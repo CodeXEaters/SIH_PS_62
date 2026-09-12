@@ -6,6 +6,7 @@ import { queueOfflineAction, cacheEntityData } from "@/lib/offline/sync/syncEngi
 function mapBackendCargoToCargoItem(c: any): CargoItem {
   return {
     id: c.cargo_code || String(c.id),
+    rawId: typeof c.id === "number" ? c.id : undefined,
     description: c.name || c.description || `Cargo Package ${c.cargo_code || c.id}`,
     owner: c.owner || "NCPOR Logistics Wing",
     category:
@@ -121,5 +122,42 @@ export const cargoService = {
       }
       throw err;
     }
+  },
+
+  async resolveCargoByQr(qrPayload: string): Promise<{ cargo: CargoItem; rawId: number } | null> {
+    const clean = qrPayload.trim();
+    const all = await this.getAllCargo();
+    for (const c of all) {
+      if (
+        c.qrCode === clean ||
+        c.id === clean ||
+        `DHRUV:CARGO:${c.id}` === clean ||
+        clean.endsWith(c.id) ||
+        (c.rawId && (String(c.rawId) === clean || `DHRUV:CARGO:${c.rawId}` === clean))
+      ) {
+        return {
+          cargo: c,
+          rawId: c.rawId || Number(c.id.replace(/\D/g, "")) || 1,
+        };
+      }
+    }
+    return null;
+  },
+
+  async scanCargo(
+    cargoId: number,
+    qrCode: string,
+    location: string = "Polar Transit Terminal"
+  ): Promise<{ message: string; cargo: CargoItem }> {
+    const res = await apiClient.post<any>(`/cargo/${cargoId}/scan`, {
+      qr_code: qrCode,
+      location,
+      event_type: "SCANNED",
+    });
+    const updated = await this.getCargoById(String(cargoId));
+    return {
+      message: res?.message || `Scan recorded at ${location}`,
+      cargo: updated || mapBackendCargoToCargoItem(res),
+    };
   },
 };
