@@ -23,10 +23,18 @@ def db_session():
         session.close()
 
 
+class CanonicalV1Client(TestClient):
+    def request(self, method: str, url: str, *args, **kwargs):
+        # Automatically route un-prefixed API paths to canonical /api/v1
+        if url.startswith("/") and not url.startswith("/api/v1") and url != "/":
+            url = f"/api/v1{url}"
+        return super().request(method, url, *args, **kwargs)
+
+
 @pytest.fixture(scope="module")
 def client():
-    """FastAPI TestClient for API testing."""
-    with TestClient(app) as test_client:
+    """FastAPI TestClient for API testing with canonical /api/v1 routing."""
+    with CanonicalV1Client(app) as test_client:
         yield test_client
 
 
@@ -34,7 +42,7 @@ def client():
 def admin_token(client):
     """Authenticate as seeded admin user and return JWT token."""
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"email": "admin@dhruv.gov.in", "password": "Admin@123456"}
     )
     assert response.status_code == 200, f"Admin login failed: {response.text}"

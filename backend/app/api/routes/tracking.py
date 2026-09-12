@@ -35,6 +35,98 @@ def get_live_tracking(
     return TrackingService.get_live_tracking(db=db)
 
 
+@router.get("/entities")
+def get_tracking_entities(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Returns tactical tracking entities across stations, transports, missions, and cargo
+    for the interactive operations GIS map.
+    """
+    from app.models.station import Station
+    from app.models.transport import Transport
+    from app.models.mission import Mission
+    from app.models.cargo import Cargo, CargoStatus
+    from app.models.tracking_event import TrackingEvent
+
+    entities = []
+
+    # 1. Stations
+    stations = db.query(Station).all()
+    for s in stations:
+        entities.append({
+            "id": f"STAT-{s.id}",
+            "name": s.name,
+            "type": "STATION",
+            "lat": s.latitude,
+            "lng": s.longitude,
+            "status": s.status,
+            "lastPing": "Live (Telemetry Nominal)",
+            "stationBase": s.name,
+            "description": f"Indian Antarctic Base ({s.location}). Type: {s.type}.",
+        })
+
+    # 2. Transports
+    transports = db.query(Transport).all()
+    for t in transports:
+        latest_track = (
+            db.query(TrackingEvent)
+            .filter(TrackingEvent.entity_type == TrackingEntityType.TRANSPORT, TrackingEvent.entity_id == t.id)
+            .order_by(TrackingEvent.timestamp.desc())
+            .first()
+        )
+        lat = latest_track.latitude if latest_track else -69.28
+        lng = latest_track.longitude if latest_track else 76.32
+        speed = latest_track.speed if latest_track else 0.0
+        battery = latest_track.battery if latest_track else 100.0
+
+        t_type = "VESSEL" if "VESSEL" in t.type.value else "AIRCRAFT" if ("AIRCRAFT" in t.type.value or "HELICOPTER" in t.type.value) else "VEHICLE"
+
+        entities.append({
+            "id": f"TRN-{t.id}",
+            "name": t.transport_name,
+            "type": t_type,
+            "lat": lat,
+            "lng": lng,
+            "status": t.status.value,
+            "speedKts": round(speed * 0.539957, 1),
+            "batteryPct": round(battery, 1),
+            "lastPing": "Live (AIS / Satellite)",
+            "stationBase": t.current_location,
+            "description": f"Fleet asset: {t.transport_name}. Capacity: {t.capacity} kg.",
+        })
+
+    # 3. Active Field Missions
+    missions = db.query(Mission).all()
+    for m in missions:
+        latest_track = (
+            db.query(TrackingEvent)
+            .filter(TrackingEvent.entity_type == TrackingEntityType.MISSION, TrackingEvent.entity_id == m.id)
+            .order_by(TrackingEvent.timestamp.desc())
+            .first()
+        )
+        lat = latest_track.latitude if latest_track else -69.75
+        lng = latest_track.longitude if latest_track else 75.61
+
+        entities.append({
+            "id": f"MIS-{m.id}",
+            "name": m.mission_name,
+            "type": "TEAM",
+            "lat": lat,
+            "lng": lng,
+            "status": m.status.value,
+            "speedKts": round(latest_track.speed * 0.539957, 1) if latest_track else 0.0,
+            "batteryPct": round(latest_track.battery, 1) if latest_track else 85.0,
+            "lastPing": "Live (HF Radio / Iridium)",
+            "stationBase": m.origin,
+            "description": f"Traverse expedition: {m.mission_name}. Risk Level: {m.risk_level.value}.",
+        })
+
+    return entities
+
+
+
 @router.get("/{entity_type}/{entity_id}", response_model=List[TrackingEventResponse])
 def get_entity_tracking_history(
     entity_type: TrackingEntityType = Path(..., description="Type of entity: MISSION or TRANSPORT"),

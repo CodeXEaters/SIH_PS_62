@@ -3,34 +3,63 @@ import { apiClient } from "./apiClient";
 export interface UserSession {
   id: string;
   name: string;
-  role: "COMMANDER" | "LOGISTICS_OFFICER" | "SCIENTIST" | "MEDICAL_OFFICER";
+  role: string;
   callsign: string;
   station: string;
   email: string;
 }
 
-export const mockCurrentUser: UserSession = {
-  id: "USR-001",
-  name: "Dr. Arvind Sharan",
-  role: "COMMANDER",
-  callsign: "POLAR-LEADER-1",
-  station: "Bharati Station",
-  email: "arvind.sharan@ncpor.res.in",
-};
+export interface BackendUser {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
 
 export const authService = {
-  async getCurrentUser(): Promise<UserSession> {
-    try {
-      return await apiClient.get<UserSession>("/auth/me");
-    } catch {
-      return mockCurrentUser;
+  async login(credentials: LoginCredentials): Promise<UserSession> {
+    const res = await apiClient.post<LoginResponse>("/auth/login", credentials);
+    if (res?.access_token) {
+      apiClient.setToken(res.access_token);
     }
+    return await this.getCurrentUser();
   },
+
+  async getCurrentUser(): Promise<UserSession> {
+    const backendUser = await apiClient.get<BackendUser>("/auth/me");
+    return {
+      id: String(backendUser.id),
+      name: backendUser.full_name,
+      role: backendUser.role,
+      callsign: `POLAR-${backendUser.role}`,
+      station: "Bharati Station",
+      email: backendUser.email,
+    };
+  },
+
   async logout(): Promise<void> {
     try {
       await apiClient.post("/auth/logout");
     } catch {
-      // Mock logout
+      // Discard errors on logout
+    } finally {
+      apiClient.clearToken();
     }
+  },
+
+  isAuthenticated(): boolean {
+    return Boolean(apiClient.getToken());
   },
 };

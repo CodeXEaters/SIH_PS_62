@@ -70,3 +70,10 @@ async def login(
 def get_me(current_user: User = Depends(get_current_user)):
     """Get the profile of the currently authenticated user."""
     return current_user
+
+
+@router.post("/logout")
+def logout():
+    """Client logout endpoint."""
+    return {"message": "Logged out successfully"}
+

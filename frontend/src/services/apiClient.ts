@@ -1,4 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const TOKEN_KEY = "dhruv_access_token";
 
 export interface ApiResponse<T> {
   data: T;
@@ -6,45 +7,109 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+export class ApiError extends Error {
+  public status?: number;
+  public data?: any;
+  public isOffline: boolean;
+
+  constructor(message: string, status?: number, data?: any, isOffline: boolean = false) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+    this.isOffline = isOffline;
+  }
+}
+
 export class ApiClient {
   private baseUrl: string;
+  private token: string | null = null;
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem(TOKEN_KEY);
+    }
+  }
+
+  public setToken(token: string | null): void {
+    this.token = token;
+    if (typeof window !== "undefined") {
+      if (token) {
+        localStorage.setItem(TOKEN_KEY, token);
+      } else {
+        localStorage.removeItem(TOKEN_KEY);
+      }
+    }
+  }
+
+  public getToken(): string | null {
+    if (!this.token && typeof window !== "undefined") {
+      this.token = localStorage.getItem(TOKEN_KEY);
+    }
+    return this.token;
+  }
+
+  public clearToken(): void {
+    this.setToken(null);
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const url = `${this.baseUrl}${cleanEndpoint}`;
+    const token = this.getToken();
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second timeout for polar / offline resilience
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-      const response = await fetch(url, {
+    let response: Response;
+    try {
+      response = await fetch(url, {
         ...options,
         headers,
         signal: controller.signal,
       });
-
+    } catch (networkError: any) {
       clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-      }
-
-      return (await response.json()) as T;
-    } catch (error) {
-      // Graceful fallback for mock mode / standalone demo / offline mode
-      throw error;
+      throw new ApiError(
+        networkError.message || "Network request failed",
+        undefined,
+        undefined,
+        true
+      );
     }
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errData: any = null;
+      try {
+        errData = await response.json();
+      } catch {
+        // Body was not JSON
+      }
+      const errMsg =
+        errData?.detail ||
+        `HTTP error ${response.status}: ${response.statusText}`;
+      throw new ApiError(errMsg, response.status, errData, false);
+    }
+
+    // Return empty object for 204 No Content
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return (await response.json()) as T;
   }
 
   public async get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {

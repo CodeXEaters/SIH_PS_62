@@ -117,8 +117,11 @@ export const trackingService = {
   async getTrackingEntities(): Promise<TacticalTrackingEntity[]> {
     try {
       return await apiClient.get<TacticalTrackingEntity[]>("/tracking/entities");
-    } catch {
-      return mockTrackingEntities;
+    } catch (err: any) {
+      if (err?.isOffline) {
+        return mockTrackingEntities;
+      }
+      throw err;
     }
   },
 };
