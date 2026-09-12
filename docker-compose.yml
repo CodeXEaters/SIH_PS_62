@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: dhruv-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: dhruv_db
+      POSTGRES_USER: dhruv_user
+      POSTGRES_PASSWORD: dhruv_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database.database import Base, engine, check_db_connection
 import app.models  # Ensure all models are registered with Base metadata
-from app.api.router import api_router
+from app.api import api_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,6 +25,8 @@ async def lifespan(app: FastAPI):
         logger.info("Database tables verified / created.")
     except Exception as exc:
         logger.error("Database initialization check failed: %s", exc)
+        # Note: If PostgreSQL is unreachable, requests attempting DB access will fail clearly
+        # as requested in the playbook and guidelines.
     yield
     logger.info("Shutting down DHRUV Core Platform Backend...")
 
@@ -36,7 +38,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS for frontend access
+# Configure CORS for frontend access (Vite, React, Next.js, etc.)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -45,7 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount API routes
+# Mount all core platform API endpoints
 app.include_router(api_router)
 
 
