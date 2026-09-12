@@ -3,6 +3,7 @@ from app.schemas.station import StationCreate, StationResponse
 from app.schemas.personnel import PersonnelCreate, PersonnelUpdate, PersonnelStatusUpdate, PersonnelResponse
 from app.schemas.inventory import InventoryCreate, InventoryUpdate, InventoryResponse
 from app.schemas.asset import AssetCreate, AssetUpdate, AssetResponse
+from app.schemas.cargo import CargoCreate, CargoUpdate, CargoStatusUpdate, CargoResponse
 
 __all__ = [
     "UserRegister",
@@ -22,4 +23,8 @@ __all__ = [
     "AssetCreate",
     "AssetUpdate",
     "AssetResponse",
+    "CargoCreate",
+    "CargoUpdate",
+    "CargoStatusUpdate",
+    "CargoResponse",
 ]
