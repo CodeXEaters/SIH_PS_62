@@ -9,6 +9,8 @@ from app.models.transport import Transport, TransportType, TransportStatus
 from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskLevel
 from app.models.tracking_event import TrackingEvent, TrackingEntityType
 
+from app.models.alert import Alert, AlertSeverity, AlertType, AlertStatus, AlertEntityType
+
 __all__ = [
     "User",
     "UserRole",
@@ -31,4 +33,10 @@ __all__ = [
     "MissionRiskLevel",
     "TrackingEvent",
     "TrackingEntityType",
+    "Alert",
+    "AlertSeverity",
+    "AlertType",
+    "AlertStatus",
+    "AlertEntityType",
 ]
+

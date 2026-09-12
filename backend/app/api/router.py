@@ -8,6 +8,7 @@ from app.api.routes.cargo import router as cargo_router
 from app.api.routes.transport import router as transport_router
 from app.api.routes.missions import router as missions_router
 from app.api.routes.tracking import router as tracking_router
+from app.api.routes.alerts import router as alerts_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -19,5 +20,7 @@ api_router.include_router(cargo_router, prefix="/cargo", tags=["Cargo"])
 api_router.include_router(transport_router, prefix="/transport", tags=["Transport"])
 api_router.include_router(missions_router, prefix="/missions", tags=["Missions"])
 api_router.include_router(tracking_router, prefix="/tracking", tags=["Tracking"])
+api_router.include_router(alerts_router, prefix="/alerts", tags=["Alerts"])
 
 __all__ = ["api_router"]
+
