@@ -18,6 +18,12 @@ from app.schemas.transport import (
     TransportResponse,
     TransportStatusResponse,
 )
+from app.schemas.mission import (
+    MissionCreate,
+    MissionUpdate,
+    MissionStatusUpdate,
+    MissionResponse,
+)
 
 __all__ = [
     "UserRegister",
@@ -51,4 +57,8 @@ __all__ = [
     "TransportStatusUpdate",
     "TransportResponse",
     "TransportStatusResponse",
+    "MissionCreate",
+    "MissionUpdate",
+    "MissionStatusUpdate",
+    "MissionResponse",
 ]

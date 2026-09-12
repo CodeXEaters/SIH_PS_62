@@ -6,6 +6,7 @@ from app.api.routes.inventory import router as inventory_router
 from app.api.routes.assets import router as assets_router
 from app.api.routes.cargo import router as cargo_router
 from app.api.routes.transport import router as transport_router
+from app.api.routes.missions import router as missions_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -15,5 +16,6 @@ api_router.include_router(inventory_router, prefix="/inventory", tags=["Inventor
 api_router.include_router(assets_router, prefix="/assets", tags=["Assets"])
 api_router.include_router(cargo_router, prefix="/cargo", tags=["Cargo"])
 api_router.include_router(transport_router, prefix="/transport", tags=["Transport"])
+api_router.include_router(missions_router, prefix="/missions", tags=["Missions"])
 
 __all__ = ["api_router"]

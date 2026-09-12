@@ -6,6 +6,7 @@ from app.models.asset import Asset
 from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
 from app.models.cargo_event import CargoEvent, CargoEventType
 from app.models.transport import Transport, TransportType, TransportStatus
+from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskLevel
 
 __all__ = [
     "User",
@@ -23,4 +24,8 @@ __all__ = [
     "Transport",
     "TransportType",
     "TransportStatus",
+    "Mission",
+    "MissionType",
+    "MissionStatus",
+    "MissionRiskLevel",
 ]
