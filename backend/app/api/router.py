@@ -10,6 +10,7 @@ from app.api.routes.missions import router as missions_router
 from app.api.routes.tracking import router as tracking_router
 from app.api.routes.alerts import router as alerts_router
 from app.api.routes.emergency import router as emergency_router
+from app.api.routes.intelligence import router as intelligence_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -23,7 +24,9 @@ api_router.include_router(missions_router, prefix="/missions", tags=["Missions"]
 api_router.include_router(tracking_router, prefix="/tracking", tags=["Tracking"])
 api_router.include_router(alerts_router, prefix="/alerts", tags=["Alerts"])
 api_router.include_router(emergency_router, prefix="/emergency", tags=["Emergency"])
+api_router.include_router(intelligence_router, prefix="/intelligence", tags=["Intelligence"])
 
 __all__ = ["api_router"]
+
 
 
