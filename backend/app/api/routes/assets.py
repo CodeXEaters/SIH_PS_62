@@ -90,35 +90,35 @@ def create_asset(
     return asset
 
 
-@router.get("/{asset_id}", response_model=AssetResponse)
+@router.get("/{id}", response_model=AssetResponse)
 def get_asset(
-    asset_id: int,
+    id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve an asset by ID."""
-    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    asset = db.query(Asset).filter(Asset.id == id).first()
     if not asset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Asset with id {asset_id} not found"
+            detail=f"Asset with id {id} not found"
         )
     return asset
 
 
-@router.put("/{asset_id}", response_model=AssetResponse)
+@router.put("/{id}", response_model=AssetResponse)
 def update_asset(
-    asset_id: int,
+    id: int,
     asset_in: AssetUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OPERATIONS, UserRole.LOGISTICS)),
 ):
     """Update asset specifications, status, health score, or maintenance records."""
-    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    asset = db.query(Asset).filter(Asset.id == id).first()
     if not asset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Asset with id {asset_id} not found"
+            detail=f"Asset with id {id} not found"
         )
 
     update_data = asset_in.model_dump(exclude_unset=True)

@@ -67,35 +67,35 @@ def create_personnel(
     return personnel
 
 
-@router.get("/{personnel_id}", response_model=PersonnelResponse)
+@router.get("/{id}", response_model=PersonnelResponse)
 def get_personnel(
-    personnel_id: int,
+    id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a single personnel by ID."""
-    personnel = db.query(Personnel).filter(Personnel.id == personnel_id).first()
+    personnel = db.query(Personnel).filter(Personnel.id == id).first()
     if not personnel:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Personnel with id {personnel_id} not found"
+            detail=f"Personnel with id {id} not found"
         )
     return personnel
 
 
-@router.put("/{personnel_id}", response_model=PersonnelResponse)
+@router.put("/{id}", response_model=PersonnelResponse)
 def update_personnel(
-    personnel_id: int,
+    id: int,
     personnel_in: PersonnelUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OPERATIONS, UserRole.STATION_MANAGER)),
 ):
     """Update personnel details."""
-    personnel = db.query(Personnel).filter(Personnel.id == personnel_id).first()
+    personnel = db.query(Personnel).filter(Personnel.id == id).first()
     if not personnel:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Personnel with id {personnel_id} not found"
+            detail=f"Personnel with id {id} not found"
         )
 
     update_data = personnel_in.model_dump(exclude_unset=True)
@@ -115,19 +115,19 @@ def update_personnel(
     return personnel
 
 
-@router.patch("/{personnel_id}/status", response_model=PersonnelResponse)
+@router.patch("/{id}/status", response_model=PersonnelResponse)
 def patch_personnel_status(
-    personnel_id: int,
+    id: int,
     status_in: PersonnelStatusUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Update personnel operational status (e.g. ACTIVE, ON_MISSION, REST)."""
-    personnel = db.query(Personnel).filter(Personnel.id == personnel_id).first()
+    personnel = db.query(Personnel).filter(Personnel.id == id).first()
     if not personnel:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Personnel with id {personnel_id} not found"
+            detail=f"Personnel with id {id} not found"
         )
 
     personnel.status = status_in.status

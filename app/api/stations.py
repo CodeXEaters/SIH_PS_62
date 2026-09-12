@@ -47,17 +47,17 @@ def create_station(
     return station
 
 
-@router.get("/{station_id}", response_model=StationResponse)
+@router.get("/{id}", response_model=StationResponse)
 def get_station(
-    station_id: int,
+    id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a single station by its ID."""
-    station = db.query(Station).filter(Station.id == station_id).first()
+    station = db.query(Station).filter(Station.id == id).first()
     if not station:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Station with id {station_id} not found"
+            detail=f"Station with id {id} not found"
         )
     return station

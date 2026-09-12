@@ -72,35 +72,35 @@ def create_inventory_item(
     return item
 
 
-@router.get("/{inventory_id}", response_model=InventoryResponse)
+@router.get("/{id}", response_model=InventoryResponse)
 def get_inventory_item(
-    inventory_id: int,
+    id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a single inventory item by ID."""
-    item = db.query(Inventory).filter(Inventory.id == inventory_id).first()
+    item = db.query(Inventory).filter(Inventory.id == id).first()
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Inventory item with id {inventory_id} not found"
+            detail=f"Inventory item with id {id} not found"
         )
     return item
 
 
-@router.put("/{inventory_id}", response_model=InventoryResponse)
+@router.put("/{id}", response_model=InventoryResponse)
 def update_inventory_item(
-    inventory_id: int,
+    id: int,
     item_in: InventoryUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OPERATIONS, UserRole.LOGISTICS)),
 ):
     """Update inventory item quantity, thresholds, or consumption."""
-    item = db.query(Inventory).filter(Inventory.id == inventory_id).first()
+    item = db.query(Inventory).filter(Inventory.id == id).first()
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Inventory item with id {inventory_id} not found"
+            detail=f"Inventory item with id {id} not found"
         )
 
     update_data = item_in.model_dump(exclude_unset=True)

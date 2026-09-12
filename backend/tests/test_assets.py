@@ -23,13 +23,15 @@ def test_asset_maintenance_alerts(client, auth_headers):
 
 def test_create_and_get_asset(client, auth_headers):
     """Test registering an asset with QR code identity."""
+    import uuid
     stations = client.get("/stations", headers=auth_headers).json()
     station_id = stations[0]["id"]
+    test_qr = f"DHRUV:ASSET:TRAILER-{uuid.uuid4().hex[:6].upper()}"
 
     payload = {
         "asset_name": "Snowcat Hydro-Trailer",
         "asset_type": "VEHICLE",
-        "qr_code": "DHRUV:ASSET:TRAILER-TEST-99",
+        "qr_code": test_qr,
         "status": "OPERATIONAL",
         "station_id": station_id,
         "location": "Main Vehicle Yard",

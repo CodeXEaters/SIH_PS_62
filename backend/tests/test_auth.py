@@ -9,19 +9,20 @@ def test_health_check(client):
 
 def test_auth_register_success(client):
     """Test new user registration."""
+    import uuid
+    email = f"field_{uuid.uuid4().hex[:6]}@dhruv.gov.in"
     user_payload = {
-        "email": "field_test_user@dhruv.gov.in",
+        "email": email,
         "password": "Password@123",
         "full_name": "Field Test Engineer",
         "role": "FIELD_TEAM",
     }
     response = client.post("/auth/register", json=user_payload)
-    assert response.status_code in [201, 400]  # 201 if first run, 400 if already created
-    if response.status_code == 201:
-        data = response.json()
-        assert data["email"] == user_payload["email"]
-        assert data["role"] == "FIELD_TEAM"
-        assert "hashed_password" not in data
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == user_payload["email"]
+    assert data["role"] == "FIELD_TEAM"
+    assert "hashed_password" not in data
 
 
 def test_auth_login_json(client):
