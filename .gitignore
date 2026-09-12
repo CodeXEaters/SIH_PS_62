@@ -7,23 +7,23 @@ yarn-error.log*
 out/
 build/
 dist/
-.DS_Store
 *.tsbuildinfo
 *.env.local
 
 # Python / Backend
+venv/
+.venv/
+env/
+ENV/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv/
-ENV/
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -37,8 +37,18 @@ wheels/
 .installed.cfg
 *.egg
 .pytest_cache/
+.coverage
+htmlcov/
+*.log
+_tmp_backup/
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # IDE / OS
+.DS_Store
 .idea/
 .vscode/
 Thumbs.db
