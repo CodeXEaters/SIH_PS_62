@@ -3,6 +3,32 @@ from app.schemas.station import StationCreate, StationResponse
 from app.schemas.personnel import PersonnelCreate, PersonnelUpdate, PersonnelStatusUpdate, PersonnelResponse
 from app.schemas.inventory import InventoryCreate, InventoryUpdate, InventoryResponse
 from app.schemas.asset import AssetCreate, AssetUpdate, AssetResponse
+from app.schemas.cargo import CargoCreate, CargoUpdate, CargoStatusUpdate, CargoResponse
+from app.schemas.cargo_event import (
+    CargoScanRequest,
+    CargoEventCreate,
+    CargoEventResponse,
+    CargoScanResponse,
+    CargoTimelineResponse,
+)
+from app.schemas.transport import (
+    TransportCreate,
+    TransportUpdate,
+    TransportStatusUpdate,
+    TransportResponse,
+    TransportStatusResponse,
+)
+from app.schemas.mission import (
+    MissionCreate,
+    MissionUpdate,
+    MissionStatusUpdate,
+    MissionResponse,
+)
+from app.schemas.tracking import (
+    TrackingEventCreate,
+    TrackingEventResponse,
+    LiveTrackingItem,
+)
 
 __all__ = [
     "UserRegister",
@@ -22,4 +48,25 @@ __all__ = [
     "AssetCreate",
     "AssetUpdate",
     "AssetResponse",
+    "CargoCreate",
+    "CargoUpdate",
+    "CargoStatusUpdate",
+    "CargoResponse",
+    "CargoScanRequest",
+    "CargoEventCreate",
+    "CargoEventResponse",
+    "CargoScanResponse",
+    "CargoTimelineResponse",
+    "TransportCreate",
+    "TransportUpdate",
+    "TransportStatusUpdate",
+    "TransportResponse",
+    "TransportStatusResponse",
+    "MissionCreate",
+    "MissionUpdate",
+    "MissionStatusUpdate",
+    "MissionResponse",
+    "TrackingEventCreate",
+    "TrackingEventResponse",
+    "LiveTrackingItem",
 ]
