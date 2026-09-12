@@ -1,0 +1,18 @@
+<svg width="220" height="48" viewBox="0 0 220 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- DHRUV Typography with Gold Star Accent -->
+  <g id="dhruv-logo">
+    <text x="4" y="30" font-family="'Inter', -apple-system, sans-serif" font-size="28" font-weight="900" letter-spacing="4" fill="#FFFFFF">DHR</text>
+    <text x="96" y="30" font-family="'Inter', -apple-system, sans-serif" font-size="28" font-weight="900" letter-spacing="4" fill="#FFFFFF">V</text>
+    <!-- Dhruv Polaris Star replacing 'U' center or integrated -->
+    <text x="72" y="30" font-family="'Inter', -apple-system, sans-serif" font-size="28" font-weight="900" letter-spacing="4" fill="#FFFFFF">U</text>
+    
+    <!-- 4-point radiant Polaris Star in gold -->
+    <g transform="translate(132, 10)">
+      <path d="M10 0 L12 7 L19 9 L12 11 L10 18 L8 11 L1 9 L8 7 Z" fill="#D6A84F"/>
+      <circle cx="10" cy="9" r="1.5" fill="#FFF2C6"/>
+    </g>
+    
+    <!-- Subtitle: NAVIGATE • MANAGE • PROTECT -->
+    <text x="5" y="44" font-family="'Inter', -apple-system, sans-serif" font-size="7.5" font-weight="700" letter-spacing="2.8" fill="#C8C8C5">NAVIGATE  •  MANAGE  •  PROTECT</text>
+  </g>
+</svg>

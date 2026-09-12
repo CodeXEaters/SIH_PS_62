@@ -1,0 +1,381 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import {
+  Users,
+  Box,
+  Truck,
+  Database,
+  Radio,
+  Compass,
+  ArrowRight,
+  Thermometer,
+  Wind,
+  Eye,
+} from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { Badge, Button } from "@/components/ui";
+import { mockAttentionItems, mockStations, mockCargoItems } from "@/data/mock";
+
+export default function DashboardPage() {
+  const kpis = [
+    {
+      label: "PERSONNEL",
+      value: "124",
+      status: "DEPLOYED",
+      subtext: "Stations & Traverse",
+      href: "/personnel",
+    },
+    {
+      label: "CARGO",
+      value: "1,842",
+      status: "TRACKED",
+      subtext: "Containers & Units",
+      href: "/cargo",
+    },
+    {
+      label: "ASSETS",
+      value: "326",
+      status: "OPERATIONAL",
+      subtext: "Vehicles & Generators",
+      href: "/assets",
+    },
+    {
+      label: "INVENTORY",
+      value: "92%",
+      status: "READY",
+      subtext: "Life Support Reserve",
+      href: "/inventory",
+    },
+    {
+      label: "MISSIONS",
+      value: "08",
+      status: "ACTIVE",
+      subtext: "Field Science Traverses",
+      href: "/missions",
+    },
+  ];
+
+  return (
+    <AppShell>
+      <div className="space-y-8">
+        {/* Dashboard Header: EXPEDITION COMMAND CENTER */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#242424] pb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91]" />
+              <span className="text-[10px] font-mono tracking-[0.25em] text-[#C8C8C5] uppercase font-semibold">
+                NCPOR OPERATIONAL COMMAND &bull; 46TH ISEA
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F5F3EE]">
+              EXPEDITION COMMAND CENTER
+            </h1>
+            <p className="text-xs sm:text-sm text-[#A5A29C] mt-1">
+              A live operational picture across people, cargo, assets and missions.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <Link href="/operations/map">
+              <Button variant="primary" size="sm" className="gap-2 font-mono text-xs">
+                <Compass className="w-3.5 h-3.5" />
+                <span>Operations Map</span>
+              </Button>
+            </Link>
+            <Link href="/cargo/scanner">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <span>Scan QR</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* KPI Section: Flat Black Panels with Thin Separators */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {kpis.map((kpi) => (
+            <Link
+              key={kpi.label}
+              href={kpi.href}
+              className="p-5 rounded bg-[#101010] border border-[#242424] hover:border-[#383838] transition-colors flex flex-col justify-between group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-medium tracking-widest text-[#6F6D68] uppercase">
+                  {kpi.label}
+                </span>
+                <span className="text-[9px] font-mono text-[#A5A29C]">
+                  {kpi.status}
+                </span>
+              </div>
+
+              <div className="my-3">
+                <div className="text-3xl sm:text-4xl font-mono font-bold text-[#F5F3EE] tracking-tight">
+                  {kpi.value}
+                </div>
+                <div className="text-[10px] font-mono text-[#6F6D68] mt-1 truncate">
+                  {kpi.subtext}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#242424] flex items-center justify-between text-[10px] font-mono text-[#6F6D68] group-hover:text-[#F5F3EE] transition-colors">
+                <span>View Details</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* ATTENTION REQUIRED (Most Important Section) */}
+        <div className="rounded bg-[#0A0A0A] border border-[#242424] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#242424] flex items-center justify-between bg-[#070707]">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-[#B85C5C]" />
+              <h2 className="text-xs font-mono font-bold tracking-[0.2em] text-[#F5F3EE] uppercase">
+                ATTENTION REQUIRED
+              </h2>
+            </div>
+            <span className="text-[11px] font-mono text-[#A5A29C]">
+              3 Items Requiring Action
+            </span>
+          </div>
+
+          <div className="divide-y divide-[#242424]">
+            {/* 01 CARGO DELAY PREDICTED */}
+            <div className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors">
+              <div className="space-y-1.5 max-w-2xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-bold text-[#C49A55]">01</span>
+                  <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
+                    CARGO DELAY PREDICTED
+                  </span>
+                  <span className="text-[10px] font-mono text-[#6F6D68]">&bull; Cape Town → Bharati</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#161208] text-[#C49A55] border border-[#C49A55]/30">
+                    +18h
+                  </span>
+                </div>
+                <p className="text-xs text-[#A5A29C] leading-relaxed">
+                  Weather conditions may affect the current transport window. Katabatic wind gusts exceeding 42 kts expected at Prydz Bay.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link href="/cargo/CRG-ANT-004821">
+                  <Button variant="secondary" size="sm" className="font-mono text-xs">
+                    <span>REVIEW</span>
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* 02 INVENTORY SHORTAGE */}
+            <div className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors">
+              <div className="space-y-1.5 max-w-2xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-bold text-[#B85C5C]">02</span>
+                  <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
+                    INVENTORY SHORTAGE
+                  </span>
+                  <span className="text-[10px] font-mono text-[#6F6D68]">&bull; DIESEL BHARATI STATION</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#140808] text-[#B85C5C] border border-[#B85C5C]/30">
+                    6 DAYS REMAINING
+                  </span>
+                </div>
+                <p className="text-xs text-[#A5A29C] leading-relaxed">
+                  Daily consumption 180 L/day. Reserve buffer below standard 14-day safety threshold.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link href="/inventory/forecast">
+                  <Button variant="secondary" size="sm" className="font-mono text-xs">
+                    <span>VIEW FORECAST</span>
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* 03 TELEMETRY ANOMALY */}
+            <div className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors">
+              <div className="space-y-1.5 max-w-2xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-bold text-[#B85C5C]">03</span>
+                  <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
+                    TELEMETRY ANOMALY
+                  </span>
+                  <span className="text-[10px] font-mono text-[#6F6D68]">&bull; TEAM ALPHA</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#140808] text-[#B85C5C] border border-[#B85C5C]/30">
+                    NO SIGNAL 14 MINUTES
+                  </span>
+                </div>
+                <p className="text-xs text-[#A5A29C] leading-relaxed">
+                  No tracking update received. Last verified ping at -69.4°S 76.2°E during Larsemann ridge traverse.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link href="/emergency">
+                  <Button variant="danger" size="sm" className="font-mono text-xs">
+                    <span>INVESTIGATE</span>
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Two-Column Grid: Station Telemetry & Active Shipments Table */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Station Telemetry (5 Columns) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
+                STATION TELEMETRY
+              </span>
+              <span className="text-[10px] font-mono text-[#7FAF91]">● SATELLITE LINK ACTIVE</span>
+            </div>
+
+            <div className="space-y-3">
+              {mockStations.map((station) => (
+                <div
+                  key={station.id}
+                  className="p-4 rounded bg-[#101010] border border-[#242424] space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#F5F3EE]">{station.name}</h4>
+                      <span className="text-[10px] font-mono text-[#6F6D68]">{station.locationName}</span>
+                    </div>
+                    <Badge variant={station.status === "OPERATIONAL" ? "success" : "warning"} dot>
+                      {station.status}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                    <div className="p-2 rounded bg-[#0A0A0A] border border-[#242424]">
+                      <div className="flex items-center justify-center gap-1 text-[#A5A29C] mb-0.5">
+                        <Thermometer className="w-3 h-3 text-[#6F6D68]" />
+                        <span className="text-[9px] uppercase">Temp</span>
+                      </div>
+                      <span className="font-bold text-[#F5F3EE]">
+                        {station.weather.temperatureC}°C
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded bg-[#0A0A0A] border border-[#242424]">
+                      <div className="flex items-center justify-center gap-1 text-[#A5A29C] mb-0.5">
+                        <Wind className="w-3 h-3 text-[#6F6D68]" />
+                        <span className="text-[9px] uppercase">Wind</span>
+                      </div>
+                      <span className="font-bold text-[#F5F3EE]">
+                        {station.weather.windSpeedKts} kts
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded bg-[#0A0A0A] border border-[#242424]">
+                      <div className="flex items-center justify-center gap-1 text-[#A5A29C] mb-0.5">
+                        <Eye className="w-3 h-3 text-[#6F6D68]" />
+                        <span className="text-[9px] uppercase">Vis</span>
+                      </div>
+                      <span className="font-bold text-[#F5F3EE]">
+                        {station.weather.visibilityKm} km
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[#6F6D68] pt-1">
+                    <span>Occupancy: {station.currentOccupancy}/{station.capacity}</span>
+                    <span className={station.weather.blizzardRisk === "SEVERE" ? "text-[#B85C5C] font-bold" : "text-[#7FAF91]"}>
+                      Blizzard Risk: {station.weather.blizzardRisk}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Active Cargo Corridors Data Table (7 Columns) */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
+                ACTIVE CARGO CORRIDORS
+              </span>
+              <Link href="/cargo" className="text-[10px] font-mono text-[#C8A96B] hover:underline">
+                All Cargo Manifests &rarr;
+              </Link>
+            </div>
+
+            <div className="rounded bg-[#101010] border border-[#242424] overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead>
+                    <tr className="border-b border-[#242424] bg-[#0A0A0A] text-[#6F6D68] text-[9px] uppercase tracking-wider">
+                      <th className="py-3 px-4">CARGO ID</th>
+                      <th className="py-3 px-4">DESCRIPTION</th>
+                      <th className="py-3 px-4">DESTINATION</th>
+                      <th className="py-3 px-4">STATUS</th>
+                      <th className="py-3 px-4">ETA</th>
+                      <th className="py-3 px-4">RISK</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#242424]/60 text-[#A5A29C]">
+                    {mockCargoItems.slice(0, 5).map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-[#111111] transition-colors cursor-pointer"
+                        onClick={() => window.location.href = `/cargo/${item.id}`}
+                      >
+                        <td className="py-3 px-4 font-bold text-[#F5F3EE] whitespace-nowrap">
+                          {item.id}
+                        </td>
+                        <td className="py-3 px-4 max-w-[180px] truncate text-[#A5A29C]">
+                          {item.description}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap text-[#F5F3EE]">
+                          {item.destination}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="flex items-center gap-1.5">
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                item.status === "Delayed"
+                                  ? "bg-[#C49A55]"
+                                  : item.status === "Received"
+                                  ? "bg-[#7FAF91]"
+                                  : "bg-[#C8C8C5]"
+                              }`}
+                            />
+                            <span>{item.status.toUpperCase()}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap text-[#6F6D68]">
+                          {item.eta}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span
+                            className={
+                              item.riskLevel === "CRITICAL"
+                                ? "text-[#B85C5C] font-bold"
+                                : item.riskLevel === "HIGH"
+                                ? "text-[#C49A55]"
+                                : "text-[#6F6D68]"
+                            }
+                          >
+                            {item.riskLevel}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
