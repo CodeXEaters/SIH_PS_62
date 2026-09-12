@@ -18,8 +18,8 @@ function mapBackendCargoToCargoItem(c: any): CargoItem {
         : c.category === "PROVISIONS"
         ? "Life Support & Rations"
         : "Heavy Machinery Spares",
-    weightKg: c.weight || c.weightKg || 120.0,
-    dimensionsM: c.dimensionsM || "1.2 x 0.8 x 0.9 m",
+    weightKg: c.weight ?? 0.0,
+    dimensionsM: c.dimensionsM || "Standard Container",
     hazardClass: c.hazardClass || "NON-HAZARDOUS",
     origin:
       c.origin ||
@@ -33,8 +33,14 @@ function mapBackendCargoToCargoItem(c: any): CargoItem {
       (c.destination_station_id === 2 ? "Maitri Station" : "Bharati Station"),
     currentLocation: c.current_location || c.currentLocation || "In Transit",
     status: c.status,
-    eta: c.eta || "2026-03-20",
-    riskLevel: c.riskLevel || "LOW",
+    eta: c.eta || "Pending ETA",
+    riskLevel:
+      c.riskLevel ||
+      (c.priority === "CRITICAL"
+        ? "CRITICAL"
+        : c.priority === "HIGH"
+        ? "HIGH"
+        : "LOW"),
     transportMode: c.transportMode || "Maritime Vessel",
     timeline: c.timeline || [],
     qrCode: c.qr_code || `CRG-${c.id}`,

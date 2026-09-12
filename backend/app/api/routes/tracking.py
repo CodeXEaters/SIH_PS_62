@@ -76,10 +76,18 @@ def get_tracking_entities(
             .order_by(TrackingEvent.timestamp.desc())
             .first()
         )
-        lat = latest_track.latitude if latest_track else -69.28
-        lng = latest_track.longitude if latest_track else 76.32
-        speed = latest_track.speed if latest_track else 0.0
-        battery = latest_track.battery if latest_track else 100.0
+        if latest_track:
+            lat = latest_track.latitude
+            lng = latest_track.longitude
+            speed = latest_track.speed
+            battery = round(latest_track.battery, 1)
+            last_ping = latest_track.timestamp.strftime("%Y-%m-%d %H:%M UTC")
+        else:
+            lat = t.current_station.latitude if t.current_station else 0.0
+            lng = t.current_station.longitude if t.current_station else 0.0
+            speed = 0.0
+            battery = None
+            last_ping = "No Telemetry Recorded"
 
         t_type = "VESSEL" if "VESSEL" in t.type.value else "AIRCRAFT" if ("AIRCRAFT" in t.type.value or "HELICOPTER" in t.type.value) else "VEHICLE"
 
@@ -91,8 +99,8 @@ def get_tracking_entities(
             "lng": lng,
             "status": t.status.value,
             "speedKts": round(speed * 0.539957, 1),
-            "batteryPct": round(battery, 1),
-            "lastPing": "Live (AIS / Satellite)",
+            "batteryPct": battery,
+            "lastPing": last_ping,
             "stationBase": t.current_location,
             "description": f"Fleet asset: {t.transport_name}. Capacity: {t.capacity} kg.",
         })
@@ -106,8 +114,18 @@ def get_tracking_entities(
             .order_by(TrackingEvent.timestamp.desc())
             .first()
         )
-        lat = latest_track.latitude if latest_track else -69.75
-        lng = latest_track.longitude if latest_track else 75.61
+        if latest_track:
+            lat = latest_track.latitude
+            lng = latest_track.longitude
+            speed = latest_track.speed
+            battery = round(latest_track.battery, 1)
+            last_ping = latest_track.timestamp.strftime("%Y-%m-%d %H:%M UTC")
+        else:
+            lat = m.origin_station.latitude if m.origin_station else 0.0
+            lng = m.origin_station.longitude if m.origin_station else 0.0
+            speed = 0.0
+            battery = None
+            last_ping = "No Telemetry Recorded"
 
         entities.append({
             "id": f"MIS-{m.id}",
@@ -116,9 +134,9 @@ def get_tracking_entities(
             "lat": lat,
             "lng": lng,
             "status": m.status.value,
-            "speedKts": round(latest_track.speed * 0.539957, 1) if latest_track else 0.0,
-            "batteryPct": round(latest_track.battery, 1) if latest_track else 85.0,
-            "lastPing": "Live (HF Radio / Iridium)",
+            "speedKts": round(speed * 0.539957, 1),
+            "batteryPct": battery,
+            "lastPing": last_ping,
             "stationBase": m.origin,
             "description": f"Traverse expedition: {m.mission_name}. Risk Level: {m.risk_level.value}.",
         })

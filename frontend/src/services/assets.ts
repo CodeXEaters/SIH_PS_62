@@ -27,13 +27,13 @@ function mapBackendAssetToAsset(a: any): Asset {
     category: cat,
     stationId,
     condition: cond,
-    utilizationPct: 82,
-    operatingHours: 1450,
-    lastMaintenance: String(a.last_maintenance || "2026-01-15"),
-    nextMaintenance: String(a.next_maintenance || "2026-04-15"),
-    fuelLevelPct: 85,
-    batteryHealthPct: Math.round(a.health_score || 92),
-    criticalSparePartsAvailable: true,
+    utilizationPct: a.utilization_pct ?? 0,
+    operatingHours: a.operating_hours ?? 0,
+    lastMaintenance: a.last_maintenance ? String(a.last_maintenance) : "Unrecorded",
+    nextMaintenance: a.next_maintenance ? String(a.next_maintenance) : "Unscheduled",
+    fuelLevelPct: a.fuel_level_pct ?? undefined,
+    batteryHealthPct: a.health_score != null ? Math.round(a.health_score) : undefined,
+    criticalSparePartsAvailable: Boolean(a.critical_spare_parts_available),
   };
 }
 

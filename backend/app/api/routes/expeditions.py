@@ -76,7 +76,8 @@ def _build_expedition_object(db: Session, exp_id: str = "ISEA-46") -> Expedition
         .scalar()
         or 0
     )
-    avg_asset_health = db.query(func.coalesce(func.avg(Asset.health_score), 92.0)).scalar() or 92.0
+    avg_asset_health = db.query(func.avg(Asset.health_score)).scalar()
+    overall_readiness = round(float(avg_asset_health), 1) if avg_asset_health is not None else 0.0
 
     return ExpeditionResponse(
         id=exp_id,
@@ -91,7 +92,7 @@ def _build_expedition_object(db: Session, exp_id: str = "ISEA-46") -> Expedition
         personnelCount=personnel_count,
         cargoTonnage=cargo_tonnage,
         activeMissionsCount=active_missions,
-        overallReadinessPct=round(float(avg_asset_health), 1),
+        overallReadinessPct=overall_readiness,
         milestones=STATIC_MILESTONES,
     )
 

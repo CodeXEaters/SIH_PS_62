@@ -8,7 +8,7 @@ export const intelligenceService = {
       return await apiClient.get<any[]>("/intelligence/attention");
     } catch (err: any) {
       if (err?.isOffline) {
-        return mockAttentionItems;
+        return [];
       }
       throw err;
     }

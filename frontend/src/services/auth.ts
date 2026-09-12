@@ -44,7 +44,7 @@ export const authService = {
       name: backendUser.full_name,
       role: backendUser.role,
       callsign: `POLAR-${backendUser.role}`,
-      station: "Bharati Station",
+      station: (backendUser as any).station || "Polar Operations Control",
       email: backendUser.email,
     };
   },

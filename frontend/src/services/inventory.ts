@@ -31,11 +31,11 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
       ? "Adequate"
       : "Optimal";
 
-  const daily = inv.daily_consumption || 10;
+  const daily = inv.daily_consumption ?? 0;
   const history = Array.from({ length: 7 }, (_, idx) => ({
     day: `D+${idx + 1}`,
     projected: Math.max(0, Math.round(inv.quantity - daily * (idx + 1))),
-    threshold: inv.minimum_threshold || 100,
+    threshold: inv.minimum_threshold || 0,
   }));
 
   return {
@@ -47,11 +47,14 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     unit: inv.unit || "units",
     dailyConsumption: daily,
     daysRemaining: days,
-    safetyStockDays: 14,
+    safetyStockDays:
+      inv.minimum_threshold && daily > 0
+        ? Math.round(inv.minimum_threshold / daily)
+        : 0,
     status,
     storageLocation: `${stationId.toUpperCase()} Core Storage Bay`,
-    minimumThreshold: inv.minimum_threshold || 50,
-    replenishmentETA: "2026-03-25",
+    minimumThreshold: inv.minimum_threshold ?? 0,
+    replenishmentETA: inv.expiry_date ? String(inv.expiry_date) : "Unscheduled",
     forecastHistory: history,
   };
 }

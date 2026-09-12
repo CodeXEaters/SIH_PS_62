@@ -1,6 +1,5 @@
 import { apiClient } from "./apiClient";
 import { EmergencyIncident } from "@/types";
-import { mockEmergencyIncident } from "@/data/mock";
 
 function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
   return {
@@ -9,37 +8,40 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
     title: em.title || "Polar Emergency Incident",
     type: (em.emergency_type || "MEDICAL") as any,
     severity: "CRITICAL",
-    locationName: em.location_description || "Antarctic Plateau Sector 4",
+    locationName: em.location_description || "Antarctic Sector",
     coordinates: {
-      lat: em.latitude || -70.05,
-      lng: em.longitude || 75.12,
+      lat: em.latitude ?? 0.0,
+      lng: em.longitude ?? 0.0,
     },
-    affectedPersonnel: [
-      {
-        id: "P-12",
-        name: "Traverse Field Lead",
-        role: "Specialist",
-        vitals: "Hypothermia Stage 1 (Attending)",
-      },
-    ],
+    affectedPersonnel: em.personnel_id
+      ? [
+          {
+            id: String(em.personnel_id),
+            name: `Personnel #${em.personnel_id}`,
+            role: "Field Personnel",
+            vitals: "Incident Active",
+          },
+        ]
+      : [],
     weatherConditions: {
-      windSpeedKts: 42,
-      temperatureC: -36,
-      visibilityM: 400,
-      blizzardWindowHours: 3.5,
+      windSpeedKts: 0,
+      temperatureC: 0,
+      visibilityM: 0,
+      blizzardWindowHours: 0,
     },
     recommendedResponse: {
-      primaryAssetId: "TRN-04",
-      primaryAssetName: "PistenBully 300 Polar Rescue",
-      medicalTeamLeader: "Dr. Arvind Sharan (NCPOR)",
-      estimatedTransitHours: 2.5,
-      fuelRequiredLiters: 140,
-      routeRiskScore: 68,
-      optimalDepartureWindow:
-        "IMMEDIATE (0-30 min window before blizzard front)",
+      primaryAssetId: em.asset_id ? `AST-${em.asset_id}` : "DISPATCH-PENDING",
+      primaryAssetName: em.asset_id
+        ? `Response Asset #${em.asset_id}`
+        : "Unit Pending",
+      medicalTeamLeader: "Station Medical Officer",
+      estimatedTransitHours: 0,
+      fuelRequiredLiters: 0,
+      routeRiskScore: 0,
+      optimalDepartureWindow: "Emergency Window",
       contingencyPlan:
         em.recommended_response ||
-        "Deploy heavy snowcat with medical oxygen reserve.",
+        "Follow standard polar emergency response protocols.",
     },
     humanDecision: (em.human_decision || "PENDING") as any,
     decisionTimestamp: em.decision_timestamp
@@ -56,7 +58,7 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
               hour: "2-digit",
               minute: "2-digit",
             }) + " UTC"
-          : "08:15 UTC",
+          : "Incident Time",
         event: `Emergency SOS Alert Triggered: ${em.title}`,
         actor: "Automated Telemetry Relay",
       },
@@ -64,10 +66,10 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
   };
 }
 
-let cachedIncident: EmergencyIncident = { ...mockEmergencyIncident };
+let cachedIncident: EmergencyIncident | null = null;
 
 export const emergencyService = {
-  async getActiveIncident(): Promise<EmergencyIncident> {
+  async getActiveIncident(): Promise<EmergencyIncident | null> {
     try {
       const active = await apiClient.get<any>("/emergency/active");
       if (active && active.id) {
@@ -88,29 +90,12 @@ export const emergencyService = {
     decision: "APPROVED" | "MODIFIED" | "REJECTED",
     notes?: string
   ): Promise<EmergencyIncident> {
-    try {
-      const numericId = incidentId.replace(/\D/g, "") || "1";
-      const res = await apiClient.post<any>(`/emergency/${numericId}/decision`, {
-        decision,
-        notes: notes || `Commander authorized ${decision}`,
-      });
-      cachedIncident = mapBackendEmergencyToIncident(res);
-      return cachedIncident;
-    } catch (err: any) {
-      if (err?.isOffline) {
-        cachedIncident = {
-          ...cachedIncident,
-          humanDecision: decision,
-          decisionTimestamp:
-            new Date().toLocaleTimeString("en-GB", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }) + " UTC",
-          decisionNotes: notes || `Commander executed offline: ${decision}`,
-        };
-        return cachedIncident;
-      }
-      throw err;
-    }
+    const numericId = incidentId.replace(/\D/g, "") || "1";
+    const res = await apiClient.post<any>(`/emergency/${numericId}/decision`, {
+      decision,
+      notes: notes || `Commander authorized ${decision}`,
+    });
+    cachedIncident = mapBackendEmergencyToIncident(res);
+    return cachedIncident;
   },
 };

@@ -56,11 +56,23 @@ def get_reports_summary(
     avg_asset_health = db.query(func.coalesce(func.avg(Asset.health_score), 90.0)).scalar() or 90.0
     readiness = round(float(avg_asset_health), 1)
 
+    # 6. Fuel reserve status derived from real inventory fuel stock
+    fuel_items = db.query(Inventory).filter(Inventory.category == "FUEL").all()
+    if fuel_items:
+        total_fuel = sum(i.quantity for i in fuel_items)
+        total_burn = sum(i.daily_consumption for i in fuel_items if i.daily_consumption)
+        if total_burn > 0:
+            fuel_rate = f"Derived: {round(total_fuel / total_burn, 1)} days reserve stock"
+        else:
+            fuel_rate = "Derived: Stable Cache"
+    else:
+        fuel_rate = "N/A (No fuel telemetry sensor)"
+
     return ReportSummaryResponse(
         expeditionReadinessPct=readiness,
         cargoTonnageTracked=tonnage,
         criticalSupplyDaysMin=min_supply_days,
         totalMissionsCompleted=completed_missions,
         activeIncidentsCount=active_emergencies,
-        fuelEfficiencyRate="94.2%",
+        fuelEfficiencyRate=fuel_rate,
     )

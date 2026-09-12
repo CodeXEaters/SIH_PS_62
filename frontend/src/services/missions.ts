@@ -22,28 +22,22 @@ function mapBackendMissionToMission(m: any): Mission {
       : "Polar Field Science & Logistics",
     teamLead: `Leader (Personnel #${m.team_lead_id})`,
     teamLeadId: String(m.team_lead_id),
-    membersCount: 4,
+    membersCount: m.members_count ?? 1,
     stationId,
     location: `${m.origin} -> ${m.destination}`,
-    coordinates: [
-      { lat: -69.4, lng: 76.2 },
-      { lat: -69.8, lng: 75.8 },
-    ],
-    startTime:
-      typeof m.start_time === "string"
-        ? m.start_time
-        : "2026-03-01T08:00:00Z",
-    expectedReturn:
-      typeof m.expected_return === "string"
-        ? m.expected_return
-        : "2026-03-10T18:00:00Z",
+    coordinates: m.coordinates || [],
+    startTime: m.start_time ? String(m.start_time) : "",
+    expectedReturn: m.expected_return ? String(m.expected_return) : "",
     riskLevel: riskMapped,
     status: statusMapped,
     telemetryStatus: "NOMINAL",
-    lastTelemetryTime: "4 mins ago",
-    assignedVehicles: ["PistenBully 300 Polar"],
-    assignedEquipment: ["Ground Penetrating Radar", "HF Radio Relay"],
-    weatherRiskSummary: "Blizzard advisory in sector 4. Marginal visibility.",
+    lastTelemetryTime: m.last_telemetry_time
+      ? String(m.last_telemetry_time)
+      : "Telemetry Unlogged",
+    assignedVehicles: m.assigned_vehicles || [],
+    assignedEquipment: m.assigned_equipment || [],
+    weatherRiskSummary:
+      m.weather_risk_summary || "Nominal Antarctic operational conditions",
   };
 }
 

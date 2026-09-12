@@ -21,19 +21,14 @@ function mapBackendPersonnelToPersonnel(p: any): Personnel {
     location: p.current_location || (stationId === "maitri" ? "Maitri Station" : "Bharati Station"),
     status: statusMapped,
     medicalClearance: p.medical_clearance === false ? "SPECIAL_MONITORING" : "VALID",
-    trainingStatus: "CERTIFIED_SURVIVAL",
-    lastCheckIn: p.last_check_in || "2026-03-01T12:00:00Z",
-    bloodGroup: "O+",
-    emergencyContact: p.emergency_contact || "+91-11-2436-0000",
-    polarExpeditionsCount: 2,
-    assignedMissions: [],
-    movementHistory: [],
-    vitalSigns: {
-      heartRateBpm: 72,
-      spo2Pct: 98,
-      skinTempC: 36.8,
-      batteryPct: 95,
-    },
+    trainingStatus: p.training_status || "STANDARD",
+    lastCheckIn: p.last_check_in ? String(p.last_check_in) : "Unrecorded",
+    bloodGroup: p.blood_group || "UNRECORDED",
+    emergencyContact: p.emergency_contact || "Unlisted",
+    polarExpeditionsCount: p.polar_expeditions_count ?? 1,
+    assignedMissions: p.assigned_missions || [],
+    movementHistory: p.movement_history || [],
+    vitalSigns: p.vital_signs || undefined,
   };
 }
 
