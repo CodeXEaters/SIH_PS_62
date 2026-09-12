@@ -85,6 +85,7 @@ export interface CargoAIAssessment {
 
 export interface CargoItem {
   id: string;
+  rawId?: number;
   description: string;
   owner: string;
   category: "Scientific Instrumentation" | "Fuel & Energy" | "Fuel & Power" | "Life Support & Rations" | "Heavy Machinery Spares" | "Medical Supplies";
