@@ -7,7 +7,7 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
   const days =
     inv.daily_consumption && inv.daily_consumption > 0
       ? Math.max(0, Math.round(inv.quantity / inv.daily_consumption))
-      : 99;
+      : 0;
 
   let categoryMapped: InventoryItem["category"] = "Station Infrastructure";
   const cat = (inv.category || "").toUpperCase();
@@ -23,13 +23,15 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
 
   const stationId = inv.station_id === 2 ? "maitri" : "bharati";
   const status: InventoryItem["status"] =
-    inv.quantity <= inv.minimum_threshold || days <= 5
+    (inv.quantity ?? 0) <= (inv.minimum_threshold ?? 0) || (days > 0 && days <= 5)
       ? "Critical"
-      : days <= 15
+      : days > 0 && days <= 15
       ? "Low"
-      : days <= 30
+      : days > 0 && days <= 30
       ? "Adequate"
-      : "Optimal";
+      : (inv.quantity ?? 0) > 0
+      ? "Optimal"
+      : "Critical";
 
   const daily = inv.daily_consumption ?? 0;
   const history = Array.from({ length: 7 }, (_, idx) => ({

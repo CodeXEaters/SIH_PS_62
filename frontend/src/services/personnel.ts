@@ -25,7 +25,7 @@ function mapBackendPersonnelToPersonnel(p: any): Personnel {
     lastCheckIn: p.last_check_in ? String(p.last_check_in) : "Unrecorded",
     bloodGroup: p.blood_group || "UNRECORDED",
     emergencyContact: p.emergency_contact || "Unlisted",
-    polarExpeditionsCount: p.polar_expeditions_count ?? 1,
+    polarExpeditionsCount: p.polar_expeditions_count ?? 0,
     assignedMissions: p.assigned_missions || [],
     movementHistory: p.movement_history || [],
     vitalSigns: p.vital_signs || undefined,

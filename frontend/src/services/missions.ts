@@ -22,7 +22,7 @@ function mapBackendMissionToMission(m: any): Mission {
       : "Polar Field Science & Logistics",
     teamLead: `Leader (Personnel #${m.team_lead_id})`,
     teamLeadId: String(m.team_lead_id),
-    membersCount: m.members_count ?? 1,
+    membersCount: m.members_count ?? 0,
     stationId,
     location: `${m.origin} -> ${m.destination}`,
     coordinates: m.coordinates || [],

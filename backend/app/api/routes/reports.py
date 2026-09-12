@@ -34,7 +34,7 @@ def get_reports_summary(
         for item in inv_items
         if item.daily_consumption and item.daily_consumption > 0
     ]
-    min_supply_days = round(min(days_list), 1) if days_list else 14.0
+    min_supply_days = round(min(days_list), 1) if days_list else 0.0
 
     # 3. Total missions completed
     completed_missions = (
@@ -53,8 +53,8 @@ def get_reports_summary(
     )
 
     # 5. Expedition readiness percentage based on asset health scores
-    avg_asset_health = db.query(func.coalesce(func.avg(Asset.health_score), 90.0)).scalar() or 90.0
-    readiness = round(float(avg_asset_health), 1)
+    avg_asset_health = db.query(func.avg(Asset.health_score)).scalar()
+    readiness = round(float(avg_asset_health), 1) if avg_asset_health is not None else 0.0
 
     # 6. Fuel reserve status derived from real inventory fuel stock
     fuel_items = db.query(Inventory).filter(Inventory.category == "FUEL").all()
