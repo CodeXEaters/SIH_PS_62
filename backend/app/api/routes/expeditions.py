@@ -67,6 +67,7 @@ STATIC_MILESTONES = [
 
 
 def _build_expedition_object(db: Session, exp_id: str = "ISEA-46") -> ExpeditionResponse:
+    # 1. Live database operational metrics
     personnel_count = db.query(func.count(Personnel.id)).scalar() or 0
     total_kg = db.query(func.coalesce(func.sum(Cargo.weight), 0.0)).scalar() or 0.0
     cargo_tonnage = round(total_kg / 1000.0, 1)
@@ -79,6 +80,7 @@ def _build_expedition_object(db: Session, exp_id: str = "ISEA-46") -> Expedition
     avg_asset_health = db.query(func.avg(Asset.health_score)).scalar()
     overall_readiness = round(float(avg_asset_health), 1) if avg_asset_health is not None else 0.0
 
+    # 2. Configured SIH expedition dossier metadata and schedule milestones
     return ExpeditionResponse(
         id=exp_id,
         name="46th Indian Scientific Expedition to Antarctica",
@@ -102,7 +104,7 @@ def get_active_expedition(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Returns currently active polar scientific expedition with live database metrics."""
+    """Returns currently active polar scientific expedition configuration with live database metrics."""
     return _build_expedition_object(db, "ISEA-46")
 
 

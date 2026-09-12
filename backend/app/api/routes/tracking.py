@@ -62,7 +62,7 @@ def get_tracking_entities(
             "lat": s.latitude,
             "lng": s.longitude,
             "status": s.status,
-            "lastPing": "Live (Telemetry Nominal)",
+            "lastPing": "No Telemetry Recorded",
             "stationBase": s.name,
             "description": f"Indian Antarctic Base ({s.location}). Type: {s.type}.",
         })
