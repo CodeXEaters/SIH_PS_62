@@ -36,6 +36,13 @@ from app.schemas.alert import (
     AlertResolveRequest,
     AlertResponse,
 )
+from app.schemas.emergency import (
+    EmergencyCreate,
+    EmergencyUpdate,
+    EmergencyDecisionRequest,
+    EmergencyStatusUpdate,
+    EmergencyResponse,
+)
 
 
 __all__ = [
@@ -82,4 +89,9 @@ __all__ = [
     "AlertAcknowledgeRequest",
     "AlertResolveRequest",
     "AlertResponse",
+    "EmergencyCreate",
+    "EmergencyUpdate",
+    "EmergencyDecisionRequest",
+    "EmergencyStatusUpdate",
+    "EmergencyResponse",
 ]

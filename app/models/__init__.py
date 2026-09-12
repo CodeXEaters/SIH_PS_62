@@ -10,6 +10,7 @@ from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskL
 from app.models.tracking_event import TrackingEvent, TrackingEntityType
 
 from app.models.alert import Alert, AlertSeverity, AlertType, AlertStatus, AlertEntityType
+from app.models.emergency import Emergency, EmergencySeverity, EmergencyType, EmergencyStatus, EmergencyDecision
 
 __all__ = [
     "User",
@@ -38,5 +39,11 @@ __all__ = [
     "AlertType",
     "AlertStatus",
     "AlertEntityType",
+    "Emergency",
+    "EmergencySeverity",
+    "EmergencyType",
+    "EmergencyStatus",
+    "EmergencyDecision",
 ]
+
 
