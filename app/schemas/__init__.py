@@ -24,6 +24,11 @@ from app.schemas.mission import (
     MissionStatusUpdate,
     MissionResponse,
 )
+from app.schemas.tracking import (
+    TrackingEventCreate,
+    TrackingEventResponse,
+    LiveTrackingItem,
+)
 
 __all__ = [
     "UserRegister",
@@ -61,4 +66,7 @@ __all__ = [
     "MissionUpdate",
     "MissionStatusUpdate",
     "MissionResponse",
+    "TrackingEventCreate",
+    "TrackingEventResponse",
+    "LiveTrackingItem",
 ]

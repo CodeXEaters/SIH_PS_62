@@ -7,6 +7,7 @@ from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
 from app.models.cargo_event import CargoEvent, CargoEventType
 from app.models.transport import Transport, TransportType, TransportStatus
 from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskLevel
+from app.models.tracking_event import TrackingEvent, TrackingEntityType
 
 __all__ = [
     "User",
@@ -28,4 +29,6 @@ __all__ = [
     "MissionType",
     "MissionStatus",
     "MissionRiskLevel",
+    "TrackingEvent",
+    "TrackingEntityType",
 ]
