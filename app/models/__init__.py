@@ -5,6 +5,7 @@ from app.models.inventory import Inventory
 from app.models.asset import Asset
 from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
 from app.models.cargo_event import CargoEvent, CargoEventType
+from app.models.transport import Transport, TransportType, TransportStatus
 
 __all__ = [
     "User",
@@ -19,4 +20,7 @@ __all__ = [
     "CargoStatus",
     "CargoEvent",
     "CargoEventType",
+    "Transport",
+    "TransportType",
+    "TransportStatus",
 ]

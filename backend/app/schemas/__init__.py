@@ -11,6 +11,13 @@ from app.schemas.cargo_event import (
     CargoScanResponse,
     CargoTimelineResponse,
 )
+from app.schemas.transport import (
+    TransportCreate,
+    TransportUpdate,
+    TransportStatusUpdate,
+    TransportResponse,
+    TransportStatusResponse,
+)
 
 __all__ = [
     "UserRegister",
@@ -39,4 +46,9 @@ __all__ = [
     "CargoEventResponse",
     "CargoScanResponse",
     "CargoTimelineResponse",
+    "TransportCreate",
+    "TransportUpdate",
+    "TransportStatusUpdate",
+    "TransportResponse",
+    "TransportStatusResponse",
 ]
