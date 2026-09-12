@@ -9,6 +9,11 @@ from app.models.station import Station
 from app.models.personnel import Personnel
 from app.models.inventory import Inventory
 from app.models.asset import Asset
+from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
+from app.models.cargo_event import CargoEvent, CargoEventType
+from app.models.transport import Transport, TransportType, TransportStatus
+from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskLevel
+from app.models.tracking_event import TrackingEvent, TrackingEntityType
 from app.core.security import get_password_hash
 
 logger = logging.getLogger("dhruv.seed")
@@ -642,6 +647,306 @@ def seed_database(db: Session = None) -> None:
                 db.add(asset_obj)
         db.commit()
 
+        # ==========================================
+        # 7. Seed Member 2 Cargo Packages (5 packages)
+        # ==========================================
+        cargo_data = [
+            {
+                "cargo_code": "CRG-2026-001",
+                "name": "Atmospheric Aerosol Sampling Filters",
+                "category": CargoCategory.SCIENTIFIC,
+                "weight": 24.5,
+                "priority": CargoPriority.HIGH,
+                "origin_station_id": created_stations["Maitri Station"].id,
+                "destination_station_id": created_stations["Bharati Station"].id,
+                "status": CargoStatus.IN_TRANSIT,
+                "current_location": "Southern Ocean Transit Corridor",
+                "qr_code": "DHRUV:CARGO:CRG-2026-001",
+            },
+            {
+                "cargo_code": "CRG-2026-002",
+                "name": "Emergency Medical Plasma & Antibiotics",
+                "category": CargoCategory.MEDICAL,
+                "weight": 18.0,
+                "priority": CargoPriority.CRITICAL,
+                "origin_station_id": created_stations["Cape Town Transit Hub"].id,
+                "destination_station_id": created_stations["Maitri Station"].id,
+                "status": CargoStatus.DISPATCHED,
+                "current_location": "Cape Town Port Berth 2",
+                "qr_code": "DHRUV:CARGO:CRG-2026-002",
+            },
+            {
+                "cargo_code": "CRG-2026-003",
+                "name": "Polar Winter Grade Diesel Fuel Drums",
+                "category": CargoCategory.FUEL,
+                "weight": 1200.0,
+                "priority": CargoPriority.HIGH,
+                "origin_station_id": created_stations["NCPOR Goa"].id,
+                "destination_station_id": created_stations["Maitri Station"].id,
+                "status": CargoStatus.PACKED,
+                "current_location": "Goa Supply Wharf",
+                "qr_code": "DHRUV:CARGO:CRG-2026-003",
+            },
+            {
+                "cargo_code": "CRG-2026-004",
+                "name": "High-Calorie Freeze-Dried Expedition Rations",
+                "category": CargoCategory.FOOD,
+                "weight": 150.0,
+                "priority": CargoPriority.MEDIUM,
+                "origin_station_id": created_stations["Maitri Station"].id,
+                "destination_station_id": created_stations["Field Camp Alpha"].id,
+                "status": CargoStatus.ARRIVED,
+                "current_location": "Field Camp Alpha Shelter",
+                "qr_code": "DHRUV:CARGO:CRG-2026-004",
+            },
+            {
+                "cargo_code": "CRG-2026-005",
+                "name": "Deep Ice Core Thermal Drilling Head Kit",
+                "category": CargoCategory.EQUIPMENT,
+                "weight": 85.0,
+                "priority": CargoPriority.CRITICAL,
+                "origin_station_id": created_stations["Cape Town Transit Hub"].id,
+                "destination_station_id": created_stations["Bharati Station"].id,
+                "status": CargoStatus.PLANNED,
+                "current_location": "Cape Town Logistics Hub",
+                "qr_code": "DHRUV:CARGO:CRG-2026-005",
+            },
+        ]
+
+        created_cargo = {}
+        for c in cargo_data:
+            existing = db.query(Cargo).filter(Cargo.cargo_code == c["cargo_code"]).first()
+            if not existing:
+                cg = Cargo(**c)
+                db.add(cg)
+                db.commit()
+                db.refresh(cg)
+                created_cargo[c["cargo_code"]] = cg
+            else:
+                created_cargo[c["cargo_code"]] = existing
+
+        # ==========================================
+        # 8. Seed Cargo Events (Chain of Custody)
+        # ==========================================
+        ops_user = db.query(User).filter(User.email == "ops@dhruv.gov.in").first()
+        ops_user_id = ops_user.id if ops_user else None
+
+        cargo_events_data = [
+            {
+                "cargo_id": created_cargo["CRG-2026-001"].id,
+                "event_type": CargoEventType.PACKED,
+                "location": "Maitri Cargo Storage Facility",
+                "station_id": created_stations["Maitri Station"].id,
+                "remarks": "Packed and inspected for coastal vessel loading",
+                "updated_by": ops_user_id,
+            },
+            {
+                "cargo_id": created_cargo["CRG-2026-001"].id,
+                "event_type": CargoEventType.LOADED,
+                "location": "MV Vasundhara Hold 1",
+                "station_id": created_stations["Maitri Station"].id,
+                "remarks": "Loaded aboard MV Vasundhara for passage to Bharati",
+                "updated_by": ops_user_id,
+            },
+            {
+                "cargo_id": created_cargo["CRG-2026-002"].id,
+                "event_type": CargoEventType.PACKED,
+                "location": "Cape Town Cold-Chain Facility",
+                "station_id": created_stations["Cape Town Transit Hub"].id,
+                "remarks": "Cryo-package sealed at -20C",
+                "updated_by": ops_user_id,
+            },
+            {
+                "cargo_id": created_cargo["CRG-2026-004"].id,
+                "event_type": CargoEventType.ARRIVED_AT_HUB,
+                "location": "Field Camp Alpha Depot",
+                "station_id": created_stations["Field Camp Alpha"].id,
+                "remarks": "Delivered via Snow Traverse 01",
+                "updated_by": ops_user_id,
+            },
+        ]
+
+        for ce in cargo_events_data:
+            existing = (
+                db.query(CargoEvent)
+                .filter(
+                    CargoEvent.cargo_id == ce["cargo_id"],
+                    CargoEvent.event_type == ce["event_type"],
+                    CargoEvent.location == ce["location"],
+                )
+                .first()
+            )
+            if not existing:
+                db.add(CargoEvent(**ce))
+        db.commit()
+
+        # ==========================================
+        # 9. Seed Transport Fleet (3 Transports)
+        # ==========================================
+        transport_data = [
+            {
+                "transport_name": "MV Vasundhara Polar Resupply Vessel",
+                "type": TransportType.RESEARCH_VESSEL,
+                "capacity": 250000.0,
+                "status": TransportStatus.IN_TRANSIT,
+                "current_location": "-55.4000, 42.1000",
+                "destination": "Bharati Station",
+                "eta": now + timedelta(days=8),
+                "current_station_id": created_stations["Cape Town Transit Hub"].id,
+                "destination_station_id": created_stations["Bharati Station"].id,
+            },
+            {
+                "transport_name": "Ilyushin Il-76TD Antarctic Transport",
+                "type": TransportType.CARGO_AIRCRAFT,
+                "capacity": 48000.0,
+                "status": TransportStatus.STANDBY,
+                "current_location": "Cape Town International Airport",
+                "destination": "Maitri Blue Ice Runway",
+                "eta": now + timedelta(days=2),
+                "current_station_id": created_stations["Cape Town Transit Hub"].id,
+                "destination_station_id": created_stations["Maitri Station"].id,
+            },
+            {
+                "transport_name": "PistenBully Polar Traverse 01",
+                "type": TransportType.SNOW_VEHICLE,
+                "capacity": 3500.0,
+                "status": TransportStatus.IN_TRANSIT,
+                "current_location": "-70.9500, 12.1000",
+                "destination": "Field Camp Alpha",
+                "eta": now + timedelta(hours=14),
+                "current_station_id": created_stations["Maitri Station"].id,
+                "destination_station_id": created_stations["Field Camp Alpha"].id,
+            },
+        ]
+
+        created_transports = {}
+        for t in transport_data:
+            existing = db.query(Transport).filter(Transport.transport_name == t["transport_name"]).first()
+            if not existing:
+                tr = Transport(**t)
+                db.add(tr)
+                db.commit()
+                db.refresh(tr)
+                created_transports[t["transport_name"]] = tr
+            else:
+                created_transports[t["transport_name"]] = existing
+
+        # ==========================================
+        # 10. Seed Missions (2 active missions)
+        # ==========================================
+        lead1 = db.query(Personnel).filter(Personnel.name == "Dr. Priya Nair").first()
+        lead2 = db.query(Personnel).filter(Personnel.name == "Col. Vikram Malhotra").first()
+        first_personnel = db.query(Personnel).first()
+        lead1_id = lead1.id if lead1 else first_personnel.id
+        lead2_id = lead2.id if lead2 else first_personnel.id
+
+        mission_data = [
+            {
+                "mission_name": "Larsemann Hills Glaciological Traverse",
+                "mission_type": MissionType.SCIENTIFIC_SURVEY,
+                "origin": "Bharati Station",
+                "destination": "Field Camp Alpha",
+                "team_lead_id": lead1_id,
+                "origin_station_id": created_stations["Bharati Station"].id,
+                "destination_station_id": created_stations["Field Camp Alpha"].id,
+                "start_time": now - timedelta(days=1),
+                "expected_return": now + timedelta(days=5),
+                "status": MissionStatus.ACTIVE,
+                "risk_level": MissionRiskLevel.MEDIUM,
+            },
+            {
+                "mission_name": "Maitri-Dome C Resupply Convoy",
+                "mission_type": MissionType.LOGISTICS_RESUPPLY,
+                "origin": "Maitri Station",
+                "destination": "Field Camp Alpha Depot",
+                "team_lead_id": lead2_id,
+                "origin_station_id": created_stations["Maitri Station"].id,
+                "destination_station_id": created_stations["Field Camp Alpha"].id,
+                "start_time": now - timedelta(hours=18),
+                "expected_return": now + timedelta(days=3),
+                "status": MissionStatus.ACTIVE,
+                "risk_level": MissionRiskLevel.HIGH,
+            },
+        ]
+
+        created_missions = {}
+        for m in mission_data:
+            existing = db.query(Mission).filter(Mission.mission_name == m["mission_name"]).first()
+            if not existing:
+                ms = Mission(**m)
+                db.add(ms)
+                db.commit()
+                db.refresh(ms)
+                created_missions[m["mission_name"]] = ms
+            else:
+                created_missions[m["mission_name"]] = existing
+
+        # ==========================================
+        # 11. Seed Initial Tracking Events
+        # ==========================================
+        m1 = created_missions.get("Larsemann Hills Glaciological Traverse")
+        tr1 = created_transports.get("PistenBully Polar Traverse 01")
+
+        tracking_data = []
+        if m1:
+            tracking_data.extend([
+                {
+                    "entity_type": TrackingEntityType.MISSION,
+                    "entity_id": m1.id,
+                    "latitude": -69.4500,
+                    "longitude": 76.1200,
+                    "speed": 12.5,
+                    "battery": 92.0,
+                    "timestamp": now - timedelta(hours=2),
+                },
+                {
+                    "entity_type": TrackingEntityType.MISSION,
+                    "entity_id": m1.id,
+                    "latitude": -69.6000,
+                    "longitude": 75.8000,
+                    "speed": 14.0,
+                    "battery": 87.5,
+                    "timestamp": now,
+                },
+            ])
+
+        if tr1:
+            tracking_data.extend([
+                {
+                    "entity_type": TrackingEntityType.TRANSPORT,
+                    "entity_id": tr1.id,
+                    "latitude": -70.8500,
+                    "longitude": 11.9500,
+                    "speed": 18.0,
+                    "battery": 95.0,
+                    "timestamp": now - timedelta(hours=3),
+                },
+                {
+                    "entity_type": TrackingEntityType.TRANSPORT,
+                    "entity_id": tr1.id,
+                    "latitude": -70.9500,
+                    "longitude": 12.1000,
+                    "speed": 16.5,
+                    "battery": 89.0,
+                    "timestamp": now,
+                },
+            ])
+
+        for tk in tracking_data:
+            existing = (
+                db.query(TrackingEvent)
+                .filter(
+                    TrackingEvent.entity_type == tk["entity_type"],
+                    TrackingEvent.entity_id == tk["entity_id"],
+                    TrackingEvent.latitude == tk["latitude"],
+                    TrackingEvent.longitude == tk["longitude"],
+                )
+                .first()
+            )
+            if not existing:
+                db.add(TrackingEvent(**tk))
+        db.commit()
+
         logger.info("DHRUV database seeded successfully!")
         print("[OK] DHRUV database seeded successfully:")
         print(f"   * Users: {db.query(User).count()}")
@@ -649,6 +954,11 @@ def seed_database(db: Session = None) -> None:
         print(f"   * Personnel: {db.query(Personnel).count()}")
         print(f"   * Inventory: {db.query(Inventory).count()}")
         print(f"   * Assets: {db.query(Asset).count()}")
+        print(f"   * Cargo: {db.query(Cargo).count()}")
+        print(f"   * Cargo Events: {db.query(CargoEvent).count()}")
+        print(f"   * Transport: {db.query(Transport).count()}")
+        print(f"   * Missions: {db.query(Mission).count()}")
+        print(f"   * Tracking Events: {db.query(TrackingEvent).count()}")
 
     finally:
         if should_close:
