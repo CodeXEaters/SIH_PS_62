@@ -29,6 +29,21 @@ from app.schemas.tracking import (
     TrackingEventResponse,
     LiveTrackingItem,
 )
+from app.schemas.alert import (
+    AlertCreate,
+    AlertUpdate,
+    AlertAcknowledgeRequest,
+    AlertResolveRequest,
+    AlertResponse,
+)
+from app.schemas.emergency import (
+    EmergencyCreate,
+    EmergencyUpdate,
+    EmergencyDecisionRequest,
+    EmergencyStatusUpdate,
+    EmergencyResponse,
+)
+
 
 __all__ = [
     "UserRegister",
@@ -69,4 +84,16 @@ __all__ = [
     "TrackingEventCreate",
     "TrackingEventResponse",
     "LiveTrackingItem",
+    "AlertCreate",
+    "AlertUpdate",
+    "AlertAcknowledgeRequest",
+    "AlertResolveRequest",
+    "AlertResponse",
+    "EmergencyCreate",
+    "EmergencyUpdate",
+    "EmergencyDecisionRequest",
+    "EmergencyStatusUpdate",
+    "EmergencyResponse",
 ]
+
+

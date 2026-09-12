@@ -20,9 +20,8 @@ from app.schemas.intelligence import (
     WhatIfScenarioResult,
     AttentionItem,
 )
-
-
 from fastapi import HTTPException, status
+
 
 class IntelligenceService:
     @staticmethod
@@ -56,7 +55,6 @@ class IntelligenceService:
             recommendation=data["recommendation"],
             evaluated_at=datetime.fromisoformat(data["evaluated_at"]),
         )
-
 
     @staticmethod
     def scan_anomalies(db: Session, generate_alerts: bool = True) -> AnomalyScanResponse:

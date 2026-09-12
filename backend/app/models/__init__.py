@@ -9,6 +9,9 @@ from app.models.transport import Transport, TransportType, TransportStatus
 from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskLevel
 from app.models.tracking_event import TrackingEvent, TrackingEntityType
 
+from app.models.alert import Alert, AlertSeverity, AlertType, AlertStatus, AlertEntityType
+from app.models.emergency import Emergency, EmergencySeverity, EmergencyType, EmergencyStatus, EmergencyDecision
+
 __all__ = [
     "User",
     "UserRole",
@@ -31,4 +34,16 @@ __all__ = [
     "MissionRiskLevel",
     "TrackingEvent",
     "TrackingEntityType",
+    "Alert",
+    "AlertSeverity",
+    "AlertType",
+    "AlertStatus",
+    "AlertEntityType",
+    "Emergency",
+    "EmergencySeverity",
+    "EmergencyType",
+    "EmergencyStatus",
+    "EmergencyDecision",
 ]
+
+
