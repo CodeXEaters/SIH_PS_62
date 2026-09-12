@@ -25,7 +25,7 @@ export const mockTrackingEntities: TacticalTrackingEntity[] = [
     lat: -69.4081,
     lng: 76.1872,
     status: "OPERATIONAL",
-    lastPing: "Live (Telemetry Nominal)",
+    lastPing: "No Telemetry Recorded",
   },
   {
     id: "STAT-MTR",
@@ -34,7 +34,7 @@ export const mockTrackingEntities: TacticalTrackingEntity[] = [
     lat: -70.7658,
     lng: 11.7358,
     status: "OPERATIONAL",
-    lastPing: "Live (Telemetry Nominal)",
+    lastPing: "No Telemetry Recorded",
   },
   {
     id: "NODE-GOA",
@@ -117,8 +117,11 @@ export const trackingService = {
   async getTrackingEntities(): Promise<TacticalTrackingEntity[]> {
     try {
       return await apiClient.get<TacticalTrackingEntity[]>("/tracking/entities");
-    } catch {
-      return mockTrackingEntities;
+    } catch (err: any) {
+      if (err?.isOffline) {
+        return [];
+      }
+      throw err;
     }
   },
 };

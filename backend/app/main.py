@@ -45,8 +45,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount API routes
-app.include_router(api_router)
+from app.api.routes.websocket import router as ws_router
+
+# Mount canonical API v1 routes
+app.include_router(api_router, prefix="/api/v1")
+
+# Mount WebSocket endpoint at /ws for telemetry and alerts
+app.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
 
 @app.get("/", tags=["Health"])

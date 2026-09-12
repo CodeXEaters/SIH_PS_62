@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { UserSession } from "@/services/auth";
 
 export type ConnectionState = "OPERATIONAL" | "SYNCING" | "OFFLINE";
 
@@ -14,6 +15,10 @@ interface AppState {
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
   toggleSearch: () => void;
+
+  // Authentication & Profile
+  user: UserSession | null;
+  setUser: (user: UserSession | null) => void;
 
   // Expedition & Station Context
   currentExpeditionId: string;
@@ -45,6 +50,9 @@ export const useAppStore = create<AppState>((set) => ({
   searchOpen: false,
   setSearchOpen: (open) => set({ searchOpen: open }),
   toggleSearch: () => set((s) => ({ searchOpen: !s.searchOpen })),
+
+  user: null,
+  setUser: (user) => set({ user }),
 
   currentExpeditionId: "ISEA-46",
   setExpeditionId: (id) => set({ currentExpeditionId: id }),

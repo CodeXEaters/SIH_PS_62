@@ -11,6 +11,8 @@ from app.api.routes.tracking import router as tracking_router
 from app.api.routes.alerts import router as alerts_router
 from app.api.routes.emergency import router as emergency_router
 from app.api.routes.intelligence import router as intelligence_router
+from app.api.routes.reports import router as reports_router
+from app.api.routes.expeditions import router as expeditions_router
 from app.api.routes.websocket import router as ws_router
 
 api_router = APIRouter()
@@ -26,6 +28,8 @@ api_router.include_router(tracking_router, prefix="/tracking", tags=["Tracking"]
 api_router.include_router(alerts_router, prefix="/alerts", tags=["Alerts"])
 api_router.include_router(emergency_router, prefix="/emergency", tags=["Emergency"])
 api_router.include_router(intelligence_router, prefix="/intelligence", tags=["Intelligence"])
+api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
+api_router.include_router(expeditions_router, prefix="/expeditions", tags=["Expeditions"])
 api_router.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
 __all__ = ["api_router"]
