@@ -4,6 +4,13 @@ from app.schemas.personnel import PersonnelCreate, PersonnelUpdate, PersonnelSta
 from app.schemas.inventory import InventoryCreate, InventoryUpdate, InventoryResponse
 from app.schemas.asset import AssetCreate, AssetUpdate, AssetResponse
 from app.schemas.cargo import CargoCreate, CargoUpdate, CargoStatusUpdate, CargoResponse
+from app.schemas.cargo_event import (
+    CargoScanRequest,
+    CargoEventCreate,
+    CargoEventResponse,
+    CargoScanResponse,
+    CargoTimelineResponse,
+)
 
 __all__ = [
     "UserRegister",
@@ -27,4 +34,9 @@ __all__ = [
     "CargoUpdate",
     "CargoStatusUpdate",
     "CargoResponse",
+    "CargoScanRequest",
+    "CargoEventCreate",
+    "CargoEventResponse",
+    "CargoScanResponse",
+    "CargoTimelineResponse",
 ]

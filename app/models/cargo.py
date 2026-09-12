@@ -48,3 +48,6 @@ class Cargo(Base):
     # Unidirectional relationships to Station (does not modify Station model)
     origin_station = relationship("Station", foreign_keys=[origin_station_id])
     destination_station = relationship("Station", foreign_keys=[destination_station_id])
+
+    # Cascade relationship to CargoEvent
+    events = relationship("CargoEvent", back_populates="cargo", cascade="all, delete-orphan", order_by="CargoEvent.timestamp.asc()")

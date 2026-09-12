@@ -4,6 +4,7 @@ from app.models.personnel import Personnel
 from app.models.inventory import Inventory
 from app.models.asset import Asset
 from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
+from app.models.cargo_event import CargoEvent, CargoEventType
 
 __all__ = [
     "User",
@@ -16,4 +17,6 @@ __all__ = [
     "CargoCategory",
     "CargoPriority",
     "CargoStatus",
+    "CargoEvent",
+    "CargoEventType",
 ]

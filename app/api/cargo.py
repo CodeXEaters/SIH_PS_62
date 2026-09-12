@@ -11,7 +11,13 @@ from app.schemas.cargo import (
     CargoStatusUpdate,
     CargoResponse,
 )
+from app.schemas.cargo_event import (
+    CargoScanRequest,
+    CargoScanResponse,
+    CargoTimelineResponse,
+)
 from app.services.cargo_service import CargoService
+from app.services.cargo_event_service import CargoEventService
 from app.core.security import get_current_user, require_roles
 
 router = APIRouter()
@@ -78,3 +84,24 @@ def patch_cargo_status(
 ):
     """Advance cargo package along the logistics lifecycle with state validation."""
     return CargoService.update_cargo_status(db=db, cargo_id=id, status_in=status_in)
+
+
+@router.post("/{id}/scan", response_model=CargoScanResponse)
+def scan_cargo(
+    id: int,
+    scan_in: CargoScanRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OPERATIONS, UserRole.LOGISTICS, UserRole.FIELD_TEAM)),
+):
+    """Scan cargo package via QR payload, record chain of custody, and update location/status."""
+    return CargoEventService.scan_cargo(db=db, cargo_id=id, scan_in=scan_in, current_user=current_user)
+
+
+@router.get("/{id}/timeline", response_model=CargoTimelineResponse)
+def get_cargo_timeline(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve full chronological chain-of-custody event timeline for a cargo package."""
+    return CargoEventService.get_cargo_timeline(db=db, cargo_id=id)
