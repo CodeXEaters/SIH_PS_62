@@ -24,7 +24,9 @@ import { Expedition } from "@/types";
 
 export default function ExpeditionOverviewPage() {
   const [exp, setExp] = useState<Expedition>(mockExpedition);
+  // null = loading, number = loaded, -1 = error/unavailable
   const [assetsCount, setAssetsCount] = useState<number | null>(null);
+  const [operationalAssetsCount, setOperationalAssetsCount] = useState<number | null>(null);
 
   useEffect(() => {
     expeditionService.getActiveExpedition().then((data) => {
@@ -32,8 +34,19 @@ export default function ExpeditionOverviewPage() {
     }).catch(console.warn);
 
     assetsService.getAllAssets().then((assets) => {
-      if (assets && assets.length > 0) setAssetsCount(assets.length);
-    }).catch(console.warn);
+      if (assets && assets.length > 0) {
+        setAssetsCount(assets.length);
+        // Count operational assets matching the same filter as Dashboard
+        const operational = assets.filter((a) => {
+          const cond = String(a.condition ?? (a as any).status ?? "").toUpperCase().trim();
+          return cond === "OPERATIONAL";
+        }).length;
+        setOperationalAssetsCount(operational);
+      }
+    }).catch(() => {
+      setAssetsCount(-1);
+      setOperationalAssetsCount(-1);
+    });
   }, []);
 
   const flowNodes = [
@@ -163,7 +176,11 @@ export default function ExpeditionOverviewPage() {
               <Truck className="w-4 h-4 text-amber-400" />
             </div>
             <div className="text-2xl font-extrabold font-mono text-white group-hover:text-amber-300">
-              {assetsCount !== null ? assetsCount : "——"}
+              {operationalAssetsCount === null
+                ? "..."
+                : operationalAssetsCount < 0
+                ? "——"
+                : operationalAssetsCount}
             </div>
             <p className="text-[11px] text-polar-muted mt-1">Operational Fleet Inventory</p>
           </Link>

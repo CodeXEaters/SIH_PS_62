@@ -69,20 +69,22 @@ export default function DashboardPage() {
         setAttentionItems(intelRes.value);
       }
 
-      // 1. Active Personnel (Real backend statuses: ACTIVE and ON_MISSION)
+      // 1. Active Personnel
+      // Services map raw DB "ACTIVE" → "Active", "ON_MISSION" → "On Mission".
+      // toUpperCase() handles both the mapped display strings and raw DB values.
       let pVal = "——";
       let pSub = "Unavailable";
       if (personnelRes.status === "fulfilled" && personnelRes.value) {
         const pList = personnelRes.value;
         const activeCount = pList.filter((p) => {
-          const s = String(p.status).toUpperCase();
+          const s = String(p.status ?? "").toUpperCase().trim();
           return s === "ACTIVE" || s === "ON MISSION" || s === "ON_MISSION";
         }).length;
         pVal = String(activeCount);
         pSub = `${pList.length} Total Roster`;
       }
 
-      // 2. Tracked Cargo (Total units in manifest)
+      // 2. Tracked Cargo (total manifest items)
       let cVal = "——";
       let cSub = "Unavailable";
       if (cargoRes.status === "fulfilled" && cargoRes.value) {
@@ -90,33 +92,40 @@ export default function DashboardPage() {
         cSub = "In Transit & Staged";
       }
 
-      // 3. Operational Assets (Real backend status: OPERATIONAL)
+      // 3. Operational Assets
+      // Services map raw DB "OPERATIONAL" → condition: "Operational".
+      // toUpperCase() handles both the mapped display string and the raw DB value.
       let aVal = "——";
       let aSub = "Unavailable";
       if (assetsRes.status === "fulfilled" && assetsRes.value) {
         const aList = assetsRes.value;
         const opCount = aList.filter((a) => {
-          const cond = String(a.condition || (a as any).status || "").toUpperCase();
+          const cond = String(a.condition ?? (a as any).status ?? "").toUpperCase().trim();
           return cond === "OPERATIONAL";
         }).length;
         aVal = String(opCount);
         aSub = `${aList.length} Registered Fleet`;
       }
 
-      // 4. Expedition Readiness (Real backend percentage from reports service)
+      // 4. Expedition Readiness (from reports/summary endpoint)
       let invVal = "——";
       let invSub = "Life Support & Reserves";
-      if (reportsRes.status === "fulfilled" && reportsRes.value && typeof reportsRes.value.expeditionReadinessPct === "number") {
+      if (
+        reportsRes.status === "fulfilled" &&
+        reportsRes.value &&
+        typeof reportsRes.value.expeditionReadinessPct === "number"
+      ) {
         invVal = `${Math.round(reportsRes.value.expeditionReadinessPct)}%`;
       }
 
-      // 5. Active Missions (Real backend status: ACTIVE)
+      // 5. Active Missions
+      // Services map raw DB "ACTIVE" → "Active". toUpperCase() handles both forms.
       let mVal = "——";
       let mSub = "Unavailable";
       if (missionsRes.status === "fulfilled" && missionsRes.value) {
         const mList = missionsRes.value;
         const activeCount = mList.filter((m) => {
-          const s = String(m.status).toUpperCase();
+          const s = String(m.status ?? "").toUpperCase().trim();
           return s === "ACTIVE";
         }).length;
         mVal = String(activeCount).padStart(2, "0");
