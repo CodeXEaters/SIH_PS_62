@@ -21,6 +21,20 @@ export class ApiError extends Error {
   }
 }
 
+function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    // Check if expired or within 30 seconds of expiry
+    return Date.now() >= (payload.exp * 1000) - 30000;
+  } catch {
+    return true;
+  }
+}
+
 export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
@@ -70,9 +84,12 @@ export class ApiClient {
    * concurrently, causing a race where most proceeded without a token (→ 401).
    */
   private async ensureToken(): Promise<string | null> {
-    // Fast path: token already in memory or localStorage
+    // Fast path: token already in memory or localStorage AND not expired
     const existing = this.getToken();
-    if (existing) return existing;
+    if (existing && !isTokenExpired(existing)) return existing;
+    if (existing && isTokenExpired(existing)) {
+      this.clearToken();
+    }
 
     // If a login is already in-flight, wait for it rather than starting a new one
     if (this.pendingLogin) return this.pendingLogin;
@@ -150,6 +167,22 @@ export class ApiClient {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      // If 401 Unauthorized, token might be expired/invalidated on backend restart.
+      // Automatically clear token, acquire fresh one, and retry once.
+      if (response.status === 401 && !(options as any)._isRetry && !endpoint.includes("/auth/")) {
+        this.clearToken();
+        const freshToken = await this.ensureToken();
+        const retryHeaders: Record<string, string> = {
+          ...headers,
+          ...(freshToken ? { Authorization: `Bearer ${freshToken}` } : {}),
+        };
+        return this.request<T>(endpoint, {
+          ...options,
+          headers: retryHeaders,
+          _isRetry: true,
+        } as any);
+      }
+
       let errData: any = null;
       try {
         errData = await response.json();

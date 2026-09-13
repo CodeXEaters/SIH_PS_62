@@ -81,20 +81,18 @@ export default function DashboardPage() {
           return s === "ACTIVE" || s === "ON MISSION" || s === "ON_MISSION";
         }).length;
         pVal = String(activeCount);
-        pSub = `${pList.length} Total Roster`;
+        pSub = "Across expedition operations";
       }
 
-      // 2. Tracked Cargo (total manifest items)
+      // 2. Tracked Cargo (total manifest items tracked by the system)
       let cVal = "——";
       let cSub = "Unavailable";
       if (cargoRes.status === "fulfilled" && cargoRes.value) {
         cVal = String(cargoRes.value.length);
-        cSub = "In Transit & Staged";
+        cSub = "Manifest items tracked";
       }
 
-      // 3. Operational Assets
-      // Services map raw DB "OPERATIONAL" → condition: "Operational".
-      // toUpperCase() handles both the mapped display string and the raw DB value.
+      // 3. Operational Assets (fleet in operational status)
       let aVal = "——";
       let aSub = "Unavailable";
       if (assetsRes.status === "fulfilled" && assetsRes.value) {
@@ -104,7 +102,7 @@ export default function DashboardPage() {
           return cond === "OPERATIONAL";
         }).length;
         aVal = String(opCount);
-        aSub = `${aList.length} Registered Fleet`;
+        aSub = "Operational fleet";
       }
 
       // 4. Expedition Readiness (from reports/summary endpoint)
@@ -118,8 +116,7 @@ export default function DashboardPage() {
         invVal = `${Math.round(reportsRes.value.expeditionReadinessPct)}%`;
       }
 
-      // 5. Active Missions
-      // Services map raw DB "ACTIVE" → "Active". toUpperCase() handles both forms.
+      // 5. Active Missions (active missions/traverses across operations)
       let mVal = "——";
       let mSub = "Unavailable";
       if (missionsRes.status === "fulfilled" && missionsRes.value) {
@@ -129,7 +126,7 @@ export default function DashboardPage() {
           return s === "ACTIVE";
         }).length;
         mVal = String(activeCount).padStart(2, "0");
-        mSub = `${mList.length} Total Registered`;
+        mSub = "Across active expedition operations";
       }
 
       setKpiData({
