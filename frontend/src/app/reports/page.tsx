@@ -32,8 +32,17 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { reportsService, ReportSummary, ReportChartsResponse } from "@/services/reports";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function ReportsPage() {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const gridStroke = isLight ? "#E2E8F0" : "#242424";
+  const axisStroke = isLight ? "#475569" : "#A7B9CB";
+  const tooltipBg = isLight ? "#FFFFFF" : "#0A0A0A";
+  const tooltipBorder = isLight ? "#E2E8F0" : "#242424";
+  const tooltipColor = isLight ? "#0F172A" : "#F5F3EE";
+
   const [activeReportTab, setActiveReportTab] = useState<"cargo" | "fuel" | "assets">("cargo");
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [charts, setCharts] = useState<ReportChartsResponse | null>(null);
@@ -187,19 +196,20 @@ export default function ReportsPage() {
                 <div className="h-72 w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyCargoData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#16314F" />
-                      <XAxis dataKey="month" stroke="#A7B9CB" fontSize={11} />
-                      <YAxis stroke="#A7B9CB" fontSize={11} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                      <XAxis dataKey="month" stroke={axisStroke} fontSize={11} />
+                      <YAxis stroke={axisStroke} fontSize={11} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#08111F",
-                          borderColor: "#16314F",
+                          backgroundColor: tooltipBg,
+                          borderColor: tooltipBorder,
+                          color: tooltipColor,
                           borderRadius: "4px",
                           fontSize: "12px",
                         }}
                       />
-                      <Bar dataKey="dispatched" name="Tonnes Manifested" fill="#4A6572" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="received" name="Tonnes Received" fill="#C8A96B" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="dispatched" name="Tonnes Manifested" fill={isLight ? "#94A3B8" : "#4A6572"} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="received" name="Tonnes Received" fill={isLight ? "#0284C7" : "#C8A96B"} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -217,18 +227,19 @@ export default function ReportsPage() {
                 <div className="h-72 w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={fuelConsumptionData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#16314F" />
-                      <XAxis dataKey="week" stroke="#A7B9CB" fontSize={11} />
-                      <YAxis stroke="#A7B9CB" fontSize={11} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                      <XAxis dataKey="week" stroke={axisStroke} fontSize={11} />
+                      <YAxis stroke={axisStroke} fontSize={11} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#08111F",
-                          borderColor: "#16314F",
+                          backgroundColor: tooltipBg,
+                          borderColor: tooltipBorder,
+                          color: tooltipColor,
                           borderRadius: "4px",
                           fontSize: "12px",
                         }}
                       />
-                      <Line type="monotone" dataKey="maitri" name="Maitri (L)" stroke="#C8C8C5" strokeWidth={2} />
+                      <Line type="monotone" dataKey="maitri" name="Maitri (L)" stroke={isLight ? "#0284C7" : "#C8C8C5"} strokeWidth={2} />
                       <Line type="monotone" dataKey="bharati" name="Bharati (L)" stroke="#E45B5B" strokeWidth={2.5} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -249,18 +260,19 @@ export default function ReportsPage() {
                 <div className="h-72 w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={assetHealthData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#16314F" />
-                      <XAxis type="number" domain={[50, 100]} stroke="#A7B9CB" fontSize={11} />
-                      <YAxis type="category" dataKey="name" stroke="#A7B9CB" fontSize={11} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                      <XAxis type="number" domain={[50, 100]} stroke={axisStroke} fontSize={11} />
+                      <YAxis type="category" dataKey="name" stroke={axisStroke} fontSize={11} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#08111F",
-                          borderColor: "#16314F",
+                          backgroundColor: tooltipBg,
+                          borderColor: tooltipBorder,
+                          color: tooltipColor,
                           borderRadius: "4px",
                           fontSize: "12px",
                         }}
                       />
-                      <Bar dataKey="score" name="Health Score %" fill="#43C99A" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="score" name="Health Score %" fill="#10B981" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

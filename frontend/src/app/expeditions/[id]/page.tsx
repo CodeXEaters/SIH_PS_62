@@ -19,14 +19,20 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
 import { mockExpedition } from "@/data/mock";
 import { expeditionService } from "@/services/expedition";
+import { assetsService } from "@/services/assets";
 import { Expedition } from "@/types";
 
 export default function ExpeditionOverviewPage() {
   const [exp, setExp] = useState<Expedition>(mockExpedition);
+  const [assetsCount, setAssetsCount] = useState<number | null>(null);
 
   useEffect(() => {
     expeditionService.getActiveExpedition().then((data) => {
       if (data) setExp(data);
+    }).catch(console.warn);
+
+    assetsService.getAllAssets().then((assets) => {
+      if (assets && assets.length > 0) setAssetsCount(assets.length);
     }).catch(console.warn);
   }, []);
 
@@ -37,6 +43,11 @@ export default function ExpeditionOverviewPage() {
     { name: "Antarctica (Fast Ice)", type: "Offshore Mooring", status: "ACTIVE", date: "08 Jan 2027" },
     { name: "Bharati / Maitri", type: "Station Bases", status: "PENDING", date: "Scheduled" },
   ];
+
+  const activeNodeIndex = flowNodes.findIndex((n) => n.status === "ACTIVE");
+  const activeStageText = activeNodeIndex !== -1
+    ? `Stage ${activeNodeIndex + 1} of ${flowNodes.length} Active`
+    : "All Stages Completed";
 
   return (
     <AppShell>
@@ -85,7 +96,7 @@ export default function ExpeditionOverviewPage() {
               OPERATIONAL FLOW &bull; INTERCONTINENTAL SUPPLY CHAIN
             </h3>
             <span className="text-[10px] font-mono text-polar-cyan">
-              Stage 4 of 5 Active
+              {activeStageText}
             </span>
           </div>
 
@@ -152,9 +163,9 @@ export default function ExpeditionOverviewPage() {
               <Truck className="w-4 h-4 text-amber-400" />
             </div>
             <div className="text-2xl font-extrabold font-mono text-white group-hover:text-amber-300">
-              326
+              {assetsCount !== null ? assetsCount : "——"}
             </div>
-            <p className="text-[11px] text-polar-muted mt-1">98% Operational Uptime</p>
+            <p className="text-[11px] text-polar-muted mt-1">Operational Fleet Inventory</p>
           </Link>
 
           <Link

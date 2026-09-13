@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { seedInitialOfflineData } from "@/lib/offline/sync/syncEngine";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { GlobalSearchModal } from "./GlobalSearchModal";
 
 export const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -24,9 +25,12 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({ children })
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <GlobalSearchModal />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <GlobalSearchModal />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
+
