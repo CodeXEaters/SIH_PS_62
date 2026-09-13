@@ -9,6 +9,32 @@ export interface ReportSummary {
   fuelEfficiencyRate: string;
 }
 
+export interface MonthlyCargoChartItem {
+  month: string;
+  dispatched: number;
+  received: number;
+}
+
+export interface FuelConsumptionChartItem {
+  week: string;
+  maitri: number;
+  bharati: number;
+}
+
+export interface AssetHealthChartItem {
+  name: string;
+  score: number;
+  total: number;
+  operational: number;
+}
+
+export interface ReportChartsResponse {
+  monthlyCargoData: MonthlyCargoChartItem[];
+  fuelConsumptionData: FuelConsumptionChartItem[];
+  assetHealthData: AssetHealthChartItem[];
+  totalDeliveredTonnes: number;
+}
+
 export const reportsService = {
   async getPerformanceSummary(): Promise<ReportSummary> {
     try {
@@ -36,6 +62,28 @@ export const reportsService = {
           totalMissionsCompleted: 0,
           activeIncidentsCount: 0,
           fuelEfficiencyRate: "N/A (Offline)",
+        };
+      }
+      throw err;
+    }
+  },
+
+  async getReportCharts(): Promise<ReportChartsResponse> {
+    try {
+      const data = await apiClient.get<any>("/reports/charts");
+      return {
+        monthlyCargoData: data.monthlyCargoData ?? [],
+        fuelConsumptionData: data.fuelConsumptionData ?? [],
+        assetHealthData: data.assetHealthData ?? [],
+        totalDeliveredTonnes: data.totalDeliveredTonnes ?? 0,
+      };
+    } catch (err: any) {
+      if (err?.isOffline) {
+        return {
+          monthlyCargoData: [],
+          fuelConsumptionData: [],
+          assetHealthData: [],
+          totalDeliveredTonnes: 0,
         };
       }
       throw err;

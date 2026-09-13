@@ -3,7 +3,7 @@ import { ChainOfCustodyRecord } from "@/types";
 export const mockChainOfCustody: ChainOfCustodyRecord[] = [
   {
     id: "COC-00109",
-    cargoId: "CRG-ANT-004821",
+    cargoId: "CRG-2026-001",
     timestamp: "02 Nov 2026, 09:30 IST",
     actorName: "Dr. K. S. Raman",
     actorRole: "Principal Instrument Scientist, IIG",
@@ -15,7 +15,7 @@ export const mockChainOfCustody: ChainOfCustodyRecord[] = [
   },
   {
     id: "COC-00110",
-    cargoId: "CRG-ANT-004821",
+    cargoId: "CRG-2026-001",
     timestamp: "12 Nov 2026, 16:45 IST",
     actorName: "Rajiv Malhotra",
     actorRole: "Logistics Officer, NCPOR",
@@ -27,7 +27,7 @@ export const mockChainOfCustody: ChainOfCustodyRecord[] = [
   },
   {
     id: "COC-00111",
-    cargoId: "CRG-ANT-004821",
+    cargoId: "CRG-2026-001",
     timestamp: "01 Dec 2026, 11:20 SAST",
     actorName: "Capt. Jacques Van Der Merwe",
     actorRole: "South African Port Agent / Marine Surveyor",
@@ -39,7 +39,7 @@ export const mockChainOfCustody: ChainOfCustodyRecord[] = [
   },
   {
     id: "COC-00112",
-    cargoId: "CRG-ANT-004821",
+    cargoId: "CRG-2026-001",
     timestamp: "04 Dec 2026, 18:00 SAST",
     actorName: "Lt. Col. Vikramaditya Rathore",
     actorRole: "Expedition Logistics Commander",
@@ -51,7 +51,7 @@ export const mockChainOfCustody: ChainOfCustodyRecord[] = [
   },
   {
     id: "COC-00113",
-    cargoId: "CRG-ANT-004821",
+    cargoId: "CRG-2026-001",
     timestamp: "08 Jan 2027, 06:00 UTC",
     actorName: "Chief Officer Dmitry Morozov",
     actorRole: "Vessel Cargo Master, MV Vasiliy Golovnin",

@@ -66,3 +66,19 @@ class Emergency(Base):
     personnel = relationship("Personnel", foreign_keys=[personnel_id])
     asset = relationship("Asset", foreign_keys=[asset_id])
     reporter = relationship("User", foreign_keys=[reported_by])
+
+    @property
+    def station_name(self):
+        return self.station.name if self.station else None
+
+    @property
+    def personnel_name(self):
+        return self.personnel.name if self.personnel else None
+
+    @property
+    def asset_name(self):
+        return self.asset.asset_name if self.asset else None
+
+    @property
+    def mission_name(self):
+        return self.mission.mission_name if self.mission else None

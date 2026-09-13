@@ -13,6 +13,18 @@ export const intelligenceService = {
     }
   },
 
+  async predictCargoDelay(cargoId: number | string) {
+    const numId = typeof cargoId === "number" ? cargoId : parseInt(String(cargoId).replace(/\D/g, ""), 10) || 1;
+    try {
+      return await apiClient.get<any>(`/intelligence/cargo/${numId}/delay-prediction`);
+    } catch (err: any) {
+      if (err?.isOffline) {
+        return null;
+      }
+      throw err;
+    }
+  },
+
   async runWhatIfSimulation(input: WhatIfScenarioInput): Promise<WhatIfScenarioResult> {
     try {
       const res = await apiClient.post<any>("/intelligence/what-if", input);

@@ -238,6 +238,7 @@ export interface EmergencyIncident {
   type: "MEDICAL" | "TRAVERSE_BLIZZARD" | "GENERATOR_FAILURE" | "COMMUNICATION_BLACKOUT";
   severity: "CRITICAL";
   locationName: string;
+  stationName?: string;
   coordinates: GeoCoordinate;
   affectedPersonnel: { id: string; name: string; role: string; vitals: string }[];
   weatherConditions: {

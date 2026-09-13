@@ -34,3 +34,17 @@ class InventoryResponse(InventoryBase):
     last_updated: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class InventoryTransferResponse(BaseModel):
+    id: str
+    item: str
+    quantity: str
+    from_location: str
+    to_location: str
+    status: str
+    timestamp: str
+    officer: str
+    notes: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)

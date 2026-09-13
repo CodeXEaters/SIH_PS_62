@@ -135,19 +135,19 @@ export default function EmergencyCommandPage() {
               <div className="absolute w-28 h-28 rounded-full border border-dashed border-[#B85C5C]/40" />
               <div className="absolute w-12 h-12 rounded-full border border-[#242424]" />
 
-              {/* Target Marker: Team Alpha */}
+              {/* Target Marker: Casualty */}
               <div className="absolute top-[38%] left-[45%] flex flex-col items-center">
                 <span className="w-3 h-3 rounded-full bg-[#B85C5C] ring-4 ring-[#B85C5C]/30 animate-pulse" />
                 <span className="mt-1 px-1.5 py-0.2 rounded bg-[#0A0A0A] border border-[#B85C5C]/50 text-[8px] font-mono font-bold text-[#F5F3EE]">
-                  {incident?.affectedPersonnel?.[0]?.name ? incident.affectedPersonnel[0].name.toUpperCase() : "TEAM ALPHA"}
+                  {incident?.affectedPersonnel?.[0]?.name ? incident.affectedPersonnel[0].name.toUpperCase() : "CASUALTY SOS"}
                 </span>
               </div>
 
-              {/* Base Marker: Bharati Station */}
+              {/* Base Marker: Station */}
               <div className="absolute bottom-[22%] right-[25%] flex flex-col items-center">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#C8A96B]" />
                 <span className="mt-1 px-1.5 py-0.2 rounded bg-[#0A0A0A] border border-[#242424] text-[8px] font-mono text-[#C8A96B]">
-                  BHARATI
+                  {incident?.stationName ? incident.stationName.toUpperCase() : "BHARATI"}
                 </span>
               </div>
 
@@ -177,10 +177,10 @@ export default function EmergencyCommandPage() {
               <div className="space-y-1">
                 <span className="text-[10px] text-[#6F6D68] uppercase block">PERSONNEL AFFECTED</span>
                 <span className="text-2xl font-bold text-[#F5F3EE] block">
-                  {incident?.affectedPersonnel?.length ? String(incident.affectedPersonnel.length).padStart(2, "0") : "04"}
+                  {incident?.affectedPersonnel?.length ? String(incident.affectedPersonnel.length).padStart(2, "0") : "01"}
                 </span>
                 <span className="text-[11px] text-[#A5A29C] block">
-                  {incident?.affectedPersonnel?.map((p) => p.name).join(", ") || "Dr. Mukherjee, T. Norbu, K. Rao, S. Patil"}
+                  {incident?.affectedPersonnel?.map((p) => p.name).join(", ") || "Field Specialist"}
                 </span>
               </div>
 
@@ -188,7 +188,7 @@ export default function EmergencyCommandPage() {
                 <div>
                   <span className="text-[10px] text-[#6F6D68] uppercase block">DISTANCE</span>
                   <span className="text-lg font-bold text-[#F5F3EE] mt-0.5 block">87 KM</span>
-                  <span className="text-[10px] text-[#A5A29C]">From Base Sector</span>
+                  <span className="text-[10px] text-[#A5A29C]">From {incident?.stationName || "Bharati"}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#6F6D68] uppercase block">STATUS</span>
@@ -201,10 +201,12 @@ export default function EmergencyCommandPage() {
 
               <div className="pt-2 border-t border-[#242424]">
                 <span className="text-[10px] text-[#6F6D68] uppercase block">TERRAIN CONTEXT</span>
-                <span className="text-sm font-bold text-[#C49A55] mt-0.5 block">
-                  {incident?.locationName || "CREVASSE ZONE &bull; STRONG WINDS"}
+                <span className="text-sm font-bold text-[#C49A55] mt-0.5 block truncate">
+                  {incident?.locationName || "CREVASSE ZONE • STRONG WINDS"}
                 </span>
-                <span className="text-[10px] text-[#A5A29C] mt-0.5 block">-24°C Windchill &bull; Blowing Snow</span>
+                <span className="text-[10px] text-[#A5A29C] mt-0.5 block">
+                  {incident?.weatherConditions ? `${incident.weatherConditions.temperatureC}°C • ${incident.weatherConditions.windSpeedKts} kts Wind` : "-24°C Windchill • Blowing Snow"}
+                </span>
               </div>
             </div>
           </div>
@@ -224,9 +226,11 @@ export default function EmergencyCommandPage() {
               <div>
                 <span className="text-[10px] text-[#6F6D68] uppercase block">NEAREST RESPONSE UNIT</span>
                 <span className="text-sm font-bold text-[#F5F3EE] mt-1 block">
-                  {incident?.recommendedResponse?.primaryAssetName || "Team Bravo (Search & Rescue)"}
+                  {incident?.recommendedResponse?.primaryAssetName || "PistenBully Polar Rescue Unit"}
                 </span>
-                <span className="text-[10px] text-[#A5A29C] block">Stationed at Forward Support Depot</span>
+                <span className="text-[10px] text-[#A5A29C] block">
+                  Stationed at {incident?.stationName || "Bharati Station"} Depot
+                </span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#242424]">

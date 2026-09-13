@@ -20,6 +20,9 @@ import { Badge, Button } from "@/components/ui";
 import { mockAttentionItems, mockStations, mockCargoItems } from "@/data/mock";
 import { stationsService } from "@/services/stations";
 import { cargoService } from "@/services/cargo";
+import { personnelService } from "@/services/personnel";
+import { assetsService } from "@/services/assets";
+import { missionsService } from "@/services/missions";
 import { intelligenceService } from "@/services/intelligence";
 import { reportsService } from "@/services/reports";
 import { Station, CargoItem, AttentionItem } from "@/types";
@@ -29,11 +32,11 @@ export default function DashboardPage() {
   const [cargoItems, setCargoItems] = useState<CargoItem[]>(mockCargoItems);
   const [attentionItems, setAttentionItems] = useState<AttentionItem[]>(mockAttentionItems);
   const [kpiData, setKpiData] = useState({
-    personnel: "124",
-    cargo: "1,842",
-    assets: "326",
-    inventory: "92%",
-    missions: "08",
+    personnel: "12",
+    cargo: "5",
+    assets: "10",
+    inventory: "94%",
+    missions: "04",
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,9 +46,12 @@ export default function DashboardPage() {
     Promise.allSettled([
       stationsService.getAllStations(),
       cargoService.getAllCargo(),
+      personnelService.getAllPersonnel(),
+      assetsService.getAllAssets(),
+      missionsService.getAllMissions(),
       intelligenceService.getAttentionItems(),
       reportsService.getPerformanceSummary(),
-    ]).then(([stationsRes, cargoRes, intelRes, reportsRes]) => {
+    ]).then(([stationsRes, cargoRes, personnelRes, assetsRes, missionsRes, intelRes, reportsRes]) => {
       if (!isMounted) return;
 
       if (stationsRes.status === "fulfilled" && stationsRes.value && stationsRes.value.length > 0) {
@@ -57,16 +63,23 @@ export default function DashboardPage() {
       if (intelRes.status === "fulfilled" && intelRes.value && intelRes.value.length > 0) {
         setAttentionItems(intelRes.value);
       }
-      if (reportsRes.status === "fulfilled" && reportsRes.value) {
-        const r = reportsRes.value;
-        setKpiData({
-          personnel: "124",
-          cargo: r.cargoTonnageTracked ? `${Math.round(r.cargoTonnageTracked * 10)}` : "1,842",
-          assets: "326",
-          inventory: r.expeditionReadinessPct ? `${Math.round(r.expeditionReadinessPct)}%` : "92%",
-          missions: r.totalMissionsCompleted ? String(r.totalMissionsCompleted).padStart(2, "0") : "08",
-        });
-      }
+
+      const pCount = personnelRes.status === "fulfilled" && personnelRes.value ? String(personnelRes.value.length) : "12";
+      const cCount = cargoRes.status === "fulfilled" && cargoRes.value ? String(cargoRes.value.length) : "5";
+      const aCount = assetsRes.status === "fulfilled" && assetsRes.value ? String(assetsRes.value.length) : "10";
+      const mCount = missionsRes.status === "fulfilled" && missionsRes.value ? String(missionsRes.value.length).padStart(2, "0") : "04";
+      const invPct = reportsRes.status === "fulfilled" && reportsRes.value && reportsRes.value.expeditionReadinessPct
+        ? `${Math.round(reportsRes.value.expeditionReadinessPct)}%`
+        : "94%";
+
+      setKpiData({
+        personnel: pCount,
+        cargo: cCount,
+        assets: aCount,
+        inventory: invPct,
+        missions: mCount,
+      });
+
       setIsLoading(false);
     });
 
@@ -190,94 +203,58 @@ export default function DashboardPage() {
               </h2>
             </div>
             <span className="text-[11px] font-mono text-[#A5A29C]">
-              3 Items Requiring Action
+              {attentionItems.length} Items Requiring Action
             </span>
           </div>
 
           <div className="divide-y divide-[#242424]">
-            {/* 01 CARGO DELAY PREDICTED */}
-            <div className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors">
-              <div className="space-y-1.5 max-w-2xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold text-[#C49A55]">01</span>
-                  <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
-                    CARGO DELAY PREDICTED
-                  </span>
-                  <span className="text-[10px] font-mono text-[#6F6D68]">&bull; Cape Town → Bharati</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#161208] text-[#C49A55] border border-[#C49A55]/30">
-                    +18h
-                  </span>
+            {attentionItems.slice(0, 4).map((item, idx) => {
+              const numStr = String(idx + 1).padStart(2, "0");
+              const isCrit = item.severity === "CRITICAL";
+              const isHigh = item.severity === "HIGH";
+              const isLow = item.severity === "LOW";
+              const colorClass = isCrit || isHigh ? "text-[#B85C5C]" : isLow ? "text-[#7FAF91]" : "text-[#C49A55]";
+              const badgeBorderClass = isCrit || isHigh
+                ? "bg-[#140808] text-[#B85C5C] border-[#B85C5C]/30"
+                : isLow
+                ? "bg-[#0A140D] text-[#7FAF91] border-[#7FAF91]/30"
+                : "bg-[#161208] text-[#C49A55] border-[#C49A55]/30";
+              const buttonVariant = isCrit ? "danger" : "secondary";
+
+              return (
+                <div
+                  key={item.id || idx}
+                  className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors"
+                >
+                  <div className="space-y-1.5 max-w-2xl">
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-mono font-bold ${colorClass}`}>{numStr}</span>
+                      <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
+                        {item.title}
+                      </span>
+                      {item.location && (
+                        <span className="text-[10px] font-mono text-[#6F6D68]">&bull; {item.location}</span>
+                      )}
+                      <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border uppercase ${badgeBorderClass}`}>
+                        {item.severity}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#A5A29C] leading-relaxed">
+                      {item.reason}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Link href={item.actionUrl || "/dashboard"}>
+                      <Button variant={buttonVariant} size="sm" className="font-mono text-xs">
+                        <span>{item.actionLabel || "REVIEW"}</span>
+                        <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-                <p className="text-xs text-[#A5A29C] leading-relaxed">
-                  Weather conditions may affect the current transport window. Katabatic wind gusts exceeding 42 kts expected at Prydz Bay.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <Link href="/cargo/CRG-ANT-004821">
-                  <Button variant="secondary" size="sm" className="font-mono text-xs">
-                    <span>REVIEW</span>
-                    <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* 02 INVENTORY SHORTAGE */}
-            <div className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors">
-              <div className="space-y-1.5 max-w-2xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold text-[#B85C5C]">02</span>
-                  <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
-                    INVENTORY SHORTAGE
-                  </span>
-                  <span className="text-[10px] font-mono text-[#6F6D68]">&bull; DIESEL BHARATI STATION</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#140808] text-[#B85C5C] border border-[#B85C5C]/30">
-                    6 DAYS REMAINING
-                  </span>
-                </div>
-                <p className="text-xs text-[#A5A29C] leading-relaxed">
-                  Daily consumption 180 L/day. Reserve buffer below standard 14-day safety threshold.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <Link href="/inventory/forecast">
-                  <Button variant="secondary" size="sm" className="font-mono text-xs">
-                    <span>VIEW FORECAST</span>
-                    <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* 03 TELEMETRY ANOMALY */}
-            <div className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors">
-              <div className="space-y-1.5 max-w-2xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono font-bold text-[#B85C5C]">03</span>
-                  <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
-                    TELEMETRY ANOMALY
-                  </span>
-                  <span className="text-[10px] font-mono text-[#6F6D68]">&bull; TEAM ALPHA</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#140808] text-[#B85C5C] border border-[#B85C5C]/30">
-                    NO SIGNAL 14 MINUTES
-                  </span>
-                </div>
-                <p className="text-xs text-[#A5A29C] leading-relaxed">
-                  No tracking update received. Last verified ping at -69.4°S 76.2°E during Larsemann ridge traverse.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                <Link href="/emergency">
-                  <Button variant="danger" size="sm" className="font-mono text-xs">
-                    <span>INVESTIGATE</span>
-                    <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
 

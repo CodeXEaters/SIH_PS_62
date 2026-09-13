@@ -101,7 +101,7 @@ export const GlobalSearchModal: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search cargo ID, personnel, assets, missions, stations... (e.g. CRG-ANT-004821)"
+            placeholder="Search cargo ID, personnel, assets, missions, stations... (e.g. CRG-2026-001)"
             className="w-full bg-transparent text-sm text-polar-snow placeholder:text-polar-muted focus:outline-none"
             autoFocus
           />

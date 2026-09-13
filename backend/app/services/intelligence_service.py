@@ -127,18 +127,32 @@ class IntelligenceService:
                     station_name = s.name
 
             category = "SYSTEM"
+            action_url = "/alerts"
+            action_label = "REVIEW ALERT"
             if "BATTERY" in a.alert_type.value or "SIGNAL" in a.alert_type.value:
                 category = "TELEMETRY"
+                action_url = "/operations/map"
+                action_label = "LOCATE UNIT"
             elif "INVENTORY" in a.alert_type.value:
                 category = "INVENTORY"
+                action_url = "/inventory/forecast"
+                action_label = "VIEW FORECAST"
             elif "WEATHER" in a.alert_type.value:
                 category = "WEATHER"
+                action_url = "/operations/map"
+                action_label = "VIEW WEATHER"
             elif "CARGO" in a.alert_type.value:
                 category = "CARGO"
+                action_url = f"/cargo/{a.entity_id}" if a.entity_id else "/cargo/CRG-2026-001"
+                action_label = "REVIEW CARGO"
             elif "MAINTENANCE" in a.alert_type.value:
                 category = "ASSET"
-            elif "EMERGENCY" in a.alert_type.value:
+                action_url = f"/assets/{a.entity_id}" if a.entity_id else "/assets"
+                action_label = "INSPECT ASSET"
+            elif "EMERGENCY" in a.alert_type.value or a.severity == AlertSeverity.CRITICAL:
                 category = "EMERGENCY"
+                action_url = "/emergency"
+                action_label = "INVESTIGATE"
 
             attention_items.append(
                 AttentionItem(
@@ -149,8 +163,8 @@ class IntelligenceService:
                     reason=a.message,
                     location=station_name,
                     timestamp=a.created_at,
-                    action_label="Review Alert",
-                    action_url=f"/alerts/{a.id}",
+                    action_label=action_label,
+                    action_url=action_url,
                     entity_id=str(a.entity_id) if a.entity_id else None,
                 )
             )

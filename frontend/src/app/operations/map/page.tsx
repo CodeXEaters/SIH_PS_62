@@ -233,23 +233,23 @@ export default function OperationsMapPage() {
                 </button>
               )}
 
-              {/* 3. Chartered Icebreaker: MV Vasiliy Golovnin - Silver Ship */}
+              {/* 3. Expedition Vessel: MV Vasundhara - Silver Ship */}
               {layers.vessels && (
                 <button
                   onClick={() => {
-                    const entity = trackingEntities.find(e => e.type === "VESSEL" || e.name.toLowerCase().includes("vasiliy") || e.name.toLowerCase().includes("golovnin")) || mockTrackingEntities[2];
+                    const entity = trackingEntities.find(e => e.type === "VESSEL" || e.name.toLowerCase().includes("vasundhara") || e.name.toLowerCase().includes("vessel")) || mockTrackingEntities[2];
                     setSelectedEntity(entity);
                     setDrawerOpen(true);
                   }}
                   className="absolute top-[30%] left-[58%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
-                  title="Charter Vessel"
+                  title="Expedition Vessel"
                 >
                   <div className="flex flex-col items-center">
                     <div className="w-6 h-6 rounded bg-[#101010] border border-[#C8A96B] flex items-center justify-center">
                       <Ship className="w-3.5 h-3.5 text-[#C8A96B]" />
                     </div>
                     <span className="mt-1 px-1.5 py-0.2 rounded bg-[#0A0A0A] border border-[#242424] text-[8px] font-mono text-[#C8C8C5]">
-                      VASILIY GOLOVNIN
+                      VASUNDHARA
                     </span>
                   </div>
                 </button>
@@ -273,7 +273,7 @@ export default function OperationsMapPage() {
                 </div>
               </button>
 
-              {/* 5. Cargo Lot: CRG-ANT-004821 - Gray Marker */}
+              {/* 5. Cargo Lot: CRG-2026-001 - Gray Marker */}
               {layers.cargo && (
                 <button
                   onClick={() => {
@@ -287,7 +287,7 @@ export default function OperationsMapPage() {
                   <div className="flex flex-col items-center">
                     <span className="w-2 h-2 bg-[#A5A29C] rounded-xs" />
                     <span className="mt-1 px-1 py-0.2 rounded bg-[#0A0A0A] border border-[#242424] text-[8px] font-mono text-[#A5A29C]">
-                      CRG-004821
+                      CRG-2026-001
                     </span>
                   </div>
                 </button>
@@ -358,7 +358,7 @@ export default function OperationsMapPage() {
               )}
 
               <div className="pt-3 border-t border-[#242424] flex items-center justify-between">
-                <Link href={selectedEntity.type === "CARGO" ? "/cargo/CRG-ANT-004821" : selectedEntity.type === "STATION" ? "/inventory" : "/personnel"}>
+                <Link href={selectedEntity.type === "CARGO" ? "/cargo/CRG-2026-001" : selectedEntity.type === "STATION" ? "/inventory" : "/personnel"}>
                   <Button variant="primary" size="sm" className="gap-1.5 font-mono text-xs">
                     <span>Open Detailed Dossier</span>
                     <ArrowRight className="w-3 h-3" />

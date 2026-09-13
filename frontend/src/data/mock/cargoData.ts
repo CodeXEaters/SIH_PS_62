@@ -2,8 +2,8 @@ import { CargoItem } from "@/types";
 
 export const mockCargoItems: CargoItem[] = [
   {
-    id: "CRG-ANT-004821",
-    description: "Multi-Channel Atmospheric Lidar & Cryospheric Radar Sensors",
+    id: "CRG-2026-001",
+    description: "Atmospheric Aerosol Sampling Filters & Cryospheric Sensors",
     owner: "NCPOR / Indian Institute of Geomagnetism",
     category: "Scientific Instrumentation",
     weightKg: 2850,
@@ -16,7 +16,7 @@ export const mockCargoItems: CargoItem[] = [
     eta: "Tomorrow, 14:00 UTC",
     riskLevel: "HIGH",
     transportMode: "Helicopter Ferry",
-    qrCode: "CRG-ANT-004821|NCPOR|BHARATI|2850KG|LIDAR",
+    qrCode: "DHRUV:CARGO:CRG-2026-001",
     lastScannedBy: "Officer Rajiv Malhotra (Logistics)",
     lastScannedAt: "Today, 07:15 UTC",
     timeline: [

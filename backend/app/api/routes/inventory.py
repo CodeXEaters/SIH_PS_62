@@ -5,12 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.inventory import Inventory
+from app.models.inventory_transfer import InventoryTransfer
 from app.models.station import Station
 from app.models.user import User, UserRole
 from app.schemas.inventory import (
     InventoryCreate,
     InventoryUpdate,
     InventoryResponse,
+    InventoryTransferResponse,
 )
 from app.core.security import get_current_user, require_roles
 
@@ -70,6 +72,31 @@ def create_inventory_item(
     db.commit()
     db.refresh(item)
     return item
+
+
+@router.get("/transfers", response_model=List[InventoryTransferResponse])
+def list_inventory_transfers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve all logged inter-station inventory transfers."""
+    transfers = db.query(InventoryTransfer).order_by(InventoryTransfer.timestamp.desc()).all()
+    results = []
+    for trf in transfers:
+        results.append(
+            InventoryTransferResponse(
+                id=trf.transfer_code,
+                item=trf.item_name,
+                quantity=f"{trf.quantity:,.0f} {trf.unit}",
+                from_location=trf.from_location,
+                to_location=trf.to_location,
+                status=trf.status,
+                timestamp=trf.timestamp.strftime("%d %b %Y, %H:%M UTC") if trf.timestamp else "Scheduled",
+                officer=trf.authorizing_officer,
+                notes=trf.notes,
+            )
+        )
+    return results
 
 
 @router.get("/{id}", response_model=InventoryResponse)

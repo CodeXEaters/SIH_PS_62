@@ -1,44 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowLeftRight, Fuel, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Fuel, CheckCircle2, RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
+import { inventoryService } from "@/services/inventory";
 
 export default function InventoryTransfersPage() {
-  const transfers = [
-    {
-      id: "TRF-0012",
-      item: "Aviation Turbine Fuel (Jet A-1)",
-      quantity: "3,200 Liters",
-      from: "MV Vasiliy Golovnin Fuel Bay",
-      to: "Bharati Station Helipad Tanks",
-      status: "COMPLETED",
-      timestamp: "07 Jan 2027, 14:00 UTC",
-      officer: "Lt. Col. Vikramaditya Rathore",
-    },
-    {
-      id: "TRF-0013",
-      item: "Freeze-Dried MRE Rations",
-      quantity: "600 Packs",
-      from: "Bharati Station Central Larder",
-      to: "Team Alpha Field Sledge (AST-BHR-018)",
-      status: "COMPLETED",
-      timestamp: "09 Jan 2027, 18:30 UTC",
-      officer: "Omkar Joshi",
-    },
-    {
-      id: "TRF-0014",
-      item: "Polar Grade Low-Sulfur Diesel",
-      quantity: "50,000 Liters",
-      from: "MV Vasiliy Golovnin Bulk Tank #2",
-      to: "Bharati Station Fuel Farm",
-      status: "PENDING_PUMPING",
-      timestamp: "Scheduled for tomorrow",
-      officer: "Chief Engr. Suresh Nair",
-    },
-  ];
+  const [transfers, setTransfers] = useState<Array<{
+    id: string;
+    item: string;
+    quantity: string;
+    from: string;
+    to: string;
+    status: string;
+    timestamp: string;
+    officer: string;
+    notes?: string;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    inventoryService.getInventoryTransfers()
+      .then((data) => {
+        if (isMounted) setTransfers(data);
+      })
+      .catch((err) => console.warn("Failed to load inventory transfers:", err))
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   return (
     <AppShell>
@@ -76,22 +70,37 @@ export default function InventoryTransfersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-polar-border/60">
-                {transfers.map((trf) => (
-                  <tr key={trf.id} className="hover:bg-polar-surface/50 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-polar-cyan">{trf.id}</td>
-                    <td className="py-3.5 px-4 text-polar-snow font-medium">{trf.item}</td>
-                    <td className="py-3.5 px-4 font-bold text-polar-snow">{trf.quantity}</td>
-                    <td className="py-3.5 px-4 text-polar-muted">
-                      {trf.from} &rarr; <span className="text-polar-snow">{trf.to}</span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-polar-muted">
+                      <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-polar-cyan" />
+                      <span>Loading authorized inter-station transfers from database...</span>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <Badge variant={trf.status === "COMPLETED" ? "success" : "gold"}>
-                        {trf.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 text-polar-muted">{trf.officer}</td>
                   </tr>
-                ))}
+                ) : transfers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-polar-muted">
+                      <span>No inter-station inventory transfers logged.</span>
+                    </td>
+                  </tr>
+                ) : (
+                  transfers.map((trf) => (
+                    <tr key={trf.id} className="hover:bg-polar-surface/50 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-polar-cyan">{trf.id}</td>
+                      <td className="py-3.5 px-4 text-polar-snow font-medium">{trf.item}</td>
+                      <td className="py-3.5 px-4 font-bold text-polar-snow">{trf.quantity}</td>
+                      <td className="py-3.5 px-4 text-polar-muted">
+                        {trf.from} &rarr; <span className="text-polar-snow">{trf.to}</span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge variant={trf.status === "COMPLETED" ? "success" : "gold"}>
+                          {trf.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-4 text-polar-muted">{trf.officer}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

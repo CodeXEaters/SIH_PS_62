@@ -18,6 +18,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockCargoItems } from "@/data/mock";
 import { cargoService } from "@/services/cargo";
+import { intelligenceService } from "@/services/intelligence";
 import { CargoItem } from "@/types";
 import { formatKg } from "@/lib/utils";
 
@@ -27,9 +28,12 @@ export default function CargoDigitalTwinPage() {
   const [cargo, setCargo] = useState<CargoItem>(
     () => mockCargoItems.find((c) => c.id === id) || mockCargoItems[0]
   );
+  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
+  const [aiDecision, setAiDecision] = useState<"PENDING" | "ACCEPTED" | "DISMISSED">("PENDING");
 
   useEffect(() => {
     let isMounted = true;
+
     cargoService
       .getCargoById(id)
       .then((c) => {
@@ -38,23 +42,85 @@ export default function CargoDigitalTwinPage() {
         }
       })
       .catch((err) => console.warn("Failed to fetch cargo detail from backend:", err));
+
+    cargoService
+      .getCargoTimeline(id)
+      .then((res) => {
+        if (isMounted && res && res.events) {
+          setTimelineEvents(res.events);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch cargo timeline:", err));
+
+    intelligenceService
+      .predictCargoDelay(id)
+      .then((pred) => {
+        if (isMounted && pred) {
+          setCargo((prev) => ({
+            ...prev,
+            aiAssessment: {
+              delayProbability: Math.round((pred.delay_probability ?? 0.94) * 100),
+              estimatedDelayHours: Math.round(pred.estimated_delay_hours ?? 18),
+              keyDrivers: Array.isArray(pred.key_drivers) && pred.key_drivers.length > 0
+                ? pred.key_drivers
+                : ["Katabatic wind vectors exceeding 42 kts at Prydz Bay mooring", "Sling-load helicopter limits"],
+              recommendation: pred.recommendation || "Hold heli-lift transfer until wind gusts subside below 28 kts.",
+            },
+          }));
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch AI delay prediction:", err));
+
     return () => { isMounted = false; };
   }, [id]);
 
-  const [aiDecision, setAiDecision] = useState<"PENDING" | "ACCEPTED" | "DISMISSED">("PENDING");
+  // Derive corridor steps from real timeline events if available
+  const corridorSteps = React.useMemo(() => {
+    if (timelineEvents.length > 0) {
+      const steps = timelineEvents.map((evt, idx) => {
+        const isLatest = idx === timelineEvents.length - 1;
+        const eventDate = new Date(evt.timestamp).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        return {
+          name: (evt.event_type || "").replace(/_/g, " "),
+          detail: evt.remarks || evt.location,
+          location: evt.location,
+          status: isLatest ? "CURRENT" : "COMPLETED",
+          date: isLatest && (cargo.status === "Delayed" || cargo.status === "DELAYED")
+            ? `${eventDate} • Katabatic Delay +18h`
+            : eventDate,
+        };
+      });
 
-  // Exact vertical timeline requested in prompt:
-  // CREATED → PACKED → LOADED → GOA → CAPE TOWN → VESSEL → ANTARCTICA → BHARATI
-  const verticalCorridorSteps = [
-    { name: "CREATED", detail: "Electronic manifest registered at NCPOR", status: "COMPLETED", date: "10 Nov 2026" },
-    { name: "PACKED", detail: "Hermetic climate-controlled crate sealed", status: "COMPLETED", date: "12 Nov 2026" },
-    { name: "LOADED", detail: "Staged onto feeder convoy", status: "COMPLETED", date: "15 Nov 2026" },
-    { name: "GOA", detail: "NCPOR Central Logistics Depot dispatch", status: "COMPLETED", date: "15 Nov 2026" },
-    { name: "CAPE TOWN", detail: "Berth 4 Cold Store staging transfer", status: "COMPLETED", date: "01 Dec 2026" },
-    { name: "VESSEL", detail: "MV Vasiliy Golovnin (Hold 2, Slot H-04)", status: "COMPLETED", date: "04 Dec 2026" },
-    { name: "ANTARCTICA", detail: "Prydz Bay fast-ice offshore mooring", status: "CURRENT", date: "CURRENT &bull; Katabatic Delay +18h" },
-    { name: "BHARATI", detail: "Bharati Station Science Lab 2", status: "PENDING", date: "Scheduled Resupply Slot #02" },
-  ];
+      if (cargo.status !== "DELIVERED" && cargo.status !== "ARRIVED" && cargo.status !== "Received") {
+        steps.push({
+          name: cargo.destination.toUpperCase(),
+          detail: `${cargo.destination} Science Lab 2 & Inventory Bay`,
+          location: cargo.destination,
+          status: "PENDING",
+          date: "Scheduled Resupply Slot #02",
+        });
+      }
+      return steps;
+    }
+
+    return [
+      { name: "CREATED", detail: "Electronic manifest registered at NCPOR", status: "COMPLETED", date: "10 Nov 2026" },
+      { name: "PACKED", detail: "Hermetic climate-controlled crate sealed", status: "COMPLETED", date: "12 Nov 2026" },
+      { name: "LOADED", detail: "Staged onto feeder convoy", status: "COMPLETED", date: "15 Nov 2026" },
+      { name: "GOA", detail: "NCPOR Central Logistics Depot dispatch", status: "COMPLETED", date: "15 Nov 2026" },
+      { name: "CAPE TOWN", detail: "Berth 4 Cold Store staging transfer", status: "COMPLETED", date: "01 Dec 2026" },
+      { name: "VESSEL", detail: "MV Vasundhara (Hold 1, Bay 02)", status: "COMPLETED", date: "04 Dec 2026" },
+      { name: "ANTARCTICA", detail: "Prydz Bay fast-ice offshore mooring", status: "CURRENT", date: "CURRENT • Katabatic Delay +18h" },
+      { name: cargo.destination.toUpperCase(), detail: `${cargo.destination} Science Lab 2`, status: "PENDING", date: "Scheduled Resupply Slot #02" },
+    ];
+  }, [timelineEvents, cargo]);
+
+  const currentStepIndex = corridorSteps.findIndex((s) => s.status === "CURRENT");
+  const stageDisplayIndex = currentStepIndex >= 0 ? currentStepIndex + 1 : corridorSteps.length;
 
   return (
     <AppShell>
@@ -210,7 +276,7 @@ export default function CargoDigitalTwinPage() {
                 MOVEMENT TIMELINE
               </span>
               <span className="text-[10px] font-mono text-[#C8A96B]">
-                STAGE 07 OF 08
+                STAGE {String(stageDisplayIndex).padStart(2, "0")} OF {String(corridorSteps.length).padStart(2, "0")}
               </span>
             </div>
 
@@ -219,7 +285,7 @@ export default function CargoDigitalTwinPage() {
                 {/* Thin Vertical Line */}
                 <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-[#242424]" />
 
-                {verticalCorridorSteps.map((step) => {
+                {corridorSteps.map((step) => {
                   const isCurrent = step.status === "CURRENT";
                   const isCompleted = step.status === "COMPLETED";
 
@@ -278,7 +344,7 @@ export default function CargoDigitalTwinPage() {
                 <div className="flex flex-col items-center z-10">
                   <span className="w-3 h-3 rounded-full bg-[#C8A96B] ring-4 ring-[#C8A96B]/20" />
                   <span className="mt-1 px-1.5 py-0.2 rounded bg-[#0A0A0A] border border-[#242424] text-[9px] font-mono text-[#F5F3EE]">
-                    MV VASILIY GOLOVNIN
+                    MV VASUNDHARA
                   </span>
                 </div>
               </div>
@@ -305,21 +371,40 @@ export default function CargoDigitalTwinPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#242424]/60 text-[#A5A29C]">
-                    <tr>
-                      <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">R. K. Sharma (NCPOR)</td>
-                      <td className="py-2.5 px-3">Goa Depot</td>
-                      <td className="py-2.5 px-3 text-[#7FAF91]">Signed &bull; SHA-256</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">Trans-Africa Logistics</td>
-                      <td className="py-2.5 px-3">Cape Town Berth 4</td>
-                      <td className="py-2.5 px-3 text-[#7FAF91]">Signed &bull; SHA-256</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">Capt. V. Golovnin</td>
-                      <td className="py-2.5 px-3">Icebreaker Hold 2</td>
-                      <td className="py-2.5 px-3 text-[#C8A96B]">Current Custody</td>
-                    </tr>
+                    {timelineEvents.length > 0 ? (
+                      timelineEvents.slice(-3).map((evt, idx, arr) => {
+                        const isLatest = idx === arr.length - 1;
+                        return (
+                          <tr key={evt.id || idx}>
+                            <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">
+                              {evt.user?.full_name || (evt.updated_by ? `Officer #${evt.updated_by}` : "NCPOR Logistics Wing")}
+                            </td>
+                            <td className="py-2.5 px-3 max-w-[150px] truncate">{evt.location}</td>
+                            <td className={`py-2.5 px-3 ${isLatest ? "text-[#C8A96B]" : "text-[#7FAF91]"}`}>
+                              {isLatest ? "Current Custody" : "Signed • SHA-256"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <>
+                        <tr>
+                          <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">R. K. Sharma (NCPOR)</td>
+                          <td className="py-2.5 px-3">Goa Depot</td>
+                          <td className="py-2.5 px-3 text-[#7FAF91]">Signed &bull; SHA-256</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">Trans-Africa Logistics</td>
+                          <td className="py-2.5 px-3">Cape Town Berth 4</td>
+                          <td className="py-2.5 px-3 text-[#7FAF91]">Signed &bull; SHA-256</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">Capt. V. Golovnin</td>
+                          <td className="py-2.5 px-3">Icebreaker Hold 2</td>
+                          <td className="py-2.5 px-3 text-[#C8A96B]">Current Custody</td>
+                        </tr>
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>

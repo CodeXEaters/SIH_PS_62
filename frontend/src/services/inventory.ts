@@ -112,4 +112,36 @@ export const inventoryService = {
     const all = await this.getAllInventory();
     return all.filter((i) => i.stationSlug === stationId.toLowerCase() || String(i.stationId) === stationId);
   },
+
+  async getInventoryTransfers(): Promise<Array<{
+    id: string;
+    item: string;
+    quantity: string;
+    from: string;
+    to: string;
+    status: string;
+    timestamp: string;
+    officer: string;
+    notes?: string;
+  }>> {
+    try {
+      const data = await apiClient.get<any[]>("/inventory/transfers");
+      return (data || []).map((t) => ({
+        id: t.id,
+        item: t.item,
+        quantity: t.quantity,
+        from: t.from_location,
+        to: t.to_location,
+        status: t.status,
+        timestamp: t.timestamp,
+        officer: t.officer,
+        notes: t.notes,
+      }));
+    } catch (err: any) {
+      if (err?.isOffline) {
+        return [];
+      }
+      throw err;
+    }
+  },
 };

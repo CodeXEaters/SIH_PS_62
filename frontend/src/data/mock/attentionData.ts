@@ -10,8 +10,8 @@ export const mockAttentionItems: AttentionItem[] = [
     location: "Prydz Bay Offshore Mooring",
     timestamp: "12 mins ago",
     actionLabel: "Review Cargo Twin",
-    actionUrl: "/cargo/CRG-ANT-004821",
-    entityId: "CRG-ANT-004821",
+    actionUrl: "/cargo/CRG-2026-001",
+    entityId: "CRG-2026-001",
   },
   {
     id: "ATT-002",
