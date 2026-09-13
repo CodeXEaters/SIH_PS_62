@@ -216,7 +216,7 @@ export const GlobalSearchModal: React.FC = () => {
                 {filteredStations.map((station) => (
                   <button
                     key={station.id}
-                    onClick={() => handleSelect(`/operations/map?station=${station.id}`)}
+                    onClick={() => handleSelect(`/operations/map?station=${station.slug || station.id}`)}
                     className="flex items-center justify-between p-2.5 rounded bg-polar-midnight/60 border border-polar-border hover:border-polar-gold/60 text-left transition-all group"
                   >
                     <div>

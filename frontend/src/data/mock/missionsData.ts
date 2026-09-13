@@ -8,7 +8,8 @@ export const mockMissions: Mission[] = [
     teamLead: "Dr. Pradeep Mukherjee",
     teamLeadId: "EXP-024",
     membersCount: 4,
-    stationId: "bharati",
+    stationId: 4,
+    stationSlug: "bharati",
     location: "Larsemann Inland Ridge (Sector 4, 38km SW of Bharati)",
     coordinates: [
       { lat: -69.4081, lng: 76.1872 }, // Bharati base
@@ -34,7 +35,8 @@ export const mockMissions: Mission[] = [
     teamLead: "Lt. Col. Vikramaditya Rathore",
     teamLeadId: "EXP-042",
     membersCount: 3,
-    stationId: "bharati",
+    stationId: 4,
+    stationSlug: "bharati",
     location: "Prydz Bay Sea Ice Transect",
     coordinates: [
       { lat: -69.4081, lng: 76.1872 },
@@ -57,7 +59,8 @@ export const mockMissions: Mission[] = [
     teamLead: "Dr. Arvind Sharan",
     teamLeadId: "EXP-019",
     membersCount: 2,
-    stationId: "maitri",
+    stationId: 3,
+    stationSlug: "maitri",
     location: "Lake Priyadarshini, Schirmacher Oasis",
     coordinates: [
       { lat: -70.7658, lng: 11.7358 },
@@ -80,7 +83,8 @@ export const mockMissions: Mission[] = [
     teamLead: "Tenzing Norbu",
     teamLeadId: "EXP-055",
     membersCount: 4,
-    stationId: "maitri",
+    stationId: 3,
+    stationSlug: "maitri",
     location: "Schirmacher Shelf Route",
     coordinates: [
       { lat: -70.7658, lng: 11.7358 },

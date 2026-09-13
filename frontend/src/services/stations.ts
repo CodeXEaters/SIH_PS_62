@@ -51,7 +51,8 @@ export function mapBackendToStation(s: BackendStation): Station {
   const slug = determineStationSlug(s.name, s.id);
 
   return {
-    id: slug,
+    id: s.id,
+    slug: slug,
     name: s.name,
     coordinates: {
       lat: s.latitude,
@@ -162,7 +163,7 @@ export const stationsService = {
     const numId = typeof id === "number" ? id : parseInt(id, 10);
 
     return stations.find((s) => {
-      if (s.id === strId) return true;
+      if (s.id === numId || s.slug === strId) return true;
       if (!isNaN(numId)) {
         const cached = runtimeStationCache.get(numId);
         if (cached && s.name === cached.name) return true;

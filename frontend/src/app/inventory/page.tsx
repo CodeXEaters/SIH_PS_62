@@ -42,7 +42,7 @@ export default function InventoryPage() {
       i.name.toLowerCase().includes(search.toLowerCase()) ||
       i.id.toLowerCase().includes(search.toLowerCase()) ||
       i.category.toLowerCase().includes(search.toLowerCase());
-    const matchesStation = stationFilter === "ALL" || i.stationId === stationFilter;
+    const matchesStation = stationFilter === "ALL" || i.stationSlug === stationFilter || String(i.stationId) === stationFilter;
     return matchesSearch && matchesStation;
   });
 
@@ -179,7 +179,7 @@ export default function InventoryPage() {
                     </td>
 
                     <td className="py-3.5 px-4 uppercase font-bold text-[#F5F3EE]">
-                      {item.stationId}
+                      {item.stationSlug || item.stationId}
                     </td>
 
                     <td className="py-3.5 px-4 font-bold text-[#F5F3EE]">

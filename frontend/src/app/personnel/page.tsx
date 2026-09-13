@@ -40,7 +40,7 @@ export default function PersonnelPage() {
       p.role.toLowerCase().includes(search.toLowerCase()) ||
       p.team.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
-    const matchesStation = stationFilter === "ALL" || p.stationId === stationFilter;
+    const matchesStation = stationFilter === "ALL" || p.stationSlug === stationFilter || String(p.stationId) === stationFilter;
     return matchesSearch && matchesStatus && matchesStation;
   });
 

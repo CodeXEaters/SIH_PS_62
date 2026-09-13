@@ -3,7 +3,8 @@ import { Asset } from "@/types";
 import { getStationSlug } from "./stations";
 
 function mapBackendAssetToAsset(a: any): Asset {
-  const stationId = getStationSlug(a.station_id);
+  const stationId = typeof a.station_id === "number" ? a.station_id : 4;
+  const stationSlug = getStationSlug(a.station_id);
   let cat: Asset["category"] = "Vehicles";
   const rawType = (a.asset_type || "").toUpperCase();
   if (rawType.includes("GENERATOR") || rawType.includes("POWER")) {
@@ -27,6 +28,7 @@ function mapBackendAssetToAsset(a: any): Asset {
     name: a.asset_name || `Polar Asset ${a.id}`,
     category: cat,
     stationId,
+    stationSlug,
     condition: cond,
     utilizationPct: a.utilization_pct ?? 0,
     operatingHours: a.operating_hours ?? 0,

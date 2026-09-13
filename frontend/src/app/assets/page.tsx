@@ -181,7 +181,7 @@ export default function AssetsPage() {
                     </td>
 
                     <td className="py-3.5 px-4 uppercase font-bold text-polar-snow">
-                      {asset.stationId}
+                      {asset.stationSlug || asset.stationId}
                     </td>
 
                     <td className="py-3.5 px-4">

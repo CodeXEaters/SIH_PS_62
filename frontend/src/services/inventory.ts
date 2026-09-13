@@ -22,7 +22,8 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     categoryMapped = "Vehicle Spares";
   }
 
-  const stationId = getStationSlug(inv.station_id);
+  const stationId = typeof inv.station_id === "number" ? inv.station_id : 4;
+  const stationSlug = getStationSlug(inv.station_id);
   const stationName = getStationName(inv.station_id);
   const status: InventoryItem["status"] =
     (inv.quantity ?? 0) <= (inv.minimum_threshold ?? 0) || (days > 0 && days <= 5)
@@ -47,6 +48,7 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     name: inv.item_name || `Inventory Item ${inv.id}`,
     category: categoryMapped,
     stationId,
+    stationSlug,
     currentStock: inv.quantity ?? 0,
     unit: inv.unit || "units",
     dailyConsumption: daily,
@@ -108,6 +110,6 @@ export const inventoryService = {
 
   async getForecastByStation(stationId: string): Promise<InventoryItem[]> {
     const all = await this.getAllInventory();
-    return all.filter((i) => i.stationId === stationId.toLowerCase());
+    return all.filter((i) => i.stationSlug === stationId.toLowerCase() || String(i.stationId) === stationId);
   },
 };

@@ -56,7 +56,7 @@ export default function AssetDetailPage() {
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-polar-muted mt-0.5">
-              {asset.name} &bull; Station: <span className="uppercase text-polar-snow font-bold">{asset.stationId}</span>
+              {asset.name} &bull; Station: <span className="uppercase text-polar-snow font-bold">{asset.stationSlug || asset.stationId}</span>
             </p>
           </div>
         </div>

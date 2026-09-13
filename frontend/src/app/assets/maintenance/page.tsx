@@ -64,7 +64,7 @@ export default function AssetMaintenancePage() {
                         {asset.name}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 uppercase font-bold text-polar-snow">{asset.stationId}</td>
+                    <td className="py-3.5 px-4 uppercase font-bold text-polar-snow">{asset.stationSlug || asset.stationId}</td>
                     <td className="py-3.5 px-4 text-polar-muted font-sans text-[11px]">
                       500-hour filter and hydraulic fluid overhaul
                     </td>

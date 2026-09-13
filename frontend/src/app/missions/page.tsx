@@ -122,7 +122,7 @@ export default function MissionsPage() {
                   <div>
                     <span className="text-[9px] text-[#6F6D68] uppercase block">LOCATION</span>
                     <span className="text-[#C8A96B] font-mono font-bold mt-0.5 block truncate" title={m.location}>{m.location}</span>
-                    <span className="text-[10px] text-[#6F6D68] font-mono">Base: {m.stationId.toUpperCase()}</span>
+                    <span className="text-[10px] text-[#6F6D68] font-mono">Base: {(m.stationSlug || m.stationId).toString().toUpperCase()}</span>
                   </div>
 
                   <div>

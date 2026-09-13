@@ -117,7 +117,7 @@ export default function MissionDetailPage() {
               <div className="p-3 rounded bg-[#0A0A0A] border border-[#242424]">
                 <span className="text-[10px] text-[#6F6D68] uppercase block">Destination Waypoint</span>
                 <span className="text-[#F5F3EE] font-bold block mt-0.5">{mission.location}</span>
-                <span className="text-[10px] text-[#C8A96B]">Base: {mission.stationId.toUpperCase()}</span>
+                <span className="text-[10px] text-[#C8A96B]">Base: {(mission.stationSlug || mission.stationId).toString().toUpperCase()}</span>
               </div>
 
               <div className="p-3 rounded bg-[#0A0A0A] border border-[#242424]">

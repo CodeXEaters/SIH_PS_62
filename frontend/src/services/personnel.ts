@@ -5,7 +5,8 @@ import { cacheEntityData } from "@/lib/offline/sync/syncEngine";
 import { getStationSlug, getStationName } from "./stations";
 
 function mapBackendPersonnelToPersonnel(p: any): Personnel {
-  const stationId = getStationSlug(p.station_id);
+  const stationId = typeof p.station_id === "number" ? p.station_id : 4;
+  const stationSlug = getStationSlug(p.station_id);
   const locationName = p.current_location || getStationName(p.station_id);
   let statusMapped: Personnel["status"] = "Active";
   const st = (p.status || "").toUpperCase();
@@ -20,6 +21,7 @@ function mapBackendPersonnelToPersonnel(p: any): Personnel {
     role: p.designation || "Operations Specialist",
     team: (p.team || "Station Operations") as any,
     stationId,
+    stationSlug,
     location: locationName,
     status: statusMapped,
     medicalClearance: p.medical_clearance === false ? "SPECIAL_MONITORING" : "VALID",

@@ -66,7 +66,7 @@ export default function InventoryForecastPage() {
             >
               {items.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.name} ({inv.stationId.toUpperCase()})
+                  {inv.name} ({(inv.stationSlug || inv.stationId).toString().toUpperCase()})
                 </option>
               ))}
             </select>
