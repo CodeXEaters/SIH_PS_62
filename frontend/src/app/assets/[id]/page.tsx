@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -17,11 +17,23 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
 import { mockAssets } from "@/data/mock";
+import { assetsService } from "@/services/assets";
+import { Asset } from "@/types";
 
 export default function AssetDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const asset = mockAssets.find((a) => a.id === id) || mockAssets[0];
+  const [asset, setAsset] = useState<Asset>(
+    () => mockAssets.find((a) => a.id === id) || mockAssets[0]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    assetsService.getAssetById(id).then((a) => {
+      if (isMounted && a) setAsset(a);
+    }).catch(console.warn);
+    return () => { isMounted = false; };
+  }, [id]);
 
   return (
     <AppShell>

@@ -1,16 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockMissions } from "@/data/mock";
-import { ArrowRight } from "lucide-react";
+import { missionsService } from "@/services/missions";
+import { Mission } from "@/types";
+import { ArrowRight, RefreshCw } from "lucide-react";
 
 export default function MissionsPage() {
+  const [missionsList, setMissionsList] = useState<Mission[]>(mockMissions);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = mockMissions.filter(
+  const fetchMissions = () => {
+    setIsLoading(true);
+    missionsService
+      .getAllMissions()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setMissionsList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch missions:", err))
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchMissions();
+  }, []);
+
+  const filtered = missionsList.filter(
     (m) => statusFilter === "ALL" || m.status === statusFilter
   );
 

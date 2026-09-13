@@ -1,14 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Clock, MapPin, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockExpedition } from "@/data/mock";
+import { expeditionService } from "@/services/expedition";
+import { Expedition } from "@/types";
 
 export default function ExpeditionTimelinePage() {
-  const exp = mockExpedition;
+  const [exp, setExp] = useState<Expedition>(mockExpedition);
+
+  useEffect(() => {
+    expeditionService.getActiveExpedition().then((data) => {
+      if (data) setExp(data);
+    }).catch(console.warn);
+  }, []);
 
   return (
     <AppShell>

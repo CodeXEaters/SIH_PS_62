@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -18,11 +18,23 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockMissions } from "@/data/mock";
+import { missionsService } from "@/services/missions";
+import { Mission } from "@/types";
 
 export default function MissionDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const mission = mockMissions.find((m) => m.id === id) || mockMissions[0];
+  const [mission, setMission] = useState<Mission>(
+    () => mockMissions.find((m) => m.id === id) || mockMissions[0]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    missionsService.getMissionById(id).then((m) => {
+      if (isMounted && m) setMission(m);
+    }).catch(console.warn);
+    return () => { isMounted = false; };
+  }, [id]);
 
   return (
     <AppShell>

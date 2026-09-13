@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Compass,
@@ -17,10 +17,18 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
-import { mockExpedition, mockStations } from "@/data/mock";
+import { mockExpedition } from "@/data/mock";
+import { expeditionService } from "@/services/expedition";
+import { Expedition } from "@/types";
 
 export default function ExpeditionOverviewPage() {
-  const exp = mockExpedition;
+  const [exp, setExp] = useState<Expedition>(mockExpedition);
+
+  useEffect(() => {
+    expeditionService.getActiveExpedition().then((data) => {
+      if (data) setExp(data);
+    }).catch(console.warn);
+  }, []);
 
   const flowNodes = [
     { name: "Goa (NCPOR)", type: "Origin & HQ", status: "COMPLETED", date: "15 Nov 2026" },

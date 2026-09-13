@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -17,12 +17,29 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockCargoItems } from "@/data/mock";
+import { cargoService } from "@/services/cargo";
+import { CargoItem } from "@/types";
 import { formatKg } from "@/lib/utils";
 
 export default function CargoDigitalTwinPage() {
   const params = useParams();
   const id = params.id as string;
-  const cargo = mockCargoItems.find((c) => c.id === id) || mockCargoItems[0];
+  const [cargo, setCargo] = useState<CargoItem>(
+    () => mockCargoItems.find((c) => c.id === id) || mockCargoItems[0]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    cargoService
+      .getCargoById(id)
+      .then((c) => {
+        if (isMounted && c) {
+          setCargo(c);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch cargo detail from backend:", err));
+    return () => { isMounted = false; };
+  }, [id]);
 
   const [aiDecision, setAiDecision] = useState<"PENDING" | "ACCEPTED" | "DISMISSED">("PENDING");
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Truck,
@@ -12,16 +12,37 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
 import { mockAssets } from "@/data/mock";
-import { AssetCondition } from "@/types";
+import { assetsService } from "@/services/assets";
+import { Asset, AssetCondition } from "@/types";
 
 export default function AssetsPage() {
+  const [assetsList, setAssetsList] = useState<Asset[]>(mockAssets);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [conditionFilter, setConditionFilter] = useState("ALL");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchAssets = () => {
+    setIsLoading(true);
+    assetsService
+      .getAllAssets()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setAssetsList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch assets:", err))
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchAssets();
+  }, []);
 
   const categories = [
     "Vehicles",
@@ -31,7 +52,7 @@ export default function AssetsPage() {
     "Medical Equipment",
   ];
 
-  const filteredAssets = mockAssets.filter((a) => {
+  const filteredAssets = assetsList.filter((a) => {
     const matchesSearch =
       a.id.toLowerCase().includes(search.toLowerCase()) ||
       a.name.toLowerCase().includes(search.toLowerCase());

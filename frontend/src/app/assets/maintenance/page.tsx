@@ -1,13 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Wrench, Calendar, CheckCircle2, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockAssets } from "@/data/mock";
+import { assetsService } from "@/services/assets";
+import { Asset } from "@/types";
 
 export default function AssetMaintenancePage() {
+  const [assets, setAssets] = useState<Asset[]>(mockAssets);
+
+  useEffect(() => {
+    assetsService.getAllAssets().then((data) => {
+      if (data && data.length > 0) setAssets(data);
+    }).catch(console.warn);
+  }, []);
   return (
     <AppShell>
       <div className="space-y-6 max-w-5xl mx-auto">
@@ -44,7 +53,7 @@ export default function AssetMaintenancePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-polar-border/60">
-                {mockAssets.map((asset) => (
+                {assets.map((asset) => (
                   <tr key={asset.id} className="hover:bg-polar-surface/50 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-polar-snow">{asset.nextMaintenance}</td>
                     <td className="py-3.5 px-4">
