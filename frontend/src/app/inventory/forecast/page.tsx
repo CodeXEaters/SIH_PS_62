@@ -27,9 +27,7 @@ export default function InventoryForecastPage() {
     inventoryService.getAllInventory().then((data) => {
       if (data && data.length > 0) {
         setItems(data);
-        if (!data.some((i) => i.id === selectedItemId)) {
-          setSelectedItemId(data[0].id);
-        }
+        setSelectedItemId((prev) => (data.some((i) => i.id === prev) ? prev : data[0].id));
       }
     }).catch(console.warn);
   }, []);

@@ -19,9 +19,7 @@ export default function ChainOfCustodyPage() {
     cargoService.getAllCargo().then((all) => {
       if (all && all.length > 0) {
         setCargoList(all);
-        if (!all.some(c => c.id === selectedCargoId)) {
-          setSelectedCargoId(all[0].id);
-        }
+        setSelectedCargoId((prev) => (all.some((c) => c.id === prev) ? prev : all[0].id));
       }
     }).catch(console.warn);
   }, []);
