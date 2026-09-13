@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, TrendingDown } from "lucide-react";
 import {
@@ -16,10 +16,23 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockInventory } from "@/data/mock";
+import { inventoryService } from "@/services/inventory";
+import { InventoryItem } from "@/types";
 
 export default function InventoryForecastPage() {
+  const [items, setItems] = useState<InventoryItem[]>(mockInventory);
   const [selectedItemId, setSelectedItemId] = useState("INV-BHR-001");
-  const item = mockInventory.find((i) => i.id === selectedItemId) || mockInventory[0];
+
+  useEffect(() => {
+    inventoryService.getAllInventory().then((data) => {
+      if (data && data.length > 0) {
+        setItems(data);
+        setSelectedItemId((prev) => (data.some((i) => i.id === prev) ? prev : data[0].id));
+      }
+    }).catch(console.warn);
+  }, []);
+
+  const item = items.find((i) => i.id === selectedItemId) || items[0];
 
   return (
     <AppShell>
@@ -49,9 +62,9 @@ export default function InventoryForecastPage() {
               onChange={(e) => setSelectedItemId(e.target.value)}
               className="bg-[#101010] border border-[#242424] rounded px-3 py-1.5 text-[#F5F3EE] text-xs font-mono focus:outline-none focus:border-[#C8A96B]"
             >
-              {mockInventory.map((inv) => (
+              {items.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.name} ({inv.stationId.toUpperCase()})
+                  {inv.name} ({(inv.stationSlug || inv.stationId).toString().toUpperCase()})
                 </option>
               ))}
             </select>

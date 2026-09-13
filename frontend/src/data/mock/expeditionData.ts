@@ -2,7 +2,8 @@ import { Expedition, Station } from "@/types";
 
 export const mockStations: Station[] = [
   {
-    id: "bharati",
+    id: 4,
+    slug: "bharati",
     name: "Bharati Station",
     coordinates: { lat: -69.4081, lng: 76.1872 },
     elevation: "35m",
@@ -24,7 +25,8 @@ export const mockStations: Station[] = [
     },
   },
   {
-    id: "maitri",
+    id: 3,
+    slug: "maitri",
     name: "Maitri Station",
     coordinates: { lat: -70.7658, lng: 11.7358 },
     elevation: "117m",

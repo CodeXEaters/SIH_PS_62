@@ -1,26 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   TrendingDown,
   Search,
   ArrowLeftRight,
+  RefreshCw,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
 import { mockInventory } from "@/data/mock";
+import { inventoryService } from "@/services/inventory";
+import { InventoryItem } from "@/types";
 
 export default function InventoryPage() {
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(mockInventory);
   const [search, setSearch] = useState("");
   const [stationFilter, setStationFilter] = useState("ALL");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = mockInventory.filter((i) => {
+  const fetchInventory = () => {
+    setIsLoading(true);
+    inventoryService
+      .getAllInventory()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setInventoryItems(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch inventory:", err))
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const filtered = inventoryItems.filter((i) => {
     const matchesSearch =
       i.name.toLowerCase().includes(search.toLowerCase()) ||
       i.id.toLowerCase().includes(search.toLowerCase()) ||
       i.category.toLowerCase().includes(search.toLowerCase());
-    const matchesStation = stationFilter === "ALL" || i.stationId === stationFilter;
+    const matchesStation = stationFilter === "ALL" || i.stationSlug === stationFilter || String(i.stationId) === stationFilter;
     return matchesSearch && matchesStation;
   });
 
@@ -157,7 +179,7 @@ export default function InventoryPage() {
                     </td>
 
                     <td className="py-3.5 px-4 uppercase font-bold text-[#F5F3EE]">
-                      {item.stationId}
+                      {item.stationSlug || item.stationId}
                     </td>
 
                     <td className="py-3.5 px-4 font-bold text-[#F5F3EE]">

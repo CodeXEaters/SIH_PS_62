@@ -2,6 +2,19 @@ import { apiClient } from "./apiClient";
 import { CargoItem } from "@/types";
 import { db } from "@/lib/offline/storage/db";
 import { queueOfflineAction, cacheEntityData } from "@/lib/offline/sync/syncEngine";
+import { getStationName } from "./stations";
+
+function normalizeToBackendCargoStatus(status: string): string {
+  const s = (status || "").toUpperCase().replace(/\s+/g, "_");
+  if (s === "RECEIVED") return "ARRIVED";
+  if (s === "LOADED") return "DISPATCHED";
+  if (s === "BOOKED") return "PLANNED";
+  if (s === "IN_TRANSIT" || s === "INTRANSIT") return "IN_TRANSIT";
+  if (["PLANNED", "PACKED", "DISPATCHED", "IN_TRANSIT", "DELAYED", "ARRIVED", "DELIVERED"].includes(s)) {
+    return s;
+  }
+  return "IN_TRANSIT";
+}
 
 function mapBackendCargoToCargoItem(c: any): CargoItem {
   return {
@@ -24,14 +37,10 @@ function mapBackendCargoToCargoItem(c: any): CargoItem {
     hazardClass: c.hazardClass || "NON-HAZARDOUS",
     origin:
       c.origin ||
-      (c.origin_station_id === 1
-        ? "Bharati Station"
-        : c.origin_station_id === 2
-        ? "Maitri Station"
-        : "Cape Town Staging"),
+      (c.origin_station_id ? getStationName(c.origin_station_id) : "Cape Town Staging"),
     destination:
       c.destination ||
-      (c.destination_station_id === 2 ? "Maitri Station" : "Bharati Station"),
+      (c.destination_station_id ? getStationName(c.destination_station_id) : "Bharati Station"),
     currentLocation: c.current_location || c.currentLocation || "In Transit",
     status: c.status,
     eta: c.eta || "Pending ETA",
@@ -97,11 +106,12 @@ export const cargoService = {
     status: CargoItem["status"],
     location?: string
   ): Promise<CargoItem> {
+    const backendStatus = normalizeToBackendCargoStatus(status);
     try {
       const isNumeric = /^\d+$/.test(id);
       const targetId = isNumeric ? id : id.replace(/\D/g, "") || "1";
       const res = await apiClient.patch<any>(`/cargo/${targetId}/status`, {
-        status,
+        status: backendStatus,
         current_location: location,
       });
       return mapBackendCargoToCargoItem(res);
@@ -115,7 +125,7 @@ export const cargoService = {
           await queueOfflineAction({
             type: "PATCH",
             endpoint: `/cargo/${id}/status`,
-            payload: { status, current_location: location },
+            payload: { status: backendStatus, current_location: location },
           });
           return cached;
         }
@@ -159,5 +169,21 @@ export const cargoService = {
       message: res?.message || `Scan recorded at ${location}`,
       cargo: updated || mapBackendCargoToCargoItem(res),
     };
+  },
+
+  async getCargoTimeline(id: string | number): Promise<any> {
+    const numericId = typeof id === "number" ? id : parseInt(String(id).replace(/\D/g, ""), 10) || 1;
+    try {
+      return await apiClient.get<any>(`/cargo/${numericId}/timeline`);
+    } catch (err: any) {
+      if (err?.isOffline) {
+        return {
+          cargo_id: numericId,
+          cargo_code: `CRG-${numericId}`,
+          events: [],
+        };
+      }
+      throw err;
+    }
   },
 };

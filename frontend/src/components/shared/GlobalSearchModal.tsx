@@ -4,12 +4,28 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Box, Users, Truck, Compass, MapPin, X, ArrowRight } from "lucide-react";
 import { useAppStore } from "@/store";
-import { mockCargoItems, mockPersonnel, mockAssets, mockMissions, mockStations } from "@/data/mock";
+import { cargoService } from "@/services/cargo";
+import { personnelService } from "@/services/personnel";
+import { missionsService } from "@/services/missions";
+import { stationsService } from "@/services/stations";
+import { mockCargoItems, mockPersonnel, mockMissions, mockStations } from "@/data/mock";
 
 export const GlobalSearchModal: React.FC = () => {
   const router = useRouter();
   const { searchOpen, setSearchOpen } = useAppStore();
   const [query, setQuery] = useState("");
+  const [cargoItems, setCargoItems] = useState(mockCargoItems);
+  const [personnel, setPersonnel] = useState(mockPersonnel);
+  const [missions, setMissions] = useState(mockMissions);
+  const [stations, setStations] = useState(mockStations);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    cargoService.getAllCargo().then(setCargoItems).catch(() => {});
+    personnelService.getAllPersonnel().then(setPersonnel).catch(() => {});
+    missionsService.getAllMissions().then(setMissions).catch(() => {});
+    stationsService.getAllStations().then(setStations).catch(() => {});
+  }, [searchOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -30,48 +46,39 @@ export const GlobalSearchModal: React.FC = () => {
   const q = query.toLowerCase().trim();
 
   const filteredCargo = q
-    ? mockCargoItems.filter(
+    ? cargoItems.filter(
         (c) =>
           c.id.toLowerCase().includes(q) ||
           c.description.toLowerCase().includes(q) ||
           c.destination.toLowerCase().includes(q)
       )
-    : mockCargoItems.slice(0, 2);
+    : cargoItems.slice(0, 2);
 
   const filteredPersonnel = q
-    ? mockPersonnel.filter(
+    ? personnel.filter(
         (p) =>
           p.id.toLowerCase().includes(q) ||
           p.name.toLowerCase().includes(q) ||
           p.role.toLowerCase().includes(q)
       )
-    : mockPersonnel.slice(0, 2);
-
-  const filteredAssets = q
-    ? mockAssets.filter(
-        (a) =>
-          a.id.toLowerCase().includes(q) ||
-          a.name.toLowerCase().includes(q) ||
-          a.category.toLowerCase().includes(q)
-      )
-    : mockAssets.slice(0, 2);
+    : personnel.slice(0, 2);
 
   const filteredMissions = q
-    ? mockMissions.filter(
+    ? missions.filter(
         (m) =>
           m.id.toLowerCase().includes(q) ||
           m.title.toLowerCase().includes(q) ||
           m.location.toLowerCase().includes(q)
       )
-    : mockMissions.slice(0, 2);
+    : missions.slice(0, 2);
 
   const filteredStations = q
-    ? mockStations.filter(
+    ? stations.filter(
         (s) =>
           s.name.toLowerCase().includes(q) ||
           s.locationName.toLowerCase().includes(q)
       )
-    : mockStations;
+    : stations;
 
   const handleSelect = (url: string) => {
     setSearchOpen(false);
@@ -209,7 +216,7 @@ export const GlobalSearchModal: React.FC = () => {
                 {filteredStations.map((station) => (
                   <button
                     key={station.id}
-                    onClick={() => handleSelect(`/operations/map?station=${station.id}`)}
+                    onClick={() => handleSelect(`/operations/map?station=${station.slug || station.id}`)}
                     className="flex items-center justify-between p-2.5 rounded bg-polar-midnight/60 border border-polar-border hover:border-polar-gold/60 text-left transition-all group"
                   >
                     <div>

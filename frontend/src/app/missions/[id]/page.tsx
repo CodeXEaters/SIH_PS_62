@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -18,11 +18,23 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockMissions } from "@/data/mock";
+import { missionsService } from "@/services/missions";
+import { Mission } from "@/types";
 
 export default function MissionDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const mission = mockMissions.find((m) => m.id === id) || mockMissions[0];
+  const [mission, setMission] = useState<Mission>(
+    () => mockMissions.find((m) => m.id === id) || mockMissions[0]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    missionsService.getMissionById(id).then((m) => {
+      if (isMounted && m) setMission(m);
+    }).catch(console.warn);
+    return () => { isMounted = false; };
+  }, [id]);
 
   return (
     <AppShell>
@@ -105,7 +117,7 @@ export default function MissionDetailPage() {
               <div className="p-3 rounded bg-[#0A0A0A] border border-[#242424]">
                 <span className="text-[10px] text-[#6F6D68] uppercase block">Destination Waypoint</span>
                 <span className="text-[#F5F3EE] font-bold block mt-0.5">{mission.location}</span>
-                <span className="text-[10px] text-[#C8A96B]">Base: {mission.stationId.toUpperCase()}</span>
+                <span className="text-[10px] text-[#C8A96B]">Base: {(mission.stationSlug || mission.stationId).toString().toUpperCase()}</span>
               </div>
 
               <div className="p-3 rounded bg-[#0A0A0A] border border-[#242424]">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Compass,
@@ -19,14 +19,37 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Drawer } from "@/components/ui";
-import { mockTrackingEntities, TacticalTrackingEntity } from "@/services/tracking";
+import { mockTrackingEntities, TacticalTrackingEntity, trackingService } from "@/services/tracking";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { formatCoords } from "@/lib/utils";
 
 export default function OperationsMapPage() {
+  const [trackingEntities, setTrackingEntities] = useState<TacticalTrackingEntity[]>(mockTrackingEntities);
   const [selectedEntity, setSelectedEntity] = useState<TacticalTrackingEntity | null>(
     mockTrackingEntities[0] // Bharati Station initially selected
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    trackingService.getTrackingEntities().then((entities) => {
+      if (entities && entities.length > 0) {
+        setTrackingEntities(entities);
+        setSelectedEntity(entities[0]);
+      }
+    }).catch(console.warn);
+  }, []);
+
+  // Listen for live telemetry updates over WebSocket
+  useWebSocket({
+    channel: "tracking",
+    onMessage: () => {
+      trackingService.getTrackingEntities().then((entities) => {
+        if (entities && entities.length > 0) {
+          setTrackingEntities(entities);
+        }
+      }).catch(() => {});
+    },
+  });
 
   // Active Map Layers
   const [layers, setLayers] = useState({
@@ -46,7 +69,7 @@ export default function OperationsMapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Filter entities by active layers
-  const visibleEntities = mockTrackingEntities.filter((e) => {
+  const visibleEntities = trackingEntities.filter((e) => {
     if (e.type === "STATION" && !layers.stations) return false;
     if (e.type === "VESSEL" && !layers.vessels) return false;
     if (e.type === "AIRCRAFT" && !layers.aircraft) return false;
@@ -174,7 +197,8 @@ export default function OperationsMapPage() {
               {layers.stations && (
                 <button
                   onClick={() => {
-                    setSelectedEntity(mockTrackingEntities[0]);
+                    const entity = trackingEntities.find(e => e.id === "STAT-4" || e.name.toLowerCase().includes("bharati")) || mockTrackingEntities[0];
+                    setSelectedEntity(entity);
                     setDrawerOpen(true);
                   }}
                   className="absolute top-[42%] left-[62%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
@@ -193,7 +217,8 @@ export default function OperationsMapPage() {
               {layers.stations && (
                 <button
                   onClick={() => {
-                    setSelectedEntity(mockTrackingEntities[1]);
+                    const entity = trackingEntities.find(e => e.id === "STAT-3" || e.name.toLowerCase().includes("maitri")) || mockTrackingEntities[1];
+                    setSelectedEntity(entity);
                     setDrawerOpen(true);
                   }}
                   className="absolute top-[46%] left-[34%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
@@ -212,7 +237,8 @@ export default function OperationsMapPage() {
               {layers.vessels && (
                 <button
                   onClick={() => {
-                    setSelectedEntity(mockTrackingEntities[2]);
+                    const entity = trackingEntities.find(e => e.type === "VESSEL" || e.name.toLowerCase().includes("vasiliy") || e.name.toLowerCase().includes("golovnin")) || mockTrackingEntities[2];
+                    setSelectedEntity(entity);
                     setDrawerOpen(true);
                   }}
                   className="absolute top-[30%] left-[58%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
@@ -232,7 +258,8 @@ export default function OperationsMapPage() {
               {/* 4. Personnel Traverse: Team Alpha - White Marker */}
               <button
                 onClick={() => {
-                  setSelectedEntity(mockTrackingEntities[4]);
+                  const entity = trackingEntities.find(e => e.type === "TEAM" || e.name.toLowerCase().includes("alpha") || e.name.toLowerCase().includes("traverse")) || mockTrackingEntities[4];
+                  setSelectedEntity(entity);
                   setDrawerOpen(true);
                 }}
                 className="absolute top-[52%] left-[64%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
@@ -250,7 +277,8 @@ export default function OperationsMapPage() {
               {layers.cargo && (
                 <button
                   onClick={() => {
-                    setSelectedEntity(mockTrackingEntities[5]);
+                    const entity = trackingEntities.find(e => e.type === "CARGO" || e.id.includes("CRG")) || mockTrackingEntities[5];
+                    setSelectedEntity(entity);
                     setDrawerOpen(true);
                   }}
                   className="absolute top-[33%] left-[59%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"

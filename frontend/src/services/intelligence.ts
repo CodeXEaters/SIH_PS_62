@@ -1,6 +1,5 @@
 import { apiClient } from "./apiClient";
 import { WhatIfScenarioInput, WhatIfScenarioResult } from "@/types";
-import { mockAttentionItems } from "@/data/mock";
 
 export const intelligenceService = {
   async getAttentionItems() {

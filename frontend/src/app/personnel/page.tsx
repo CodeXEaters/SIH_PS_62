@@ -1,25 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
 import { mockPersonnel } from "@/data/mock";
+import { personnelService } from "@/services/personnel";
+import { Personnel } from "@/types";
 
 export default function PersonnelPage() {
+  const [personnelList, setPersonnelList] = useState<Personnel[]>(mockPersonnel);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [stationFilter, setStationFilter] = useState("ALL");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = mockPersonnel.filter((p) => {
+  const fetchPersonnel = () => {
+    setIsLoading(true);
+    personnelService
+      .getAllPersonnel()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setPersonnelList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch personnel:", err))
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchPersonnel();
+  }, []);
+
+  const filtered = personnelList.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.id.toLowerCase().includes(search.toLowerCase()) ||
       p.role.toLowerCase().includes(search.toLowerCase()) ||
       p.team.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
-    const matchesStation = stationFilter === "ALL" || p.stationId === stationFilter;
+    const matchesStation = stationFilter === "ALL" || p.stationSlug === stationFilter || String(p.stationId) === stationFilter;
     return matchesSearch && matchesStatus && matchesStation;
   });
 

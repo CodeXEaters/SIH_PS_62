@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -13,44 +13,98 @@ import {
   Thermometer,
   Wind,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockAttentionItems, mockStations, mockCargoItems } from "@/data/mock";
+import { stationsService } from "@/services/stations";
+import { cargoService } from "@/services/cargo";
+import { intelligenceService } from "@/services/intelligence";
+import { reportsService } from "@/services/reports";
+import { Station, CargoItem, AttentionItem } from "@/types";
 
 export default function DashboardPage() {
+  const [stations, setStations] = useState<Station[]>(mockStations);
+  const [cargoItems, setCargoItems] = useState<CargoItem[]>(mockCargoItems);
+  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>(mockAttentionItems);
+  const [kpiData, setKpiData] = useState({
+    personnel: "124",
+    cargo: "1,842",
+    assets: "326",
+    inventory: "92%",
+    missions: "08",
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.allSettled([
+      stationsService.getAllStations(),
+      cargoService.getAllCargo(),
+      intelligenceService.getAttentionItems(),
+      reportsService.getPerformanceSummary(),
+    ]).then(([stationsRes, cargoRes, intelRes, reportsRes]) => {
+      if (!isMounted) return;
+
+      if (stationsRes.status === "fulfilled" && stationsRes.value && stationsRes.value.length > 0) {
+        setStations(stationsRes.value);
+      }
+      if (cargoRes.status === "fulfilled" && cargoRes.value && cargoRes.value.length > 0) {
+        setCargoItems(cargoRes.value);
+      }
+      if (intelRes.status === "fulfilled" && intelRes.value && intelRes.value.length > 0) {
+        setAttentionItems(intelRes.value);
+      }
+      if (reportsRes.status === "fulfilled" && reportsRes.value) {
+        const r = reportsRes.value;
+        setKpiData({
+          personnel: "124",
+          cargo: r.cargoTonnageTracked ? `${Math.round(r.cargoTonnageTracked * 10)}` : "1,842",
+          assets: "326",
+          inventory: r.expeditionReadinessPct ? `${Math.round(r.expeditionReadinessPct)}%` : "92%",
+          missions: r.totalMissionsCompleted ? String(r.totalMissionsCompleted).padStart(2, "0") : "08",
+        });
+      }
+      setIsLoading(false);
+    });
+
+    return () => { isMounted = false; };
+  }, []);
+
   const kpis = [
     {
       label: "PERSONNEL",
-      value: "124",
+      value: kpiData.personnel,
       status: "DEPLOYED",
       subtext: "Stations & Traverse",
       href: "/personnel",
     },
     {
       label: "CARGO",
-      value: "1,842",
+      value: kpiData.cargo,
       status: "TRACKED",
       subtext: "Containers & Units",
       href: "/cargo",
     },
     {
       label: "ASSETS",
-      value: "326",
+      value: kpiData.assets,
       status: "OPERATIONAL",
       subtext: "Vehicles & Generators",
       href: "/assets",
     },
     {
       label: "INVENTORY",
-      value: "92%",
+      value: kpiData.inventory,
       status: "READY",
       subtext: "Life Support Reserve",
       href: "/inventory",
     },
     {
       label: "MISSIONS",
-      value: "08",
+      value: kpiData.missions,
       status: "ACTIVE",
       subtext: "Field Science Traverses",
       href: "/missions",
@@ -239,7 +293,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {mockStations.map((station) => (
+              {stations.map((station) => (
                 <div
                   key={station.id}
                   className="p-4 rounded bg-[#101010] border border-[#242424] space-y-3"
@@ -322,7 +376,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#242424]/60 text-[#A5A29C]">
-                    {mockCargoItems.slice(0, 5).map((item) => (
+                    {cargoItems.slice(0, 5).map((item) => (
                       <tr
                         key={item.id}
                         className="hover:bg-[#111111] transition-colors cursor-pointer"

@@ -2,9 +2,13 @@ import { apiClient } from "./apiClient";
 import { Mission } from "@/types";
 import { db } from "@/lib/offline/storage/db";
 import { cacheEntityData } from "@/lib/offline/sync/syncEngine";
+import { getStationSlug, getStationName } from "./stations";
 
 function mapBackendMissionToMission(m: any): Mission {
-  const stationId = m.origin_station_id === 2 ? "maitri" : "bharati";
+  const stationId = typeof m.origin_station_id === "number" ? m.origin_station_id : 4;
+  const stationSlug = getStationSlug(m.origin_station_id);
+  const originName = m.origin || getStationName(m.origin_station_id);
+  const destName = m.destination || getStationName(m.destination_station_id);
   let statusMapped: Mission["status"] = "Planned";
   const st = (m.status || "").toUpperCase();
   if (st === "ACTIVE") statusMapped = "Active";
@@ -24,7 +28,8 @@ function mapBackendMissionToMission(m: any): Mission {
     teamLeadId: String(m.team_lead_id),
     membersCount: m.members_count ?? 0,
     stationId,
-    location: `${m.origin} -> ${m.destination}`,
+    stationSlug,
+    location: `${originName} -> ${destName}`,
     coordinates: m.coordinates || [],
     startTime: m.start_time ? String(m.start_time) : "",
     expectedReturn: m.expected_return ? String(m.expected_return) : "",

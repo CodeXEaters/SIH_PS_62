@@ -2,6 +2,7 @@ import { apiClient } from "./apiClient";
 import { InventoryItem } from "@/types";
 import { db } from "@/lib/offline/storage/db";
 import { cacheEntityData } from "@/lib/offline/sync/syncEngine";
+import { getStationSlug, getStationName } from "./stations";
 
 function mapBackendInventoryToItem(inv: any): InventoryItem {
   const days =
@@ -21,7 +22,9 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     categoryMapped = "Vehicle Spares";
   }
 
-  const stationId = inv.station_id === 2 ? "maitri" : "bharati";
+  const stationId = typeof inv.station_id === "number" ? inv.station_id : 4;
+  const stationSlug = getStationSlug(inv.station_id);
+  const stationName = getStationName(inv.station_id);
   const status: InventoryItem["status"] =
     (inv.quantity ?? 0) <= (inv.minimum_threshold ?? 0) || (days > 0 && days <= 5)
       ? "Critical"
@@ -45,6 +48,7 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     name: inv.item_name || `Inventory Item ${inv.id}`,
     category: categoryMapped,
     stationId,
+    stationSlug,
     currentStock: inv.quantity ?? 0,
     unit: inv.unit || "units",
     dailyConsumption: daily,
@@ -54,7 +58,7 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
         ? Math.round(inv.minimum_threshold / daily)
         : 0,
     status,
-    storageLocation: `${stationId.toUpperCase()} Core Storage Bay`,
+    storageLocation: `${stationName} Core Storage Bay`,
     minimumThreshold: inv.minimum_threshold ?? 0,
     replenishmentETA: inv.expiry_date ? String(inv.expiry_date) : "Unscheduled",
     forecastHistory: history,
@@ -106,6 +110,6 @@ export const inventoryService = {
 
   async getForecastByStation(stationId: string): Promise<InventoryItem[]> {
     const all = await this.getAllInventory();
-    return all.filter((i) => i.stationId === stationId.toLowerCase());
+    return all.filter((i) => i.stationSlug === stationId.toLowerCase() || String(i.stationId) === stationId);
   },
 };

@@ -1,22 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Search,
   QrCode,
   FileSpreadsheet,
   ArrowRight,
+  RefreshCw,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
 import { mockCargoItems } from "@/data/mock";
+import { cargoService } from "@/services/cargo";
+import { CargoItem } from "@/types";
 
 export default function CargoDashboardPage() {
+  const [cargoList, setCargoList] = useState<CargoItem[]>(mockCargoItems);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredCargo = mockCargoItems.filter((c) => {
+  const fetchCargo = () => {
+    setIsLoading(true);
+    cargoService
+      .getAllCargo()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCargoList(data);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch cargo from backend:", err))
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchCargo();
+  }, []);
+
+  const filteredCargo = cargoList.filter((c) => {
     const matchesSearch =
       c.id.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -47,6 +69,16 @@ export default function CargoDashboardPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={fetchCargo}
+              className="gap-2 font-mono text-xs"
+              title="Refresh cargo manifests from backend"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </Button>
             <Link href="/cargo/scanner">
               <Button variant="primary" size="sm" className="gap-2 font-mono text-xs">
                 <QrCode className="w-3.5 h-3.5" />

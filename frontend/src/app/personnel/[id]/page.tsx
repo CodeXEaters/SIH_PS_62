@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -12,11 +12,23 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockPersonnel } from "@/data/mock";
+import { personnelService } from "@/services/personnel";
+import { Personnel } from "@/types";
 
 export default function PersonnelProfilePage() {
   const params = useParams();
   const id = params.id as string;
-  const person = mockPersonnel.find((p) => p.id === id) || mockPersonnel[0];
+  const [person, setPerson] = useState<Personnel>(
+    () => mockPersonnel.find((p) => p.id === id) || mockPersonnel[0]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    personnelService.getPersonnelById(id).then((p) => {
+      if (isMounted && p) setPerson(p);
+    }).catch(console.warn);
+    return () => { isMounted = false; };
+  }, [id]);
 
   const standardTimeline = [
     { step: "Departed Goa (NCPOR Flag-off)", location: "Goa, India", date: "15 Nov 2026", completed: true },

@@ -1,14 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Footprints, ShieldCheck, MapPin } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { mockPersonnel } from "@/data/mock";
+import { personnelService } from "@/services/personnel";
+import { Personnel } from "@/types";
 
 export default function PersonnelMovementPage() {
-  const allMovements = mockPersonnel.flatMap((p) =>
+  const [personnelList, setPersonnelList] = useState<Personnel[]>(mockPersonnel);
+
+  useEffect(() => {
+    personnelService.getAllPersonnel().then((data) => {
+      if (data && data.length > 0) setPersonnelList(data);
+    }).catch(console.warn);
+  }, []);
+
+  const allMovements = personnelList.flatMap((p) =>
     p.movementHistory.map((m) => ({
       ...m,
       personnelId: p.id,
