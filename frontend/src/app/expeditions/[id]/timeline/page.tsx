@@ -5,18 +5,58 @@ import Link from "next/link";
 import { ArrowLeft, Clock, MapPin, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockExpedition } from "@/data/mock";
 import { expeditionService } from "@/services/expedition";
 import { Expedition } from "@/types";
 
 export default function ExpeditionTimelinePage() {
-  const [exp, setExp] = useState<Expedition>(mockExpedition);
+  const [exp, setExp] = useState<Expedition | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    expeditionService.getActiveExpedition().then((data) => {
-      if (data) setExp(data);
-    }).catch(console.warn);
+    expeditionService
+      .getActiveExpedition()
+      .then((data) => {
+        if (data) setExp(data);
+      })
+      .catch(console.warn)
+      .finally(() => setIsLoading(false));
   }, []);
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-polar-muted uppercase tracking-wider">
+            Loading expedition milestone timeline...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!exp) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-polar-deep border border-polar-border text-amber-400 mb-2">
+            <Clock className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-white">TIMELINE UNAVAILABLE</h2>
+          <p className="text-xs font-mono text-polar-muted">
+            Could not retrieve active expedition milestone records.
+          </p>
+          <div className="pt-2">
+            <Link href="/expeditions/ISEA-46">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Expedition Overview</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

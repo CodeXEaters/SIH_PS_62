@@ -17,13 +17,12 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
-import { mockExpedition } from "@/data/mock";
 import { expeditionService } from "@/services/expedition";
 import { assetsService } from "@/services/assets";
 import { Expedition } from "@/types";
 
 export default function ExpeditionOverviewPage() {
-  const [exp, setExp] = useState<Expedition>(mockExpedition);
+  const [exp, setExp] = useState<Expedition | null>(null);
   const [isExpLoading, setIsExpLoading] = useState<boolean>(true);
   const [expError, setExpError] = useState<boolean>(false);
   // null = loading, number = loaded, -1 = error/unavailable
@@ -36,6 +35,9 @@ export default function ExpeditionOverviewPage() {
       .then((data) => {
         if (data) {
           setExp(data);
+          setIsExpLoading(false);
+        } else {
+          setExpError(true);
           setIsExpLoading(false);
         }
       })
@@ -63,6 +65,42 @@ export default function ExpeditionOverviewPage() {
         setOperationalAssetsCount(-1);
       });
   }, []);
+
+  if (isExpLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-6xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-polar-muted uppercase tracking-wider">
+            Loading expedition parameters and operations overview...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (expError || !exp) {
+    return (
+      <AppShell>
+        <div className="max-w-6xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-polar-deep border border-polar-border text-amber-400 mb-2">
+            <Compass className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-white">EXPEDITION DATA UNAVAILABLE</h2>
+          <p className="text-xs font-mono text-polar-muted">
+            Could not retrieve active expedition parameters from the system.
+          </p>
+          <div className="pt-2">
+            <Link href="/dashboard">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowRight className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Command Center</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   const flowNodes = [
     { name: "Goa (NCPOR)", type: "Origin & HQ", status: "COMPLETED", date: "15 Nov 2026" },

@@ -4,13 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockMissions } from "@/data/mock";
 import { missionsService } from "@/services/missions";
 import { Mission } from "@/types";
 import { ArrowRight, RefreshCw } from "lucide-react";
 
 export default function MissionsPage() {
-  const [missionsList, setMissionsList] = useState<Mission[]>(mockMissions);
+  const [missionsList, setMissionsList] = useState<Mission[]>([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -19,9 +18,7 @@ export default function MissionsPage() {
     missionsService
       .getAllMissions()
       .then((data) => {
-        if (data && data.length > 0) {
-          setMissionsList(data);
-        }
+        setMissionsList(data || []);
       })
       .catch((err) => console.warn("Failed to fetch missions:", err))
       .finally(() => setIsLoading(false));
@@ -72,94 +69,95 @@ export default function MissionsPage() {
         </div>
 
         {/* Mission Cards: Black surfaces with thin borders */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((m) => (
-            <div
-              key={m.id}
-              className="p-6 rounded bg-[#101010] border border-[#242424] hover:border-[#383838] transition-colors space-y-4 font-mono text-xs flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                {/* Header of card */}
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="text-[10px] font-mono text-[#C8A96B] font-bold block">
-                      {m.id}
-                    </span>
-                    <h3 className="text-sm font-bold text-[#F5F3EE] mt-0.5">
-                      {m.title}
-                    </h3>
-                  </div>
-                  <Badge
-                    severity={
-                      m.riskLevel === "CRITICAL"
-                        ? "CRITICAL"
-                        : m.riskLevel === "HIGH"
-                        ? "HIGH"
-                        : "LOW"
-                    }
-                    dot
-                  >
-                    {m.status}
-                  </Badge>
-                </div>
-
-                {/* PURPOSE */}
-                <div>
-                  <span className="text-[9px] text-[#6F6D68] uppercase block">PURPOSE</span>
-                  <p className="text-xs font-sans text-[#F5F3EE] font-medium mt-0.5 leading-relaxed">
-                    {m.purpose}
-                  </p>
-                </div>
-
-                {/* 2-Column Attributes: TEAM, LOCATION, RISK, RETURN */}
-                <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
-                  <div>
-                    <span className="text-[9px] text-[#6F6D68] uppercase block">TEAM</span>
-                    <span className="text-[#A5A29C] font-sans mt-0.5 block">{m.teamLead}</span>
-                    <span className="text-[10px] text-[#6F6D68] font-mono">Crew: {m.membersCount} Specialists</span>
-                  </div>
-
-                  <div>
-                    <span className="text-[9px] text-[#6F6D68] uppercase block">LOCATION</span>
-                    <span className="text-[#C8A96B] font-mono font-bold mt-0.5 block truncate" title={m.location}>{m.location}</span>
-                    <span className="text-[10px] text-[#6F6D68] font-mono">Base: {(m.stationSlug || m.stationId).toString().toUpperCase()}</span>
-                  </div>
-
-                  <div>
-                    <span className="text-[9px] text-[#6F6D68] uppercase block">RISK</span>
-                    <span
-                      className={`font-bold mt-0.5 block ${
+        {isLoading ? (
+          <div className="p-8 rounded bg-[#101010] border border-[#242424] text-center font-mono text-xs text-[#6F6D68]">
+            LOADING FIELD MISSIONS...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 rounded bg-[#101010] border border-[#242424] text-center font-mono text-xs text-[#6F6D68]">
+            NO FIELD MISSIONS FOUND MATCHING CRITERIA
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filtered.map((m) => (
+              <div
+                key={m.id}
+                className="p-6 rounded bg-[#101010] border border-[#242424] hover:border-[#383838] transition-colors space-y-4 font-mono text-xs flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  {/* Header of card */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-mono text-[#C8A96B] font-bold block">
+                        {m.id}
+                      </span>
+                      <h3 className="text-sm font-bold text-[#F5F3EE] mt-0.5">
+                        {m.title}
+                      </h3>
+                    </div>
+                    <Badge
+                      severity={
                         m.riskLevel === "CRITICAL"
-                          ? "text-[#B85C5C]"
+                          ? "CRITICAL"
                           : m.riskLevel === "HIGH"
-                          ? "text-[#C49A55]"
-                          : "text-[#7FAF91]"
-                      }`}
+                          ? "HIGH"
+                          : "LOW"
+                      }
+                      dot
                     >
-                      {m.riskLevel}
-                    </span>
+                      {m.status}
+                    </Badge>
                   </div>
 
+                  {/* PURPOSE */}
                   <div>
-                    <span className="text-[9px] text-[#6F6D68] uppercase block">ESTIMATED RETURN</span>
-                    <span className="text-[#F5F3EE] mt-0.5 block">{m.expectedReturn}</span>
+                    <span className="text-[9px] text-[#6F6D68] uppercase block">PURPOSE</span>
+                    <p className="text-xs font-sans text-[#F5F3EE] font-medium mt-0.5 leading-relaxed">
+                      {m.purpose}
+                    </p>
+                  </div>
+
+                  {/* 2-Column Attributes: TEAM, LOCATION, RISK, RETURN */}
+                  <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+                    <div>
+                      <span className="text-[9px] text-[#6F6D68] uppercase block">TEAM</span>
+                      <span className="text-[#A5A29C] font-sans mt-0.5 block">{m.teamLead}</span>
+                      <span className="text-[10px] text-[#6F6D68] font-mono">Crew: {m.membersCount} Specialists</span>
+                    </div>
+
+                    <div>
+                      <span className="text-[9px] text-[#6F6D68] uppercase block">LOCATION</span>
+                      <span className="text-[#C8A96B] font-mono mt-0.5 block">{m.location}</span>
+                      <span className="text-[10px] text-[#6F6D68] font-mono">Sector Alpha</span>
+                    </div>
+
+                    <div>
+                      <span className="text-[9px] text-[#6F6D68] uppercase block">RISK LEVEL</span>
+                      <span className="text-[#F5F3EE] font-bold mt-0.5 block">{m.riskLevel}</span>
+                      <span className="text-[10px] text-[#6F6D68] font-mono">Weather Window Valid</span>
+                    </div>
+
+                    <div>
+                      <span className="text-[9px] text-[#6F6D68] uppercase block">EXPECTED RETURN</span>
+                      <span className="text-[#F5F3EE] mt-0.5 block">{m.expectedReturn}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Footer */}
-              <div className="pt-3 border-t border-[#242424] flex items-center justify-between">
-                <span className="text-[10px] text-[#6F6D68]">Vehicle: {m.assignedVehicles?.join(", ") || "None"}</span>
-                <Link href={`/missions/${m.id}`}>
-                  <Button variant="secondary" size="sm" className="font-mono text-xs">
-                    <span>Dossier</span>
-                    <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </Link>
+                {/* Footer */}
+                <div className="pt-3 border-t border-[#242424] flex items-center justify-between">
+                  <span className="text-[10px] text-[#6F6D68]">Vehicle: {m.assignedVehicles?.join(", ") || "None"}</span>
+                  <Link href={`/missions/${m.id}`}>
+                    <Button variant="secondary" size="sm" className="font-mono text-xs">
+                      <span>Dossier</span>
+                      <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -19,15 +19,13 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Drawer } from "@/components/ui";
-import { mockTrackingEntities, TacticalTrackingEntity, trackingService } from "@/services/tracking";
+import { TacticalTrackingEntity, trackingService } from "@/services/tracking";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { formatCoords } from "@/lib/utils";
 
 export default function OperationsMapPage() {
-  const [trackingEntities, setTrackingEntities] = useState<TacticalTrackingEntity[]>(mockTrackingEntities);
-  const [selectedEntity, setSelectedEntity] = useState<TacticalTrackingEntity | null>(
-    mockTrackingEntities[0] // Bharati Station initially selected
-  );
+  const [trackingEntities, setTrackingEntities] = useState<TacticalTrackingEntity[]>([]);
+  const [selectedEntity, setSelectedEntity] = useState<TacticalTrackingEntity | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -197,9 +195,11 @@ export default function OperationsMapPage() {
               {layers.stations && (
                 <button
                   onClick={() => {
-                    const entity = trackingEntities.find(e => e.id === "STAT-4" || e.name.toLowerCase().includes("bharati")) || mockTrackingEntities[0];
-                    setSelectedEntity(entity);
-                    setDrawerOpen(true);
+                    const entity = trackingEntities.find(e => e.id === "STAT-4" || e.name.toLowerCase().includes("bharati"));
+                    if (entity) {
+                      setSelectedEntity(entity);
+                      setDrawerOpen(true);
+                    }
                   }}
                   className="absolute top-[42%] left-[62%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   title="Bharati Station"
@@ -217,9 +217,11 @@ export default function OperationsMapPage() {
               {layers.stations && (
                 <button
                   onClick={() => {
-                    const entity = trackingEntities.find(e => e.id === "STAT-3" || e.name.toLowerCase().includes("maitri")) || mockTrackingEntities[1];
-                    setSelectedEntity(entity);
-                    setDrawerOpen(true);
+                    const entity = trackingEntities.find(e => e.id === "STAT-3" || e.name.toLowerCase().includes("maitri"));
+                    if (entity) {
+                      setSelectedEntity(entity);
+                      setDrawerOpen(true);
+                    }
                   }}
                   className="absolute top-[46%] left-[34%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   title="Maitri Station"
@@ -237,9 +239,11 @@ export default function OperationsMapPage() {
               {layers.vessels && (
                 <button
                   onClick={() => {
-                    const entity = trackingEntities.find(e => e.type === "VESSEL" || e.name.toLowerCase().includes("vasundhara") || e.name.toLowerCase().includes("vessel")) || mockTrackingEntities[2];
-                    setSelectedEntity(entity);
-                    setDrawerOpen(true);
+                    const entity = trackingEntities.find(e => e.type === "VESSEL" || e.name.toLowerCase().includes("vasundhara") || e.name.toLowerCase().includes("vessel"));
+                    if (entity) {
+                      setSelectedEntity(entity);
+                      setDrawerOpen(true);
+                    }
                   }}
                   className="absolute top-[30%] left-[58%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   title="Expedition Vessel"
@@ -258,9 +262,11 @@ export default function OperationsMapPage() {
               {/* 4. Personnel Traverse: Team Alpha - White Marker */}
               <button
                 onClick={() => {
-                  const entity = trackingEntities.find(e => e.type === "TEAM" || e.name.toLowerCase().includes("alpha") || e.name.toLowerCase().includes("traverse")) || mockTrackingEntities[4];
-                  setSelectedEntity(entity);
-                  setDrawerOpen(true);
+                  const entity = trackingEntities.find(e => e.type === "TEAM" || e.name.toLowerCase().includes("alpha") || e.name.toLowerCase().includes("traverse"));
+                  if (entity) {
+                    setSelectedEntity(entity);
+                    setDrawerOpen(true);
+                  }
                 }}
                 className="absolute top-[52%] left-[64%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                 title="Team Alpha Field Party"
@@ -277,9 +283,11 @@ export default function OperationsMapPage() {
               {layers.cargo && (
                 <button
                   onClick={() => {
-                    const entity = trackingEntities.find(e => e.type === "CARGO" || e.id.includes("CRG")) || mockTrackingEntities[5];
-                    setSelectedEntity(entity);
-                    setDrawerOpen(true);
+                    const entity = trackingEntities.find(e => e.type === "CARGO" || e.id.includes("CRG"));
+                    if (entity) {
+                      setSelectedEntity(entity);
+                      setDrawerOpen(true);
+                    }
                   }}
                   className="absolute top-[33%] left-[59%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   title="Cargo Pod"

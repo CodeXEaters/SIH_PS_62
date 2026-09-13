@@ -15,24 +15,67 @@ import {
 } from "recharts";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockInventory } from "@/data/mock";
 import { inventoryService } from "@/services/inventory";
 import { InventoryItem } from "@/types";
 
 export default function InventoryForecastPage() {
-  const [items, setItems] = useState<InventoryItem[]>(mockInventory);
-  const [selectedItemId, setSelectedItemId] = useState("INV-BHR-001");
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    inventoryService.getAllInventory().then((data) => {
-      if (data && data.length > 0) {
-        setItems(data);
-        setSelectedItemId((prev) => (data.some((i) => i.id === prev) ? prev : data[0].id));
-      }
-    }).catch(console.warn);
+    inventoryService
+      .getAllInventory()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setItems(data);
+          setSelectedItemId((prev) => (prev && data.some((i) => i.id === prev) ? prev : data[0].id));
+        } else {
+          setItems([]);
+          setSelectedItemId("");
+        }
+      })
+      .catch(console.warn)
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const item = items.find((i) => i.id === selectedItemId) || items[0];
+  const item = items.find((i) => i.id === selectedItemId) || items[0] || null;
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-5xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-[#6F6D68] uppercase tracking-wider">
+            Loading consumption and depletion forecasts...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!item) {
+    return (
+      <AppShell>
+        <div className="max-w-5xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-[#101010] border border-[#242424] text-[#B85C5C] mb-2">
+            <TrendingDown className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-[#F5F3EE]">NO INVENTORY DATA AVAILABLE</h2>
+          <p className="text-xs font-mono text-[#A5A29C]">
+            No inventory records registered for predictive depletion modeling.
+          </p>
+          <div className="pt-2">
+            <Link href="/inventory">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Station Inventory</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

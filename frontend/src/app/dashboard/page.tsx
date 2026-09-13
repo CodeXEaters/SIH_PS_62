@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockAttentionItems, mockStations, mockCargoItems } from "@/data/mock";
 import { stationsService } from "@/services/stations";
 import { cargoService } from "@/services/cargo";
 import { personnelService } from "@/services/personnel";
@@ -28,9 +27,9 @@ import { reportsService } from "@/services/reports";
 import { Station, CargoItem, AttentionItem } from "@/types";
 
 export default function DashboardPage() {
-  const [stations, setStations] = useState<Station[]>(mockStations);
-  const [cargoItems, setCargoItems] = useState<CargoItem[]>(mockCargoItems);
-  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>(mockAttentionItems);
+  const [stations, setStations] = useState<Station[]>([]);
+  const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
+  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([]);
   const [kpiData, setKpiData] = useState({
     personnel: "...",
     personnelSubtext: "Loading roster...",
@@ -59,13 +58,13 @@ export default function DashboardPage() {
     ]).then(([stationsRes, cargoRes, personnelRes, assetsRes, missionsRes, intelRes, reportsRes]) => {
       if (!isMounted) return;
 
-      if (stationsRes.status === "fulfilled" && stationsRes.value && stationsRes.value.length > 0) {
+      if (stationsRes.status === "fulfilled" && stationsRes.value) {
         setStations(stationsRes.value);
       }
-      if (cargoRes.status === "fulfilled" && cargoRes.value && cargoRes.value.length > 0) {
+      if (cargoRes.status === "fulfilled" && cargoRes.value) {
         setCargoItems(cargoRes.value);
       }
-      if (intelRes.status === "fulfilled" && intelRes.value && intelRes.value.length > 0) {
+      if (intelRes.status === "fulfilled" && intelRes.value) {
         setAttentionItems(intelRes.value);
       }
 
@@ -81,7 +80,7 @@ export default function DashboardPage() {
           return s === "ACTIVE" || s === "ON MISSION" || s === "ON_MISSION";
         }).length;
         pVal = String(activeCount);
-        pSub = "Across expedition operations";
+        pSub = "Active + On Mission";
       }
 
       // 2. Tracked Cargo (total manifest items tracked by the system)
@@ -154,7 +153,7 @@ export default function DashboardPage() {
       value: kpiData.personnel,
       status: "DEPLOYED",
       subtext: kpiData.personnelSubtext,
-      href: "/personnel",
+      href: "/personnel?status=active-deployed",
     },
     {
       label: "TRACKED CARGO",

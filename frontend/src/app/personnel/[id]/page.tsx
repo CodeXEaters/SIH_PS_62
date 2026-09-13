@@ -11,23 +11,38 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockPersonnel } from "@/data/mock";
 import { personnelService } from "@/services/personnel";
 import { Personnel } from "@/types";
 
 export default function PersonnelProfilePage() {
   const params = useParams();
   const id = params.id as string;
-  const [person, setPerson] = useState<Personnel>(
-    () => mockPersonnel.find((p) => p.id === id) || mockPersonnel[0]
-  );
+  const [person, setPerson] = useState<Personnel | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    personnelService.getPersonnelById(id).then((p) => {
-      if (isMounted && p) setPerson(p);
-    }).catch(console.warn);
-    return () => { isMounted = false; };
+    setIsLoading(true);
+    setNotFound(false);
+    personnelService
+      .getPersonnelById(id)
+      .then((p) => {
+        if (isMounted) {
+          if (p) setPerson(p);
+          else setNotFound(true);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch personnel:", err);
+        if (isMounted) setNotFound(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   const standardTimeline = [
@@ -36,6 +51,42 @@ export default function PersonnelProfilePage() {
     { step: "Boarded Vessel (MV Vasiliy Golovnin)", location: "Port of Cape Town", date: "04 Dec 2026", completed: true },
     { step: "Reached Antarctica (Prydz Bay Mooring)", location: "Larsemann Coast", date: "08 Jan 2027", completed: true },
   ];
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-[#6F6D68] uppercase tracking-wider">
+            Loading personnel profile...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (notFound || !person) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-[#101010] border border-[#242424] text-[#B85C5C] mb-2">
+            <ShieldCheck className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-[#F5F3EE]">PERSONNEL RECORD NOT FOUND</h2>
+          <p className="text-xs font-mono text-[#A5A29C]">
+            No expedition member record found for identifier &quot;{id}&quot;.
+          </p>
+          <div className="pt-2">
+            <Link href="/personnel">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Personnel Roster</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

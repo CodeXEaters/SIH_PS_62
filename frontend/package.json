@@ -6,7 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "reset-demo-db": "node scripts/reset-demo-db.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

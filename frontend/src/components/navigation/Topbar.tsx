@@ -20,12 +20,12 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store";
 import { useTheme } from "@/context/ThemeContext";
-import { mockAttentionItems } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { authService, UserSession } from "@/services/auth";
 import { intelligenceService } from "@/services/intelligence";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { syncOfflineQueue } from "@/lib/offline/sync/syncEngine";
+import { AttentionItem } from "@/types";
 
 export const Topbar: React.FC = () => {
   const {
@@ -41,7 +41,7 @@ export const Topbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [attentionItems, setAttentionItems] = useState(mockAttentionItems);
+  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
@@ -53,7 +53,7 @@ export const Topbar: React.FC = () => {
     intelligenceService
       .getAttentionItems()
       .then((items) => {
-        if (items && items.length > 0) setAttentionItems(items);
+        if (items) setAttentionItems(items);
       })
       .catch(() => {});
   }, []);
@@ -64,7 +64,7 @@ export const Topbar: React.FC = () => {
       intelligenceService
         .getAttentionItems()
         .then((items) => {
-          if (items && items.length > 0) setAttentionItems(items);
+          if (items) setAttentionItems(items);
         })
         .catch(() => {});
     },

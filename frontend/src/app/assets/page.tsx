@@ -16,12 +16,11 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
-import { mockAssets } from "@/data/mock";
 import { assetsService } from "@/services/assets";
 import { Asset, AssetCondition } from "@/types";
 
 export default function AssetsPage() {
-  const [assetsList, setAssetsList] = useState<Asset[]>(mockAssets);
+  const [assetsList, setAssetsList] = useState<Asset[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [conditionFilter, setConditionFilter] = useState("ALL");
@@ -32,9 +31,7 @@ export default function AssetsPage() {
     assetsService
       .getAllAssets()
       .then((data) => {
-        if (data && data.length > 0) {
-          setAssetsList(data);
-        }
+        setAssetsList(data || []);
       })
       .catch((err) => console.warn("Failed to fetch assets:", err))
       .finally(() => setIsLoading(false));
@@ -167,57 +164,63 @@ export default function AssetsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-polar-border/60">
-                {filteredAssets.map((asset) => (
-                  <tr key={asset.id} className="hover:bg-polar-surface/50 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-polar-cyan">
-                      <Link href={`/assets/${asset.id}`} className="hover:underline">
-                        {asset.id}
-                      </Link>
-                    </td>
-
-                    <td className="py-3.5 px-4 font-sans max-w-xs">
-                      <span className="font-bold text-polar-snow block">{asset.name}</span>
-                      <span className="text-[10px] text-polar-muted font-mono">{asset.category}</span>
-                    </td>
-
-                    <td className="py-3.5 px-4 uppercase font-bold text-polar-snow">
-                      {asset.stationSlug || asset.stationId}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      {getConditionBadge(asset.condition)}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 bg-polar-midnight rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-polar-cyan"
-                            style={{ width: `${asset.utilizationPct}%` }}
-                          />
-                        </div>
-                        <span className="font-bold text-polar-snow">{asset.utilizationPct}%</span>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-polar-muted">
-                      {asset.operatingHours} hrs
-                    </td>
-
-                    <td className="py-3.5 px-4 text-polar-snow">
-                      {asset.nextMaintenance}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <Link href={`/assets/${asset.id}`}>
-                        <Button variant="outline" size="sm" className="h-7 text-xs px-2.5">
-                          <span>Inspect</span>
-                          <ArrowRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </Link>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-polar-muted font-mono">
+                      Loading expedition equipment and vehicles...
                     </td>
                   </tr>
-                ))}
+                ) : filteredAssets.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-polar-muted font-mono">
+                      No assets found matching criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAssets.map((asset) => (
+                    <tr key={asset.id} className="hover:bg-polar-surface/50 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-polar-cyan">
+                        <Link href={`/assets/${asset.id}`} className="hover:underline">
+                          {asset.id}
+                        </Link>
+                      </td>
+
+                      <td className="py-3.5 px-4 font-sans max-w-xs">
+                        <span className="font-bold text-polar-snow block">{asset.name}</span>
+                        <span className="text-[10px] text-polar-muted font-mono">{asset.category}</span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-polar-muted uppercase">
+                        {asset.stationSlug || asset.stationId}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        {getConditionBadge(asset.condition)}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-bold text-polar-snow">
+                        {asset.utilizationPct}%
+                      </td>
+
+                      <td className="py-3.5 px-4 text-polar-muted">
+                        {asset.operatingHours} hrs
+                      </td>
+
+                      <td className="py-3.5 px-4 text-polar-snow">
+                        {asset.nextMaintenance}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <Link href={`/assets/${asset.id}`}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs px-2.5">
+                            <span>Inspect</span>
+                            <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
