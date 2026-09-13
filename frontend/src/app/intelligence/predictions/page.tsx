@@ -11,16 +11,16 @@ export default function PredictionsPage() {
   const predictions = [
     {
       type: "CARGO DELAY",
-      target: "CRG-ANT-004821 (Atmospheric Lidar Pod)",
-      confidence: "68%",
+      target: "CRG-2026-001 (Atmospheric Aerosol Filters & Sensors)",
+      confidence: "94%",
       impact: "+18h Estimated Delay",
       factors: [
-        "Weather: 38-knot katabatic winds at Prydz Bay heli-deck",
-        "Transport dependency: Ka-32 flight clearance window",
-        "Payload constraints: Sling weight exceeds sub-zero high-wind envelope",
+        "Weather: 42-knot katabatic gusts at Prydz Bay offshore mooring",
+        "Transport dependency: Helicopter sling-load envelope clearance",
+        "Payload constraints: Sling weight limits in sub-zero turbulence",
       ],
-      recommendation: "Move non-critical cargo to next available transport window. Stage Lidar inside vessel Hold 2 climate bay.",
-      actionUrl: "/cargo/CRG-ANT-004821",
+      recommendation: "Hold heli-lift transfer until wind gusts subside below 28 kts. Stage container in secure hold.",
+      actionUrl: "/cargo/CRG-2026-001",
     },
     {
       type: "INVENTORY STOCKOUT",

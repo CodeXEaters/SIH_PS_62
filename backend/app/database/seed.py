@@ -14,6 +14,10 @@ from app.models.cargo_event import CargoEvent, CargoEventType
 from app.models.transport import Transport, TransportType, TransportStatus
 from app.models.mission import Mission, MissionType, MissionStatus, MissionRiskLevel
 from app.models.tracking_event import TrackingEvent, TrackingEntityType
+from app.models.alert import Alert, AlertSeverity, AlertType, AlertStatus, AlertEntityType
+from app.models.emergency import Emergency, EmergencySeverity, EmergencyType, EmergencyStatus, EmergencyDecision
+from app.models.inventory_transfer import InventoryTransfer
+from app.models.fuel_log import FuelLog
 from app.core.security import get_password_hash
 
 logger = logging.getLogger("dhruv.seed")
@@ -129,6 +133,14 @@ def seed_database(db: Session = None) -> None:
                 "location": "Queen Maud Land Deep Core Site, Antarctica",
                 "latitude": -71.2000,
                 "longitude": 12.5000,
+                "type": "FIELD_CAMP",
+                "status": "OPERATIONAL",
+            },
+            {
+                "name": "Field Camp Echo",
+                "location": "Amery Ice Shelf, East Antarctica",
+                "latitude": -69.7500,
+                "longitude": 73.5000,
                 "type": "FIELD_CAMP",
                 "status": "OPERATIONAL",
             },
@@ -657,10 +669,10 @@ def seed_database(db: Session = None) -> None:
                 "category": CargoCategory.SCIENTIFIC,
                 "weight": 24.5,
                 "priority": CargoPriority.HIGH,
-                "origin_station_id": created_stations["Maitri Station"].id,
+                "origin_station_id": created_stations["NCPOR Goa"].id,
                 "destination_station_id": created_stations["Bharati Station"].id,
-                "status": CargoStatus.IN_TRANSIT,
-                "current_location": "Southern Ocean Transit Corridor",
+                "status": CargoStatus.DELAYED,
+                "current_location": "Prydz Bay Fast-Ice Mooring (Katabatic Delay +18h)",
                 "qr_code": "DHRUV:CARGO:CRG-2026-001",
             },
             {
@@ -723,6 +735,9 @@ def seed_database(db: Session = None) -> None:
                 db.refresh(cg)
                 created_cargo[c["cargo_code"]] = cg
             else:
+                existing.status = c["status"]
+                existing.current_location = c["current_location"]
+                db.commit()
                 created_cargo[c["cargo_code"]] = existing
 
         # ==========================================
@@ -735,17 +750,41 @@ def seed_database(db: Session = None) -> None:
             {
                 "cargo_id": created_cargo["CRG-2026-001"].id,
                 "event_type": CargoEventType.PACKED,
-                "location": "Maitri Cargo Storage Facility",
-                "station_id": created_stations["Maitri Station"].id,
-                "remarks": "Packed and inspected for coastal vessel loading",
+                "location": "NCPOR Central Logistics Depot, Goa",
+                "station_id": created_stations["NCPOR Goa"].id,
+                "remarks": "Hermetic climate-controlled crate sealed and inspected",
                 "updated_by": ops_user_id,
             },
             {
                 "cargo_id": created_cargo["CRG-2026-001"].id,
                 "event_type": CargoEventType.LOADED,
-                "location": "MV Vasundhara Hold 1",
-                "station_id": created_stations["Maitri Station"].id,
-                "remarks": "Loaded aboard MV Vasundhara for passage to Bharati",
+                "location": "Goa Supply Wharf Convoy",
+                "station_id": created_stations["NCPOR Goa"].id,
+                "remarks": "Staged onto feeder convoy for Cape Town transit hub",
+                "updated_by": ops_user_id,
+            },
+            {
+                "cargo_id": created_cargo["CRG-2026-001"].id,
+                "event_type": CargoEventType.SCANNED,
+                "location": "Port of Cape Town Berth 4",
+                "station_id": created_stations["Cape Town Transit Hub"].id,
+                "remarks": "Cold store staging transfer & QR barcode verification passed",
+                "updated_by": ops_user_id,
+            },
+            {
+                "cargo_id": created_cargo["CRG-2026-001"].id,
+                "event_type": CargoEventType.ARRIVED_AT_HUB,
+                "location": "Prydz Bay Fast-Ice Offshore Mooring",
+                "station_id": created_stations["Bharati Station"].id,
+                "remarks": "MV Vasundhara moored at offshore fast-ice edge",
+                "updated_by": ops_user_id,
+            },
+            {
+                "cargo_id": created_cargo["CRG-2026-001"].id,
+                "event_type": CargoEventType.DELAY_REPORTED,
+                "location": "Prydz Bay Fast-Ice Mooring",
+                "station_id": created_stations["Bharati Station"].id,
+                "remarks": "Katabatic wind gusts exceeding 42 kts; helicopter sling-load operations on weather hold +18h",
                 "updated_by": ops_user_id,
             },
             {
@@ -867,6 +906,32 @@ def seed_database(db: Session = None) -> None:
                 "status": MissionStatus.ACTIVE,
                 "risk_level": MissionRiskLevel.HIGH,
             },
+            {
+                "mission_name": "Prydz Bay Sea-Ice Thickness Core Survey",
+                "mission_type": MissionType.SCIENTIFIC_SURVEY,
+                "origin": "Bharati Station",
+                "destination": "Prydz Bay Fast-Ice Zone",
+                "team_lead_id": lead1_id,
+                "origin_station_id": created_stations["Bharati Station"].id,
+                "destination_station_id": created_stations["Bharati Station"].id,
+                "start_time": now - timedelta(days=12),
+                "expected_return": now - timedelta(days=2),
+                "status": MissionStatus.COMPLETED,
+                "risk_level": MissionRiskLevel.LOW,
+            },
+            {
+                "mission_name": "Schirmacher Oasis Environmental Baseline Traverse",
+                "mission_type": MissionType.RECONNAISSANCE,
+                "origin": "Maitri Station",
+                "destination": "Field Camp Alpha",
+                "team_lead_id": lead2_id,
+                "origin_station_id": created_stations["Maitri Station"].id,
+                "destination_station_id": created_stations["Field Camp Alpha"].id,
+                "start_time": now + timedelta(days=5),
+                "expected_return": now + timedelta(days=14),
+                "status": MissionStatus.PLANNED,
+                "risk_level": MissionRiskLevel.LOW,
+            },
         ]
 
         created_missions = {}
@@ -947,6 +1012,175 @@ def seed_database(db: Session = None) -> None:
                 db.add(TrackingEvent(**tk))
         db.commit()
 
+        # ==========================================
+        # 12. Seed Inventory Transfers
+        # ==========================================
+        transfer_data = [
+            {
+                "transfer_code": "TRF-2026-001",
+                "item_name": "Aviation Turbine Fuel (Jet A-1)",
+                "quantity": 3200.0,
+                "unit": "Liters",
+                "from_location": "MV Vasundhara Fuel Bay",
+                "to_location": "Bharati Station Helipad Tanks",
+                "status": "COMPLETED",
+                "timestamp": now - timedelta(days=2, hours=4),
+                "authorizing_officer": "Lt. Col. Vikramaditya Rathore",
+                "notes": "Bulk aviation turbine fuel transfer completed via offshore bunkering line.",
+            },
+            {
+                "transfer_code": "TRF-2026-002",
+                "item_name": "Freeze-Dried MRE Rations",
+                "quantity": 600.0,
+                "unit": "Packs",
+                "from_location": "Bharati Station Central Larder",
+                "to_location": "Team Alpha Field Sledge (AST-BHR-018)",
+                "status": "COMPLETED",
+                "timestamp": now - timedelta(days=1, hours=2),
+                "authorizing_officer": "Omkar Joshi",
+                "notes": "High-altitude survival packs issued for Larsemann ridge glaciological traverse.",
+            },
+            {
+                "transfer_code": "TRF-2026-003",
+                "item_name": "Polar Grade Low-Sulfur Diesel",
+                "quantity": 50000.0,
+                "unit": "Liters",
+                "from_location": "MV Vasundhara Bulk Tank #2",
+                "to_location": "Bharati Station Fuel Farm",
+                "status": "PENDING_PUMPING",
+                "timestamp": now + timedelta(hours=18),
+                "authorizing_officer": "Chief Engr. Suresh Nair",
+                "notes": "Scheduled bulk line pumping contingent on wind speeds dropping below 25 kts.",
+            },
+        ]
+        for trf in transfer_data:
+            existing = db.query(InventoryTransfer).filter(InventoryTransfer.transfer_code == trf["transfer_code"]).first()
+            if not existing:
+                db.add(InventoryTransfer(**trf))
+        db.commit()
+
+        # ==========================================
+        # 13. Seed Fuel Consumption Logs (Historical Weekly)
+        # ==========================================
+        maitri_st = created_stations["Maitri Station"]
+        bharati_st = created_stations["Bharati Station"]
+        fuel_logs_data = [
+            {"station_id": maitri_st.id, "week_label": "Wk 48", "liters_consumed": 2450.0, "recorded_date": date(2026, 11, 29), "notes": "Nominal heating cycle"},
+            {"station_id": bharati_st.id, "week_label": "Wk 48", "liters_consumed": 1260.0, "recorded_date": date(2026, 11, 29), "notes": "Nominal operations"},
+            {"station_id": maitri_st.id, "week_label": "Wk 49", "liters_consumed": 2520.0, "recorded_date": date(2026, 12, 6), "notes": "Standard load"},
+            {"station_id": bharati_st.id, "week_label": "Wk 49", "liters_consumed": 1310.0, "recorded_date": date(2026, 12, 6), "notes": "Cold front surge"},
+            {"station_id": maitri_st.id, "week_label": "Wk 50", "liters_consumed": 2600.0, "recorded_date": date(2026, 12, 13), "notes": "Secondary generator test"},
+            {"station_id": bharati_st.id, "week_label": "Wk 50", "liters_consumed": 1420.0, "recorded_date": date(2026, 12, 13), "notes": "Continuous laboratory heating"},
+            {"station_id": maitri_st.id, "week_label": "Wk 51", "liters_consumed": 2480.0, "recorded_date": date(2026, 12, 20), "notes": "Nominal heating"},
+            {"station_id": bharati_st.id, "week_label": "Wk 51", "liters_consumed": 1560.0, "recorded_date": date(2026, 12, 20), "notes": "Blizzard heating demand peak"},
+            {"station_id": maitri_st.id, "week_label": "Wk 52", "liters_consumed": 2510.0, "recorded_date": date(2026, 12, 27), "notes": "Stable operations"},
+            {"station_id": bharati_st.id, "week_label": "Wk 52", "liters_consumed": 1260.0, "recorded_date": date(2026, 12, 27), "notes": "Stabilized consumption"},
+        ]
+        for fl in fuel_logs_data:
+            existing = (
+                db.query(FuelLog)
+                .filter(FuelLog.station_id == fl["station_id"], FuelLog.week_label == fl["week_label"])
+                .first()
+            )
+            if not existing:
+                db.add(FuelLog(**fl))
+        db.commit()
+
+        # ==========================================
+        # 14. Seed Operational Alerts
+        # ==========================================
+        bharati_fuel_item = (
+            db.query(Inventory)
+            .filter(Inventory.category == "FUEL", Inventory.station_id == created_stations["Bharati Station"].id)
+            .first()
+        )
+        crg1 = created_cargo.get("CRG-2026-001")
+        m_active = created_missions.get("Larsemann Hills Glaciological Traverse")
+
+        alerts_data = [
+            {
+                "alert_type": AlertType.EMERGENCY,
+                "severity": AlertSeverity.CRITICAL,
+                "title": "Crevasse Breach & Frostbite Alert - Team Alpha Traverse",
+                "message": "Field emergency SOS triggered at Sector 4 Ridge. 87 km from Bharati Base. Immediate SAR dispatch required.",
+                "entity_type": AlertEntityType.MISSION,
+                "entity_id": m_active.id if m_active else None,
+                "station_id": created_stations["Bharati Station"].id,
+                "status": AlertStatus.ACTIVE,
+            },
+            {
+                "alert_type": AlertType.INVENTORY_SHORTAGE,
+                "severity": AlertSeverity.HIGH,
+                "title": "Bharati Polar Diesel Stock Below Safety Reserve",
+                "message": "Daily consumption 180 L/day. Reserve buffer below standard 14-day safety threshold (6 days remaining).",
+                "entity_type": AlertEntityType.INVENTORY,
+                "entity_id": bharati_fuel_item.id if bharati_fuel_item else None,
+                "station_id": created_stations["Bharati Station"].id,
+                "status": AlertStatus.ACTIVE,
+            },
+            {
+                "alert_type": AlertType.CARGO_DELAY,
+                "severity": AlertSeverity.MEDIUM,
+                "title": "Cargo Delay Predicted: Katabatic Winds at Prydz Bay",
+                "message": "CRG-2026-001 delivery to Bharati Station delayed by +18h due to 42 kt wind gusts at offshore mooring.",
+                "entity_type": AlertEntityType.CARGO,
+                "entity_id": crg1.id if crg1 else None,
+                "station_id": created_stations["Bharati Station"].id,
+                "status": AlertStatus.ACTIVE,
+            },
+            {
+                "alert_type": AlertType.GENERAL,
+                "severity": AlertSeverity.LOW,
+                "title": "High-Latitude Satellite Uplink Nominal",
+                "message": "INSAT-4CR polar transponder synchronized. All station communication links operating at 99.8% availability.",
+                "entity_type": AlertEntityType.SYSTEM,
+                "entity_id": None,
+                "station_id": created_stations["NCPOR Goa"].id,
+                "status": AlertStatus.ACTIVE,
+            },
+        ]
+
+        for alt in alerts_data:
+            existing = db.query(Alert).filter(Alert.title == alt["title"]).first()
+            if not existing:
+                db.add(Alert(**alt))
+        db.commit()
+
+        # ==========================================
+        # 15. Seed Emergency Incident (EMG-2026-001)
+        # ==========================================
+        casualty = db.query(Personnel).filter(Personnel.name.ilike("%Tenzing Norbu%")).first()
+        if not casualty:
+            casualty = db.query(Personnel).first()
+        rescue_asset = db.query(Asset).filter(Asset.asset_name.ilike("%PistenBully%")).first()
+        if not rescue_asset:
+            rescue_asset = db.query(Asset).first()
+
+        emergency_incident = {
+            "incident_code": "EMG-2026-001",
+            "title": "Crevasse Breach & Frostbite Hazard during Plateau Traverse",
+            "emergency_type": EmergencyType.MEDICAL,
+            "severity": EmergencySeverity.CRITICAL,
+            "status": EmergencyStatus.OPEN,
+            "station_id": created_stations["Bharati Station"].id,
+            "mission_id": m_active.id if m_active else None,
+            "personnel_id": casualty.id if casualty else None,
+            "asset_id": rescue_asset.id if rescue_asset else None,
+            "latitude": -69.4500,
+            "longitude": 76.1200,
+            "location_description": "Sector 4 Ridge • Crevasse Zone",
+            "description": "Traverse team reports crevasse edge collapse beneath sledge runner. Sledge stabilized but 1 researcher exhibits Stage-2 frostbite symptoms. Ambient temperature -28°C with 38 kt winds.",
+            "recommended_response": "Deploy PistenBully Polar Rescue Unit with trauma medical kit via Route 2 (Distance: 87 km, ETA: 1h 45m). Evacuate casualty to Bharati Station medical clinic.",
+            "human_decision": EmergencyDecision.PENDING,
+            "decision_notes": None,
+            "reported_by": ops_user_id,
+        }
+
+        existing_emg = db.query(Emergency).filter(Emergency.incident_code == emergency_incident["incident_code"]).first()
+        if not existing_emg:
+            db.add(Emergency(**emergency_incident))
+        db.commit()
+
         logger.info("DHRUV database seeded successfully!")
         print("[OK] DHRUV database seeded successfully:")
         print(f"   * Users: {db.query(User).count()}")
@@ -959,6 +1193,10 @@ def seed_database(db: Session = None) -> None:
         print(f"   * Transport: {db.query(Transport).count()}")
         print(f"   * Missions: {db.query(Mission).count()}")
         print(f"   * Tracking Events: {db.query(TrackingEvent).count()}")
+        print(f"   * Inventory Transfers: {db.query(InventoryTransfer).count()}")
+        print(f"   * Fuel Logs: {db.query(FuelLog).count()}")
+        print(f"   * Alerts: {db.query(Alert).count()}")
+        print(f"   * Emergencies: {db.query(Emergency).count()}")
 
     finally:
         if should_close:

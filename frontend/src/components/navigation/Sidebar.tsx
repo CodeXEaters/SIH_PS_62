@@ -79,7 +79,7 @@ export const Sidebar: React.FC = () => {
       title: "CARGO",
       items: [
         { label: "Cargo Dashboard", href: "/cargo", icon: Box },
-        { label: "Cargo Details", href: "/cargo/CRG-ANT-004821", icon: Box, badge: "Delay", badgeColor: "bg-[#141008] text-[#C49A55] border-[#C49A55]/30" },
+        { label: "Cargo Details", href: "/cargo/CRG-2026-001", icon: Box },
         { label: "QR Scanner", href: "/cargo/scanner", icon: QrCode },
         { label: "Chain of Custody", href: "/cargo/chain-of-custody", icon: FileSpreadsheet },
       ],
@@ -89,7 +89,7 @@ export const Sidebar: React.FC = () => {
       items: [
         { label: "Station Inventory", href: "/inventory", icon: Database },
         { label: "Transfers", href: "/inventory/transfers", icon: ArrowLeftRight },
-        { label: "Forecast", href: "/inventory/forecast", icon: TrendingDown, badge: "Diesel", badgeColor: "bg-[#140808] text-[#B85C5C] border-[#B85C5C]/30" },
+        { label: "Forecast", href: "/inventory/forecast", icon: TrendingDown },
       ],
     },
     {
@@ -104,7 +104,7 @@ export const Sidebar: React.FC = () => {
       title: "OPERATIONS",
       items: [
         { label: "Operations Map", href: "/operations/map", icon: MapPin },
-        { label: "Field Missions", href: "/missions", icon: Radio, badge: "08" },
+        { label: "Field Missions", href: "/missions", icon: Radio },
       ],
     },
     {
@@ -112,7 +112,7 @@ export const Sidebar: React.FC = () => {
       items: [
         { label: "Risk Center", href: "/intelligence/risk", icon: ShieldAlert },
         { label: "Predictions", href: "/intelligence/predictions", icon: Sparkles },
-        { label: "Anomalies", href: "/intelligence/anomalies", icon: AlertTriangle, badge: "Alert", badgeColor: "bg-[#140808] text-[#B85C5C] border-[#B85C5C]/30" },
+        { label: "Anomalies", href: "/intelligence/anomalies", icon: AlertTriangle },
         { label: "Optimization", href: "/intelligence/optimization", icon: Sliders },
         { label: "What-if", href: "/intelligence/what-if", icon: Brain },
       ],
@@ -120,7 +120,7 @@ export const Sidebar: React.FC = () => {
     {
       title: "EMERGENCY",
       items: [
-        { label: "Active Incidents", href: "/emergency", icon: ShieldAlert, badge: "EM-024", badgeColor: "bg-[#140808] text-[#B85C5C] border-[#B85C5C]/40" },
+        { label: "Active Incidents", href: "/emergency", icon: ShieldAlert, badge: "SOS", badgeColor: "bg-[#140808] text-[#B85C5C] border-[#B85C5C]/40" },
         { label: "Response Resources", href: "/emergency/active", icon: Compass },
         { label: "History", href: "/emergency/history", icon: Clock },
       ],

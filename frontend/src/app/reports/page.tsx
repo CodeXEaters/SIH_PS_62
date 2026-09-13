@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart3,
   TrendingUp,
@@ -12,6 +12,11 @@ import {
   Truck,
   Radio,
   FileSpreadsheet,
+  RefreshCw,
+  ShieldCheck,
+  Fuel,
+  Activity,
+  AlertTriangle,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -26,33 +31,35 @@ import {
 } from "recharts";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
+import { reportsService, ReportSummary, ReportChartsResponse } from "@/services/reports";
 
 export default function ReportsPage() {
-  const [activeReportTab, setActiveReportTab] = useState("cargo");
+  const [activeReportTab, setActiveReportTab] = useState<"cargo" | "fuel" | "assets">("cargo");
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
+  const [charts, setCharts] = useState<ReportChartsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Recharts decision data
-  const monthlyCargoData = [
-    { month: "Nov 2026", dispatched: 1842, received: 420 },
-    { month: "Dec 2026", dispatched: 1842, received: 980 },
-    { month: "Jan 2027", dispatched: 1842, received: 1420 },
-    { month: "Feb 2027 (Est)", dispatched: 1842, received: 1842 },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    Promise.allSettled([
+      reportsService.getPerformanceSummary(),
+      reportsService.getReportCharts(),
+    ]).then(([summaryRes, chartsRes]) => {
+      if (!isMounted) return;
+      if (summaryRes.status === "fulfilled" && summaryRes.value) {
+        setSummary(summaryRes.value);
+      }
+      if (chartsRes.status === "fulfilled" && chartsRes.value) {
+        setCharts(chartsRes.value);
+      }
+      setIsLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
-  const fuelConsumptionData = [
-    { week: "Wk 48", maitri: 2450, bharati: 1260 },
-    { week: "Wk 49", maitri: 2520, bharati: 1310 },
-    { week: "Wk 50", maitri: 2600, bharati: 1420 },
-    { week: "Wk 51", maitri: 2480, bharati: 1560 }, // Spike at Bharati
-    { week: "Wk 52", maitri: 2510, bharati: 1260 },
-  ];
-
-  const assetUptimeData = [
-    { name: "Vehicles", uptime: 98 },
-    { name: "Generators", uptime: 95 },
-    { name: "Comms", uptime: 99 },
-    { name: "Scientific", uptime: 92 },
-    { name: "Medical", uptime: 100 },
-  ];
+  const monthlyCargoData = charts?.monthlyCargoData ?? [];
+  const fuelConsumptionData = charts?.fuelConsumptionData ?? [];
+  const assetHealthData = charts?.assetHealthData ?? [];
 
   return (
     <AppShell>
@@ -73,7 +80,7 @@ export default function ReportsPage() {
               EXPEDITION ANALYTICS &amp; REPORTS
             </h1>
             <p className="text-xs sm:text-sm text-polar-muted mt-0.5">
-              Throughput logs, fuel burn curves, asset uptime statistics, and safety compliance audits.
+              Throughput logs, fuel burn curves, fleet health readiness, and safety compliance audits.
             </p>
           </div>
 
@@ -81,6 +88,52 @@ export default function ReportsPage() {
             <Download className="w-3.5 h-3.5" />
             <span>Export Official PDF Report</span>
           </Button>
+        </div>
+
+        {/* Top Operational Metrics Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="p-4 rounded-lg bg-polar-deep/90 border border-polar-border space-y-1">
+            <span className="text-[10px] font-mono text-polar-muted uppercase block">READINESS INDEX</span>
+            <span className="text-xl font-bold font-mono text-emerald-400">
+              {summary ? `${Math.round(summary.expeditionReadinessPct)}%` : "..."}
+            </span>
+            <span className="text-[9px] font-mono text-polar-muted block">Asset Health Avg</span>
+          </div>
+          <div className="p-4 rounded-lg bg-polar-deep/90 border border-polar-border space-y-1">
+            <span className="text-[10px] font-mono text-polar-muted uppercase block">CARGO TRACKED</span>
+            <span className="text-xl font-bold font-mono text-polar-cyan">
+              {summary ? `${summary.cargoTonnageTracked} t` : "..."}
+            </span>
+            <span className="text-[9px] font-mono text-polar-muted block">Expedition Manifest</span>
+          </div>
+          <div className="p-4 rounded-lg bg-polar-deep/90 border border-polar-border space-y-1">
+            <span className="text-[10px] font-mono text-polar-muted uppercase block">MIN SUPPLY RESERVE</span>
+            <span className={`text-xl font-bold font-mono ${(summary?.criticalSupplyDaysMin || 0) < 10 ? "text-amber-400" : "text-polar-snow"}`}>
+              {summary ? `${summary.criticalSupplyDaysMin} d` : "..."}
+            </span>
+            <span className="text-[9px] font-mono text-polar-muted block">Critical Inventory</span>
+          </div>
+          <div className="p-4 rounded-lg bg-polar-deep/90 border border-polar-border space-y-1">
+            <span className="text-[10px] font-mono text-polar-muted uppercase block">MISSIONS DONE</span>
+            <span className="text-xl font-bold font-mono text-polar-snow">
+              {summary ? summary.totalMissionsCompleted : "..."}
+            </span>
+            <span className="text-[9px] font-mono text-polar-muted block">Traverses Completed</span>
+          </div>
+          <div className="p-4 rounded-lg bg-polar-deep/90 border border-polar-border space-y-1">
+            <span className="text-[10px] font-mono text-polar-muted uppercase block">ACTIVE INCIDENTS</span>
+            <span className={`text-xl font-bold font-mono ${(summary?.activeIncidentsCount || 0) > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+              {summary ? summary.activeIncidentsCount : "..."}
+            </span>
+            <span className="text-[9px] font-mono text-polar-muted block">SAR &amp; Distress</span>
+          </div>
+          <div className="p-4 rounded-lg bg-polar-deep/90 border border-polar-border space-y-1">
+            <span className="text-[10px] font-mono text-polar-muted uppercase block">FUEL STATUS</span>
+            <span className="text-xs font-bold font-mono text-polar-snow mt-1 block truncate" title={summary?.fuelEfficiencyRate || ""}>
+              {summary ? (summary.fuelEfficiencyRate.includes("days") ? summary.fuelEfficiencyRate.replace("Derived: ", "") : "Stable") : "..."}
+            </span>
+            <span className="text-[9px] font-mono text-polar-muted block">Thermal Bunkering</span>
+          </div>
         </div>
 
         {/* Report Selector Tabs */}
@@ -113,7 +166,7 @@ export default function ReportsPage() {
                 : "text-polar-muted hover:text-polar-snow"
             }`}
           >
-            Asset Availability
+            Fleet Health &amp; Readiness
           </button>
         </div>
 
@@ -127,7 +180,9 @@ export default function ReportsPage() {
                   <h3 className="text-xs font-mono font-bold tracking-wider text-polar-snow uppercase">
                     CARGO THROUGHPUT &bull; TONNAGE RECEIVED VS MANIFEST
                   </h3>
-                  <Badge variant="info">1,420 t Delivered</Badge>
+                  <Badge variant="info">
+                    {charts ? `${charts.totalDeliveredTonnes} t Delivered` : "Calculating..."}
+                  </Badge>
                 </div>
                 <div className="h-72 w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
@@ -143,6 +198,7 @@ export default function ReportsPage() {
                           fontSize: "12px",
                         }}
                       />
+                      <Bar dataKey="dispatched" name="Tonnes Manifested" fill="#4A6572" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="received" name="Tonnes Received" fill="#C8A96B" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -156,7 +212,7 @@ export default function ReportsPage() {
                   <h3 className="text-xs font-mono font-bold tracking-wider text-polar-snow uppercase">
                     STATION WEEKLY DIESEL CONSUMPTION (LITERS)
                   </h3>
-                  <Badge variant="warning">Bharati Burn Surge</Badge>
+                  <Badge variant="warning">Bharati Burn Surge (Wk 51)</Badge>
                 </div>
                 <div className="h-72 w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
@@ -184,15 +240,17 @@ export default function ReportsPage() {
               <>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-mono font-bold tracking-wider text-polar-snow uppercase">
-                    FLEET OPERATIONAL UPTIME (%)
+                    FLEET HEALTH &amp; OPERATIONAL READINESS (%)
                   </h3>
-                  <Badge variant="success">98% Avg Uptime</Badge>
+                  <Badge variant="success">
+                    {summary ? `${Math.round(summary.expeditionReadinessPct)}% Avg Health` : "Active"}
+                  </Badge>
                 </div>
                 <div className="h-72 w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={assetUptimeData} layout="vertical">
+                    <BarChart data={assetHealthData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#16314F" />
-                      <XAxis type="number" domain={[80, 100]} stroke="#A7B9CB" fontSize={11} />
+                      <XAxis type="number" domain={[50, 100]} stroke="#A7B9CB" fontSize={11} />
                       <YAxis type="category" dataKey="name" stroke="#A7B9CB" fontSize={11} />
                       <Tooltip
                         contentStyle={{
@@ -202,7 +260,7 @@ export default function ReportsPage() {
                           fontSize: "12px",
                         }}
                       />
-                      <Bar dataKey="uptime" name="Uptime %" fill="#43C99A" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="score" name="Health Score %" fill="#43C99A" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

@@ -10,7 +10,7 @@ export default function PolarRiskCenterPage() {
   const breakdown = [
     { name: "WEATHER", score: 78, level: "HIGH", detail: "Katabatic gusts reaching 42 kts; -24°C windchill" },
     { name: "SEA ICE", score: 84, level: "CRITICAL", detail: "Fast-ice fracture zone 300m west of vessel mooring" },
-    { name: "CARGO", score: 68, level: "MODERATE", detail: "Atmospheric Lidar pod CRG-ANT-004821 delayed +18h" },
+    { name: "CARGO", score: 68, level: "MODERATE", detail: "Atmospheric sensor consignment CRG-2026-001 delayed +18h" },
     { name: "PERSONNEL", score: 58, level: "MODERATE", detail: "Larsemann ridge party under low visibility protocol" },
     { name: "ASSETS", score: 38, level: "NOMINAL", detail: "98.4% tracked vehicle and generator availability" },
     { name: "INVENTORY", score: 82, level: "CRITICAL", detail: "Bharati Station polar diesel runway at 6.9 days" },

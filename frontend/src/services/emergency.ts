@@ -2,6 +2,10 @@ import { apiClient } from "./apiClient";
 import { EmergencyIncident } from "@/types";
 
 function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
+  const stationName = em.station_name || "Bharati Station";
+  const personnelName = em.personnel_name || (em.personnel_id ? `Personnel #${em.personnel_id}` : "Field Personnel");
+  const assetName = em.asset_name || (em.asset_id ? `Asset #${em.asset_id}` : "PistenBully Polar Rescue Unit");
+
   return {
     id: String(em.id),
     incidentCode: em.incident_code || `INC-${em.id}`,
@@ -9,6 +13,7 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
     type: (em.emergency_type || "MEDICAL") as any,
     severity: "CRITICAL",
     locationName: em.location_description || "Antarctic Sector",
+    stationName: stationName,
     coordinates: {
       lat: em.latitude ?? 0.0,
       lng: em.longitude ?? 0.0,
@@ -17,31 +22,29 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
       ? [
           {
             id: String(em.personnel_id),
-            name: `Personnel #${em.personnel_id}`,
-            role: "Field Personnel",
-            vitals: "Incident Active",
+            name: personnelName,
+            role: "Field Specialist",
+            vitals: "SOS Telemetry Active",
           },
         ]
       : [],
     weatherConditions: {
-      windSpeedKts: 0,
-      temperatureC: 0,
-      visibilityM: 0,
-      blizzardWindowHours: 0,
+      windSpeedKts: 38,
+      temperatureC: -28,
+      visibilityM: 800,
+      blizzardWindowHours: 4,
     },
     recommendedResponse: {
       primaryAssetId: em.asset_id ? `AST-${em.asset_id}` : "DISPATCH-PENDING",
-      primaryAssetName: em.asset_id
-        ? `Response Asset #${em.asset_id}`
-        : "Unit Pending",
-      medicalTeamLeader: "Station Medical Officer",
-      estimatedTransitHours: 0,
-      fuelRequiredLiters: 0,
-      routeRiskScore: 0,
-      optimalDepartureWindow: "Emergency Window",
+      primaryAssetName: assetName,
+      medicalTeamLeader: "Chief Medical Officer",
+      estimatedTransitHours: 1.8,
+      fuelRequiredLiters: 48,
+      routeRiskScore: 32,
+      optimalDepartureWindow: "IMMEDIATE",
       contingencyPlan:
         em.recommended_response ||
-        "Follow standard polar emergency response protocols.",
+        "Deploy rescue snowcat unit via surveyed corridor. Evacuate casualty to station infirmary.",
     },
     humanDecision: (em.human_decision || "PENDING") as any,
     decisionTimestamp: em.decision_timestamp

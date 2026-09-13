@@ -11,6 +11,8 @@ from app.models.tracking_event import TrackingEvent, TrackingEntityType
 
 from app.models.alert import Alert, AlertSeverity, AlertType, AlertStatus, AlertEntityType
 from app.models.emergency import Emergency, EmergencySeverity, EmergencyType, EmergencyStatus, EmergencyDecision
+from app.models.inventory_transfer import InventoryTransfer
+from app.models.fuel_log import FuelLog
 
 __all__ = [
     "User",
@@ -44,6 +46,8 @@ __all__ = [
     "EmergencyType",
     "EmergencyStatus",
     "EmergencyDecision",
+    "InventoryTransfer",
+    "FuelLog",
 ]
 
 

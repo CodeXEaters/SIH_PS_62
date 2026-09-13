@@ -1,19 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { IntelligenceTabs } from "@/components/intelligence/IntelligenceTabs";
 import { Button } from "@/components/ui";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Activity } from "lucide-react";
+import { intelligenceService } from "@/services/intelligence";
+import { WhatIfScenarioResult } from "@/types";
 
 export default function WhatIfSimulatorPage() {
   const [vesselDelayDays, setVesselDelayDays] = useState(4);
   const [fuelSpikePct, setFuelSpikePct] = useState(20);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationResult, setSimulationResult] = useState<WhatIfScenarioResult | null>(null);
 
-  // Baseline metrics
+  useEffect(() => {
+    let isMounted = true;
+    setIsSimulating(true);
+
+    const timer = setTimeout(() => {
+      intelligenceService
+        .runWhatIfSimulation({
+          vesselDelayDays,
+          fuelConsumptionSpikePct: fuelSpikePct,
+          aircraftCancelled: false,
+          missionTraverseExtendedHours: 0,
+          stationTransferDelayedDays: 0,
+        })
+        .then((res) => {
+          if (isMounted) {
+            setSimulationResult(res);
+          }
+        })
+        .catch((err) => {
+          console.warn("Failed to run what-if simulation from backend:", err);
+        })
+        .finally(() => {
+          if (isMounted) setIsSimulating(false);
+        });
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [vesselDelayDays, fuelSpikePct]);
+
+  // Baseline fallbacks if backend is slow
   const fuelBurn = 180 * (1 + fuelSpikePct / 100);
-  const simulatedDieselDays = Math.max(0, Number((1240 / fuelBurn).toFixed(1)));
-  const simulatedRiskScore = Math.min(95, 48 + vesselDelayDays * 6 + Math.floor(fuelSpikePct * 0.4));
+  const fallbackDieselDays = Math.max(0, Number((1240 / fuelBurn).toFixed(1)));
+  const fallbackRiskScore = Math.min(95, 48 + vesselDelayDays * 6 + Math.floor(fuelSpikePct * 0.4));
+
+  const simulatedDieselDays = simulationResult?.bharatiFuelDaysRemaining ?? fallbackDieselDays;
+  const simulatedRiskScore = simulationResult?.operationalRiskScore ? Math.round(simulationResult.operationalRiskScore) : fallbackRiskScore;
 
   const handleReset = () => {
     setVesselDelayDays(4);
@@ -40,15 +79,21 @@ export default function WhatIfSimulatorPage() {
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            className="gap-2 font-mono text-xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Baseline</span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#161208] border border-[#C8A96B]/30 text-[10px] font-mono text-[#C8A96B]">
+              <Activity className="w-3 h-3 text-[#C8A96B]" />
+              <span>{isSimulating ? "SOLVING..." : "BACKEND SOLVER ONLINE"}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="gap-2 font-mono text-xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Baseline</span>
+            </Button>
+          </div>
         </div>
 
         {/* Sub-Navigation Tabs */}
@@ -60,7 +105,7 @@ export default function WhatIfSimulatorPage() {
             <span className="font-bold text-[#F5F3EE] uppercase tracking-wider">
               SCENARIO PARAMETERS
             </span>
-            <span className="text-[#C8A96B]">
+            <span className="text-[#C8A96B] font-bold">
               PROJECTED RISK: {simulatedRiskScore}/100
             </span>
           </div>
@@ -129,7 +174,9 @@ export default function WhatIfSimulatorPage() {
                 +{vesselDelayDays * 24}h SLIP
               </div>
               <p className="text-[11px] font-sans text-[#A5A29C] leading-relaxed">
-                Heli-transfer queue delayed. 3 critical science modules held on vessel weather deck.
+                {simulationResult?.cargoDelaysCount
+                  ? `${simulationResult.cargoDelaysCount} cargo packages affected by transit slip.`
+                  : "Heli-transfer queue delayed. Critical science modules held on vessel weather deck."}
               </p>
             </div>
 
@@ -142,7 +189,9 @@ export default function WhatIfSimulatorPage() {
                 {simulatedDieselDays} DAYS FUEL
               </div>
               <p className="text-[11px] font-sans text-[#A5A29C] leading-relaxed">
-                Bharati Station diesel buffer drops below safe 7-day threshold. Requires rationing.
+                {simulationResult?.criticalSupplyStockouts && simulationResult.criticalSupplyStockouts.length > 0
+                  ? `Stockout alert: ${simulationResult.criticalSupplyStockouts.join(", ")}.`
+                  : "Bharati Station diesel buffer drops below safe threshold. Requires rationing."}
               </p>
             </div>
 
@@ -184,7 +233,9 @@ export default function WhatIfSimulatorPage() {
           </div>
 
           <p className="text-[#F5F3EE] font-sans text-xs leading-relaxed max-w-3xl">
-            {vesselDelayDays >= 4 ? (
+            {simulationResult?.recommendedAction ? (
+              simulationResult.recommendedAction
+            ) : vesselDelayDays >= 4 ? (
               <>
                 <strong>Immediate Action Required:</strong> Initiate Level 2 Power Curtailment at Bharati Station. Switch domestic heaters to low setting (18°C) to extend diesel runway by +2.8 days. Re-task PistenBully AST-BHR-004 to shuttle 1,800L emergency fuel drums from the coastal fast-ice cache to Bharati.
               </>

@@ -50,6 +50,10 @@ class EmergencyResponse(EmergencyBase):
     decision_notes: Optional[str] = None
     decision_timestamp: Optional[datetime] = None
     reported_by: Optional[int] = None
+    station_name: Optional[str] = None
+    personnel_name: Optional[str] = None
+    asset_name: Optional[str] = None
+    mission_name: Optional[str] = None
     created_at: datetime
     resolved_at: Optional[datetime] = None
 

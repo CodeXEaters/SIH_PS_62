@@ -29,11 +29,11 @@ export default function AnomaliesPage() {
     },
     {
       type: "WEATHER EXPOSURE",
-      target: "CRG-ANT-004821",
+      target: "CRG-2026-001",
       time: "1 HOUR",
       severity: "MODERATE",
-      reason: "Climate-sensitive Lidar unit left on vessel weather-deck during grounding lull.",
-      actionUrl: "/cargo/CRG-ANT-004821",
+      reason: "Climate-sensitive sensor unit delayed at fast-ice mooring during katabatic wind lull.",
+      actionUrl: "/cargo/CRG-2026-001",
       actionLabel: "INVESTIGATE",
     },
     {
