@@ -17,24 +17,75 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockMissions } from "@/data/mock";
 import { missionsService } from "@/services/missions";
 import { Mission } from "@/types";
 
 export default function MissionDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const [mission, setMission] = useState<Mission>(
-    () => mockMissions.find((m) => m.id === id) || mockMissions[0]
-  );
+  const [mission, setMission] = useState<Mission | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    missionsService.getMissionById(id).then((m) => {
-      if (isMounted && m) setMission(m);
-    }).catch(console.warn);
-    return () => { isMounted = false; };
+    setIsLoading(true);
+    setNotFound(false);
+    missionsService
+      .getMissionById(id)
+      .then((m) => {
+        if (isMounted) {
+          if (m) setMission(m);
+          else setNotFound(true);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch mission:", err);
+        if (isMounted) setNotFound(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-5xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-[#6F6D68] uppercase tracking-wider">
+            Loading field mission dossier...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (notFound || !mission) {
+    return (
+      <AppShell>
+        <div className="max-w-5xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-[#101010] border border-[#242424] text-[#B85C5C] mb-2">
+            <Compass className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-[#F5F3EE]">MISSION NOT FOUND</h2>
+          <p className="text-xs font-mono text-[#A5A29C]">
+            No traverse or field sortie found with identifier &quot;{id}&quot;.
+          </p>
+          <div className="pt-2">
+            <Link href="/missions">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Missions List</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -65,11 +116,11 @@ export default function MissionDetailPage() {
             </p>
           </div>
 
-          {mission.id === "MSN-ANT-024" && (
+          {(mission.id === "MSN-ANT-024" || mission.status === "Emergency") && (
             <Link href="/emergency">
               <Button variant="danger" size="sm" className="gap-1.5 animate-pulse">
                 <ShieldAlert className="w-4 h-4" />
-                <span>Incident #EM-024</span>
+                <span>Active Incident</span>
               </Button>
             </Link>
           )}

@@ -16,24 +16,75 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
-import { mockAssets } from "@/data/mock";
 import { assetsService } from "@/services/assets";
 import { Asset } from "@/types";
 
 export default function AssetDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const [asset, setAsset] = useState<Asset>(
-    () => mockAssets.find((a) => a.id === id) || mockAssets[0]
-  );
+  const [asset, setAsset] = useState<Asset | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    assetsService.getAssetById(id).then((a) => {
-      if (isMounted && a) setAsset(a);
-    }).catch(console.warn);
-    return () => { isMounted = false; };
+    setIsLoading(true);
+    setNotFound(false);
+    assetsService
+      .getAssetById(id)
+      .then((a) => {
+        if (isMounted) {
+          if (a) setAsset(a);
+          else setNotFound(true);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch asset:", err);
+        if (isMounted) setNotFound(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-polar-muted uppercase tracking-wider">
+            Loading asset telemetry profile...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (notFound || !asset) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-polar-deep border border-polar-border text-amber-400 mb-2">
+            <Truck className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-white">ASSET RECORD NOT FOUND</h2>
+          <p className="text-xs font-mono text-polar-muted">
+            No equipment or vehicle found with identifier &quot;{id}&quot;.
+          </p>
+          <div className="pt-2">
+            <Link href="/assets">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Asset Registry</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -115,7 +166,7 @@ export default function AssetDetailPage() {
             <div className="flex justify-between">
               <span className="text-polar-muted">Critical Spare Parts In Station:</span>
               <span className={asset.criticalSparePartsAvailable ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
-                {asset.criticalSparePartsAvailable ? "✓ IN STOCK" : "⚠️ KIT IN TRANSIT (CRG-ANT-004825)"}
+                {asset.criticalSparePartsAvailable ? "✓ IN STOCK" : "⚠️ KIT IN TRANSIT (CRG-2026-001)"}
               </span>
             </div>
           </div>

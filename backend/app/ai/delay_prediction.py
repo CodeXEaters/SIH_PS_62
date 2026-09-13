@@ -16,8 +16,11 @@ class DelayPredictor:
     """
 
     @staticmethod
-    def predict_cargo_delay(db: Session, cargo_id: int) -> Dict[str, Any]:
-        cargo = db.query(Cargo).filter(Cargo.id == cargo_id).first()
+    def predict_cargo_delay(db: Session, cargo_id: Any) -> Dict[str, Any]:
+        if isinstance(cargo_id, int) or (isinstance(cargo_id, str) and str(cargo_id).isdigit()):
+            cargo = db.query(Cargo).filter((Cargo.id == int(cargo_id)) | (Cargo.cargo_code == str(cargo_id))).first()
+        else:
+            cargo = db.query(Cargo).filter(Cargo.cargo_code == str(cargo_id)).first()
         if not cargo:
             raise ValueError(f"Cargo {cargo_id} does not exist")
 

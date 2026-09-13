@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockCargoItems } from "@/data/mock";
 import { cargoService } from "@/services/cargo";
 import { intelligenceService } from "@/services/intelligence";
 import { CargoItem } from "@/types";
@@ -25,23 +24,35 @@ import { formatKg } from "@/lib/utils";
 export default function CargoDigitalTwinPage() {
   const params = useParams();
   const id = params.id as string;
-  const [cargo, setCargo] = useState<CargoItem>(
-    () => mockCargoItems.find((c) => c.id === id) || mockCargoItems[0]
-  );
+  const [cargo, setCargo] = useState<CargoItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
   const [aiDecision, setAiDecision] = useState<"PENDING" | "ACCEPTED" | "DISMISSED">("PENDING");
 
   useEffect(() => {
     let isMounted = true;
+    setIsLoading(true);
+    setNotFound(false);
 
     cargoService
       .getCargoById(id)
       .then((c) => {
-        if (isMounted && c) {
-          setCargo(c);
+        if (isMounted) {
+          if (c) {
+            setCargo(c);
+          } else {
+            setNotFound(true);
+          }
         }
       })
-      .catch((err) => console.warn("Failed to fetch cargo detail from backend:", err));
+      .catch((err) => {
+        console.warn("Failed to fetch cargo detail from backend:", err);
+        if (isMounted) setNotFound(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
 
     cargoService
       .getCargoTimeline(id)
@@ -56,26 +67,34 @@ export default function CargoDigitalTwinPage() {
       .predictCargoDelay(id)
       .then((pred) => {
         if (isMounted && pred) {
-          setCargo((prev) => ({
-            ...prev,
-            aiAssessment: {
-              delayProbability: Math.round((pred.delay_probability ?? 0.94) * 100),
-              estimatedDelayHours: Math.round(pred.estimated_delay_hours ?? 18),
-              keyDrivers: Array.isArray(pred.key_drivers) && pred.key_drivers.length > 0
-                ? pred.key_drivers
-                : ["Katabatic wind vectors exceeding 42 kts at Prydz Bay mooring", "Sling-load helicopter limits"],
-              recommendation: pred.recommendation || "Hold heli-lift transfer until wind gusts subside below 28 kts.",
-            },
-          }));
+          setCargo((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  aiAssessment: {
+                    delayProbability: Math.round((pred.delay_probability ?? 0.94) * 100),
+                    estimatedDelayHours: Math.round(pred.estimated_delay_hours ?? 18),
+                    keyDrivers:
+                      Array.isArray(pred.key_drivers) && pred.key_drivers.length > 0
+                        ? pred.key_drivers
+                        : ["Katabatic wind vectors exceeding 42 kts at Prydz Bay mooring", "Sling-load helicopter limits"],
+                    recommendation: pred.recommendation || "Hold heli-lift transfer until wind gusts subside below 28 kts.",
+                  },
+                }
+              : null
+          );
         }
       })
       .catch((err) => console.warn("Failed to fetch AI delay prediction:", err));
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   // Derive corridor steps from real timeline events if available
   const corridorSteps = React.useMemo(() => {
+    if (!cargo) return [];
     if (timelineEvents.length > 0) {
       const steps = timelineEvents.map((evt, idx) => {
         const isLatest = idx === timelineEvents.length - 1;
@@ -113,14 +132,50 @@ export default function CargoDigitalTwinPage() {
       { name: "LOADED", detail: "Staged onto feeder convoy", status: "COMPLETED", date: "15 Nov 2026" },
       { name: "GOA", detail: "NCPOR Central Logistics Depot dispatch", status: "COMPLETED", date: "15 Nov 2026" },
       { name: "CAPE TOWN", detail: "Berth 4 Cold Store staging transfer", status: "COMPLETED", date: "01 Dec 2026" },
-      { name: "VESSEL", detail: "MV Vasundhara (Hold 1, Bay 02)", status: "COMPLETED", date: "04 Dec 2026" },
-      { name: "ANTARCTICA", detail: "Prydz Bay fast-ice offshore mooring", status: "CURRENT", date: "CURRENT • Katabatic Delay +18h" },
+      { name: "VESSEL", detail: "MV Vasiliy Golovnin (Hold 1, Bay 02)", status: "COMPLETED", date: "04 Dec 2026" },
+      { name: "ANTARCTICA", detail: `${cargo.destination} fast-ice offshore mooring`, status: "CURRENT", date: `CURRENT • ${cargo.status}` },
       { name: cargo.destination.toUpperCase(), detail: `${cargo.destination} Science Lab 2`, status: "PENDING", date: "Scheduled Resupply Slot #02" },
     ];
   }, [timelineEvents, cargo]);
 
   const currentStepIndex = corridorSteps.findIndex((s) => s.status === "CURRENT");
   const stageDisplayIndex = currentStepIndex >= 0 ? currentStepIndex + 1 : corridorSteps.length;
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-6xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-[#6F6D68] uppercase tracking-wider">
+            Loading cargo digital twin manifest...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (notFound || !cargo) {
+    return (
+      <AppShell>
+        <div className="max-w-6xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-[#101010] border border-[#242424] text-[#B85C5C] mb-2">
+            <Box className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-[#F5F3EE]">CARGO ITEM NOT FOUND</h2>
+          <p className="text-xs font-mono text-[#A5A29C]">
+            No cargo record found for tracking code &quot;{id}&quot;.
+          </p>
+          <div className="pt-2">
+            <Link href="/cargo">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Cargo Dashboard</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

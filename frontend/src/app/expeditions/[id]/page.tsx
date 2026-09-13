@@ -17,18 +17,90 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
-import { mockExpedition } from "@/data/mock";
 import { expeditionService } from "@/services/expedition";
+import { assetsService } from "@/services/assets";
 import { Expedition } from "@/types";
 
 export default function ExpeditionOverviewPage() {
-  const [exp, setExp] = useState<Expedition>(mockExpedition);
+  const [exp, setExp] = useState<Expedition | null>(null);
+  const [isExpLoading, setIsExpLoading] = useState<boolean>(true);
+  const [expError, setExpError] = useState<boolean>(false);
+  // null = loading, number = loaded, -1 = error/unavailable
+  const [assetsCount, setAssetsCount] = useState<number | null>(null);
+  const [operationalAssetsCount, setOperationalAssetsCount] = useState<number | null>(null);
 
   useEffect(() => {
-    expeditionService.getActiveExpedition().then((data) => {
-      if (data) setExp(data);
-    }).catch(console.warn);
+    expeditionService
+      .getActiveExpedition()
+      .then((data) => {
+        if (data) {
+          setExp(data);
+          setIsExpLoading(false);
+        } else {
+          setExpError(true);
+          setIsExpLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load active expedition:", err);
+        setIsExpLoading(false);
+        setExpError(true);
+      });
+
+    assetsService
+      .getAllAssets()
+      .then((assets) => {
+        if (assets && assets.length > 0) {
+          setAssetsCount(assets.length);
+          // Count operational assets matching the same filter as Dashboard
+          const operational = assets.filter((a) => {
+            const cond = String(a.condition ?? (a as any).status ?? "").toUpperCase().trim();
+            return cond === "OPERATIONAL";
+          }).length;
+          setOperationalAssetsCount(operational);
+        }
+      })
+      .catch(() => {
+        setAssetsCount(-1);
+        setOperationalAssetsCount(-1);
+      });
   }, []);
+
+  if (isExpLoading) {
+    return (
+      <AppShell>
+        <div className="max-w-6xl mx-auto py-16 text-center">
+          <p className="text-xs font-mono text-polar-muted uppercase tracking-wider">
+            Loading expedition parameters and operations overview...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (expError || !exp) {
+    return (
+      <AppShell>
+        <div className="max-w-6xl mx-auto py-16 space-y-4 text-center">
+          <div className="inline-block p-4 rounded-full bg-polar-deep border border-polar-border text-amber-400 mb-2">
+            <Compass className="w-8 h-8 mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold font-mono text-white">EXPEDITION DATA UNAVAILABLE</h2>
+          <p className="text-xs font-mono text-polar-muted">
+            Could not retrieve active expedition parameters from the system.
+          </p>
+          <div className="pt-2">
+            <Link href="/dashboard">
+              <Button variant="secondary" size="sm" className="font-mono text-xs">
+                <ArrowRight className="w-3.5 h-3.5 mr-1.5" />
+                <span>Return to Command Center</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   const flowNodes = [
     { name: "Goa (NCPOR)", type: "Origin & HQ", status: "COMPLETED", date: "15 Nov 2026" },
@@ -37,6 +109,11 @@ export default function ExpeditionOverviewPage() {
     { name: "Antarctica (Fast Ice)", type: "Offshore Mooring", status: "ACTIVE", date: "08 Jan 2027" },
     { name: "Bharati / Maitri", type: "Station Bases", status: "PENDING", date: "Scheduled" },
   ];
+
+  const activeNodeIndex = flowNodes.findIndex((n) => n.status === "ACTIVE");
+  const activeStageText = activeNodeIndex !== -1
+    ? `Stage ${activeNodeIndex + 1} of ${flowNodes.length} Active`
+    : "All Stages Completed";
 
   return (
     <AppShell>
@@ -85,7 +162,7 @@ export default function ExpeditionOverviewPage() {
               OPERATIONAL FLOW &bull; INTERCONTINENTAL SUPPLY CHAIN
             </h3>
             <span className="text-[10px] font-mono text-polar-cyan">
-              Stage 4 of 5 Active
+              {activeStageText}
             </span>
           </div>
 
@@ -124,9 +201,9 @@ export default function ExpeditionOverviewPage() {
               <Users className="w-4 h-4 text-sky-400" />
             </div>
             <div className="text-2xl font-extrabold font-mono text-white group-hover:text-sky-300">
-              {exp.personnelCount}
+              {isExpLoading ? "..." : expError ? "——" : exp.personnelCount}
             </div>
-            <p className="text-[11px] text-polar-muted mt-1">100% Medical Cleared</p>
+            <p className="text-[11px] text-polar-muted mt-1">ISEA-46 deployment</p>
           </Link>
 
           <Link
@@ -138,9 +215,9 @@ export default function ExpeditionOverviewPage() {
               <Box className="w-4 h-4 text-polar-cyan" />
             </div>
             <div className="text-2xl font-extrabold font-mono text-white group-hover:text-polar-cyan">
-              {exp.cargoTonnage} t
+              {isExpLoading ? "..." : expError ? "——" : `${exp.cargoTonnage} t`}
             </div>
-            <p className="text-[11px] text-polar-muted mt-1">1 Delayed Item Flagged</p>
+            <p className="text-[11px] text-polar-muted mt-1">Expedition cargo tonnage</p>
           </Link>
 
           <Link
@@ -152,9 +229,13 @@ export default function ExpeditionOverviewPage() {
               <Truck className="w-4 h-4 text-amber-400" />
             </div>
             <div className="text-2xl font-extrabold font-mono text-white group-hover:text-amber-300">
-              326
+              {operationalAssetsCount === null
+                ? "..."
+                : operationalAssetsCount < 0
+                ? "——"
+                : operationalAssetsCount}
             </div>
-            <p className="text-[11px] text-polar-muted mt-1">98% Operational Uptime</p>
+            <p className="text-[11px] text-polar-muted mt-1">Operational Fleet Inventory</p>
           </Link>
 
           <Link
@@ -166,9 +247,9 @@ export default function ExpeditionOverviewPage() {
               <Radio className="w-4 h-4 text-polar-teal" />
             </div>
             <div className="text-2xl font-extrabold font-mono text-white group-hover:text-polar-teal">
-              {exp.activeMissionsCount}
+              {isExpLoading ? "..." : expError ? "——" : exp.activeMissionsCount}
             </div>
-            <p className="text-[11px] text-polar-muted mt-1">Team Alpha Under Watch</p>
+            <p className="text-[11px] text-polar-muted mt-1">ISEA-46 missions</p>
           </Link>
         </div>
 

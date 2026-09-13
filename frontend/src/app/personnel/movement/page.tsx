@@ -5,17 +5,21 @@ import Link from "next/link";
 import { ArrowLeft, Footprints, ShieldCheck, MapPin } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockPersonnel } from "@/data/mock";
 import { personnelService } from "@/services/personnel";
 import { Personnel } from "@/types";
 
 export default function PersonnelMovementPage() {
-  const [personnelList, setPersonnelList] = useState<Personnel[]>(mockPersonnel);
+  const [personnelList, setPersonnelList] = useState<Personnel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    personnelService.getAllPersonnel().then((data) => {
-      if (data && data.length > 0) setPersonnelList(data);
-    }).catch(console.warn);
+    personnelService
+      .getAllPersonnel()
+      .then((data) => {
+        setPersonnelList(data || []);
+      })
+      .catch(console.warn)
+      .finally(() => setIsLoading(false));
   }, []);
 
   const allMovements = personnelList.flatMap((p) =>
@@ -62,27 +66,41 @@ export default function PersonnelMovementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-polar-border/60">
-                {allMovements.map((move, idx) => (
-                  <tr key={idx} className="hover:bg-polar-surface/50 transition-colors">
-                    <td className="py-3 px-4 text-polar-muted">{move.timestamp}</td>
-                    <td className="py-3 px-4">
-                      <Link
-                        href={`/personnel/${move.personnelId}`}
-                        className="font-bold text-polar-snow hover:text-polar-cyan"
-                      >
-                        {move.personnelName}
-                      </Link>
-                      <span className="text-[10px] text-polar-muted block">
-                        {move.personnelId} &bull; {move.role}
-                      </span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-polar-muted font-mono">
+                      Loading personnel movement records...
                     </td>
-                    <td className="py-3 px-4 text-polar-cyan font-bold">
-                      {move.from} &rarr; {move.to}
-                    </td>
-                    <td className="py-3 px-4 text-polar-snow/90">{move.mode}</td>
-                    <td className="py-3 px-4 text-polar-muted">{move.authorizedBy}</td>
                   </tr>
-                ))}
+                ) : allMovements.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-polar-muted font-mono">
+                      No personnel movement logs recorded.
+                    </td>
+                  </tr>
+                ) : (
+                  allMovements.map((move, idx) => (
+                    <tr key={idx} className="hover:bg-polar-surface/50 transition-colors">
+                      <td className="py-3 px-4 text-polar-muted">{move.timestamp}</td>
+                      <td className="py-3 px-4">
+                        <Link
+                          href={`/personnel/${move.personnelId}`}
+                          className="font-bold text-polar-snow hover:text-polar-cyan"
+                        >
+                          {move.personnelName}
+                        </Link>
+                        <span className="text-[10px] text-polar-muted block">
+                          {move.personnelId} &bull; {move.role}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-polar-cyan font-bold">
+                        {move.from} &rarr; {move.to}
+                      </td>
+                      <td className="py-3 px-4 text-polar-snow/90">{move.mode}</td>
+                      <td className="py-3 px-4 text-polar-muted">{move.authorizedBy}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -42,7 +42,7 @@ class IntelligenceService:
         )
 
     @staticmethod
-    def predict_cargo_delay(db: Session, cargo_id: int) -> CargoDelayPredictionResponse:
+    def predict_cargo_delay(db: Session, cargo_id: Any) -> CargoDelayPredictionResponse:
         try:
             data = DelayPredictor.predict_cargo_delay(db=db, cargo_id=cargo_id)
         except ValueError as e:

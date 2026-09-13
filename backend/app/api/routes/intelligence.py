@@ -30,8 +30,9 @@ def get_mission_risk_assessment(
 
 
 @router.get("/delay/cargo/{id}", response_model=CargoDelayPredictionResponse)
+@router.get("/cargo/{id}/delay-prediction", response_model=CargoDelayPredictionResponse)
 def predict_cargo_delay(
-    id: int,
+    id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

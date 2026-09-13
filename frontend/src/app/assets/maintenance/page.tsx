@@ -5,17 +5,21 @@ import Link from "next/link";
 import { ArrowLeft, Wrench, Calendar, CheckCircle2, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockAssets } from "@/data/mock";
 import { assetsService } from "@/services/assets";
 import { Asset } from "@/types";
 
 export default function AssetMaintenancePage() {
-  const [assets, setAssets] = useState<Asset[]>(mockAssets);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    assetsService.getAllAssets().then((data) => {
-      if (data && data.length > 0) setAssets(data);
-    }).catch(console.warn);
+    assetsService
+      .getAllAssets()
+      .then((data) => {
+        setAssets(data || []);
+      })
+      .catch(console.warn)
+      .finally(() => setIsLoading(false));
   }, []);
   return (
     <AppShell>
@@ -53,35 +57,49 @@ export default function AssetMaintenancePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-polar-border/60">
-                {assets.map((asset) => (
-                  <tr key={asset.id} className="hover:bg-polar-surface/50 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-polar-snow">{asset.nextMaintenance}</td>
-                    <td className="py-3.5 px-4">
-                      <Link href={`/assets/${asset.id}`} className="font-bold text-polar-cyan hover:underline">
-                        {asset.id}
-                      </Link>
-                      <span className="text-[10px] text-polar-muted block truncate max-w-xs">
-                        {asset.name}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 uppercase font-bold text-polar-snow">{asset.stationSlug || asset.stationId}</td>
-                    <td className="py-3.5 px-4 text-polar-muted font-sans text-[11px]">
-                      500-hour filter and hydraulic fluid overhaul
-                    </td>
-                    <td className="py-3.5 px-4">
-                      {asset.criticalSparePartsAvailable ? (
-                        <span className="text-emerald-400 font-bold text-[10px]">IN STOCK</span>
-                      ) : (
-                        <span className="text-amber-400 font-bold text-[10px]">AWAITING SHIPMENT</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <Badge variant={asset.condition === "Operational" ? "success" : "warning"}>
-                        {asset.condition}
-                      </Badge>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-polar-muted font-mono">
+                      Loading maintenance calendar schedules...
                     </td>
                   </tr>
-                ))}
+                ) : assets.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-polar-muted font-mono">
+                      No maintenance tasks scheduled.
+                    </td>
+                  </tr>
+                ) : (
+                  assets.map((asset) => (
+                    <tr key={asset.id} className="hover:bg-polar-surface/50 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-polar-snow">{asset.nextMaintenance}</td>
+                      <td className="py-3.5 px-4">
+                        <Link href={`/assets/${asset.id}`} className="font-bold text-polar-cyan hover:underline">
+                          {asset.id}
+                        </Link>
+                        <span className="text-[10px] text-polar-muted block truncate max-w-xs">
+                          {asset.name}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 uppercase font-bold text-polar-snow">{asset.stationSlug || asset.stationId}</td>
+                      <td className="py-3.5 px-4 text-polar-muted font-sans text-[11px]">
+                        500-hour filter and hydraulic fluid overhaul
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {asset.criticalSparePartsAvailable ? (
+                          <span className="text-emerald-400 font-bold text-[10px]">IN STOCK</span>
+                        ) : (
+                          <span className="text-amber-400 font-bold text-[10px]">AWAITING SHIPMENT</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge variant={asset.condition === "Operational" ? "success" : "warning"}>
+                          {asset.condition}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

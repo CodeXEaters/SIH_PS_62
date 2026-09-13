@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models.cargo import CargoCategory, CargoPriority, CargoStatus
+from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
 from app.models.user import User, UserRole
 from app.schemas.cargo import (
     CargoCreate,
@@ -56,12 +56,18 @@ def create_cargo(
 
 @router.get("/{id}", response_model=CargoResponse)
 def get_cargo(
-    id: int,
+    id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Retrieve a single cargo package by ID."""
-    return CargoService.get_cargo_by_id(db=db, cargo_id=id)
+    """Retrieve a single cargo package by integer ID or cargo_code (e.g. CRG-2026-001)."""
+    cargo = db.query(Cargo).filter(Cargo.id == int(id) if id.isdigit() else Cargo.cargo_code == id).first()
+    if not cargo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cargo '{id}' not found",
+        )
+    return cargo
 
 
 @router.put("/{id}", response_model=CargoResponse)
@@ -99,9 +105,15 @@ def scan_cargo(
 
 @router.get("/{id}/timeline", response_model=CargoTimelineResponse)
 def get_cargo_timeline(
-    id: int,
+    id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Retrieve full chronological chain-of-custody event timeline for a cargo package."""
-    return CargoEventService.get_cargo_timeline(db=db, cargo_id=id)
+    """Retrieve full chronological chain-of-custody event timeline for a cargo package by integer ID or cargo_code."""
+    cargo = db.query(Cargo).filter(Cargo.id == int(id) if id.isdigit() else Cargo.cargo_code == id).first()
+    if not cargo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cargo '{id}' not found",
+        )
+    return CargoEventService.get_cargo_timeline(db=db, cargo_id=cargo.id)

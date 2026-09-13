@@ -15,14 +15,17 @@ import {
   LogOut,
   LogIn,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAppStore } from "@/store";
-import { mockAttentionItems } from "@/data/mock";
+import { useTheme } from "@/context/ThemeContext";
 import { cn } from "@/lib/utils";
 import { authService, UserSession } from "@/services/auth";
 import { intelligenceService } from "@/services/intelligence";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { syncOfflineQueue } from "@/lib/offline/sync/syncEngine";
+import { AttentionItem } from "@/types";
 
 export const Topbar: React.FC = () => {
   const {
@@ -35,9 +38,10 @@ export const Topbar: React.FC = () => {
     user,
     setUser,
   } = useAppStore();
+  const { theme, toggleTheme } = useTheme();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [attentionItems, setAttentionItems] = useState(mockAttentionItems);
+  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
@@ -49,7 +53,7 @@ export const Topbar: React.FC = () => {
     intelligenceService
       .getAttentionItems()
       .then((items) => {
-        if (items && items.length > 0) setAttentionItems(items);
+        if (items) setAttentionItems(items);
       })
       .catch(() => {});
   }, []);
@@ -60,7 +64,7 @@ export const Topbar: React.FC = () => {
       intelligenceService
         .getAttentionItems()
         .then((items) => {
-          if (items && items.length > 0) setAttentionItems(items);
+          if (items) setAttentionItems(items);
         })
         .catch(() => {});
     },
@@ -150,7 +154,7 @@ export const Topbar: React.FC = () => {
         >
           <div className="flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-[#6F6D68]" />
-            <span>Search entities (CRG-004821, Bharati, Missions)...</span>
+            <span>Search entities (CRG-2026-001, Bharati, Missions)...</span>
           </div>
           <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#141414] border border-[#242424] text-[#A5A29C]">
             Ctrl+K
@@ -158,7 +162,7 @@ export const Topbar: React.FC = () => {
         </button>
       </div>
 
-      {/* Right Controls: Connection Status, Notifications, Profile */}
+      {/* Right Controls: Theme Toggle, Connection Status, Notifications, Profile */}
       <div className="flex items-center gap-3">
         {/* Mobile Search Button */}
         <button
@@ -167,6 +171,20 @@ export const Topbar: React.FC = () => {
           title="Search"
         >
           <Search className="w-4 h-4" />
+        </button>
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="p-1.5 rounded text-[#A5A29C] hover:text-[#F5F3EE] hover:bg-[#121212] border border-[#242424] transition-colors"
+          title={theme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
+          aria-label="Toggle Theme"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 text-[#FFB84D]" />
+          ) : (
+            <Moon className="w-4 h-4 text-[#0284C7]" />
+          )}
         </button>
 
         {/* Connection Status Indicator */}

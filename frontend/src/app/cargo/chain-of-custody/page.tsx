@@ -5,64 +5,75 @@ import Link from "next/link";
 import { ArrowLeft, FileSpreadsheet, ShieldCheck, CheckCircle2, Search, Hash, RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
-import { mockChainOfCustody, mockCargoItems } from "@/data/mock";
 import { cargoService } from "@/services/cargo";
 import { CargoItem } from "@/types";
 
 export default function ChainOfCustodyPage() {
-  const [cargoList, setCargoList] = useState<CargoItem[]>(mockCargoItems);
-  const [selectedCargoId, setSelectedCargoId] = useState<string>("CRG-2026-001");
+  const [cargoList, setCargoList] = useState<CargoItem[]>([]);
+  const [selectedCargoId, setSelectedCargoId] = useState<string>("");
   const [timelineRecords, setTimelineRecords] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    cargoService.getAllCargo().then((all) => {
-      if (all && all.length > 0) {
-        setCargoList(all);
-        setSelectedCargoId((prev) => (all.some((c) => c.id === prev) ? prev : all[0].id));
-      }
-    }).catch(console.warn);
+    cargoService
+      .getAllCargo()
+      .then((all) => {
+        if (all && all.length > 0) {
+          setCargoList(all);
+          setSelectedCargoId((prev) => (all.some((c) => c.id === prev) ? prev : all[0].id));
+        } else {
+          setCargoList([]);
+          setSelectedCargoId("");
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch cargo for chain of custody:", err);
+        setIsLoading(false);
+      });
   }, []);
 
   useEffect(() => {
-    if (!selectedCargoId) return;
+    if (!selectedCargoId) {
+      setTimelineRecords([]);
+      return;
+    }
     setIsLoading(true);
-    cargoService.getCargoTimeline(selectedCargoId).then((res) => {
-      if (res && res.events && res.events.length > 0) {
-        const mapped = res.events.map((ev: any, idx: number) => {
-          const prevEv = idx > 0 ? res.events[idx - 1] : null;
-          return {
-            id: `COC-${ev.id}`,
-            cargoId: selectedCargoId,
-            timestamp: new Date(ev.timestamp).toLocaleString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }) + " UTC",
-            action: ev.event_type || "CUSTODY_TRANSFER",
-            fromLocation: prevEv ? prevEv.location : "NCPOR Central Logistics Depot, Goa",
-            toLocation: ev.location,
-            actorName: `Logistics Specialist #${ev.updated_by || 1}`,
-            actorRole: ev.event_type === "DELAY_REPORTED" ? "Incident Reporter" : "Custody Officer",
-            verificationHash: `SHA256:${String(ev.id * 834923 + 104921).padStart(8, "0")}`,
-            notes: ev.remarks || `Cargo verified and scanned at ${ev.location}.`,
-          };
-        });
-        setTimelineRecords(mapped);
-      } else {
-        const matchingMock = mockChainOfCustody.filter(
-          (c) => c.cargoId === selectedCargoId
-        );
-        setTimelineRecords(matchingMock);
-      }
-    }).catch(() => {
-      const matchingMock = mockChainOfCustody.filter(
-        (c) => c.cargoId === selectedCargoId
-      );
-      setTimelineRecords(matchingMock);
-    }).finally(() => setIsLoading(false));
+    cargoService
+      .getCargoTimeline(selectedCargoId)
+      .then((res) => {
+        if (res && res.events && res.events.length > 0) {
+          const mapped = res.events.map((ev: any, idx: number) => {
+            const prevEv = idx > 0 ? res.events[idx - 1] : null;
+            return {
+              id: `COC-${ev.id}`,
+              cargoId: selectedCargoId,
+              timestamp:
+                new Date(ev.timestamp).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }) + " UTC",
+              action: ev.event_type || "CUSTODY_TRANSFER",
+              fromLocation: prevEv ? prevEv.location : "NCPOR Central Logistics Depot, Goa",
+              toLocation: ev.location,
+              actorName: `Logistics Specialist #${ev.updated_by || 1}`,
+              actorRole: ev.event_type === "DELAY_REPORTED" ? "Incident Reporter" : "Custody Officer",
+              verificationHash: `SHA256:${String(ev.id * 834923 + 104921).padStart(8, "0")}`,
+              notes: ev.remarks || `Cargo verified and scanned at ${ev.location}.`,
+            };
+          });
+          setTimelineRecords(mapped);
+        } else {
+          setTimelineRecords([]);
+        }
+      })
+      .catch(() => {
+        setTimelineRecords([]);
+      })
+      .finally(() => setIsLoading(false));
   }, [selectedCargoId]);
 
   return (

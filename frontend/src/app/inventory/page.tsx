@@ -10,12 +10,11 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
-import { mockInventory } from "@/data/mock";
 import { inventoryService } from "@/services/inventory";
 import { InventoryItem } from "@/types";
 
 export default function InventoryPage() {
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(mockInventory);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [stationFilter, setStationFilter] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
@@ -25,9 +24,7 @@ export default function InventoryPage() {
     inventoryService
       .getAllInventory()
       .then((data) => {
-        if (data && data.length > 0) {
-          setInventoryItems(data);
-        }
+        setInventoryItems(data || []);
       })
       .catch((err) => console.warn("Failed to fetch inventory:", err))
       .finally(() => setIsLoading(false));
@@ -169,61 +166,75 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#242424]/60 text-[#A5A29C]">
-                {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-[#111111] transition-colors">
-                    <td className="py-3.5 px-4 font-sans">
-                      <span className="font-bold text-[#F5F3EE] block">{item.name}</span>
-                      <span className="text-[10px] text-[#6F6D68] font-mono block">
-                        {item.id} &bull; {item.category}
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 uppercase font-bold text-[#F5F3EE]">
-                      {item.stationSlug || item.stationId}
-                    </td>
-
-                    <td className="py-3.5 px-4 font-bold text-[#F5F3EE]">
-                      {item.currentStock.toLocaleString()} {item.unit}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-[#A5A29C]">
-                      {item.dailyConsumption} {item.unit}/day
-                    </td>
-
-                    <td className="py-3.5 px-4 font-bold font-mono">
-                      <span
-                        className={
-                          item.daysRemaining < 10
-                            ? "text-[#B85C5C]"
-                            : item.daysRemaining < 25
-                            ? "text-[#C49A55]"
-                            : "text-[#7FAF91]"
-                        }
-                      >
-                        {item.daysRemaining} days
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-[#6F6D68]">
-                      {item.safetyStockDays} days
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <Badge
-                        variant={
-                          item.status === "Critical"
-                            ? "danger"
-                            : item.status === "Low"
-                            ? "warning"
-                            : "success"
-                        }
-                        dot
-                      >
-                        {item.status}
-                      </Badge>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-[#6F6D68] font-mono">
+                      LOADING STATION INVENTORY &amp; RESERVES...
                     </td>
                   </tr>
-                ))}
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-[#6F6D68] font-mono">
+                      NO INVENTORY ITEMS FOUND
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#111111] transition-colors">
+                      <td className="py-3.5 px-4 font-sans">
+                        <span className="font-bold text-[#F5F3EE] block">{item.name}</span>
+                        <span className="text-[10px] text-[#6F6D68] font-mono block">
+                          {item.id} &bull; {item.category}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 uppercase font-bold text-[#F5F3EE]">
+                        {item.stationSlug || item.stationId}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-bold text-[#F5F3EE]">
+                        {item.currentStock.toLocaleString()} {item.unit}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-[#A5A29C]">
+                        {item.dailyConsumption} {item.unit}/day
+                      </td>
+
+                      <td className="py-3.5 px-4 font-bold font-mono">
+                        <span
+                          className={
+                            item.daysRemaining < 10
+                              ? "text-[#B85C5C]"
+                              : item.daysRemaining < 25
+                              ? "text-[#C49A55]"
+                              : "text-[#7FAF91]"
+                          }
+                        >
+                          {item.daysRemaining} days
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-[#6F6D68]">
+                        {item.safetyStockDays} days
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <Badge
+                          variant={
+                            item.status === "Critical"
+                              ? "danger"
+                              : item.status === "Low"
+                              ? "warning"
+                              : "success"
+                          }
+                          dot
+                        >
+                          {item.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

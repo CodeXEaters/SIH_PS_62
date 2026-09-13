@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
-import { mockAttentionItems, mockStations, mockCargoItems } from "@/data/mock";
 import { stationsService } from "@/services/stations";
 import { cargoService } from "@/services/cargo";
 import { personnelService } from "@/services/personnel";
@@ -28,15 +27,20 @@ import { reportsService } from "@/services/reports";
 import { Station, CargoItem, AttentionItem } from "@/types";
 
 export default function DashboardPage() {
-  const [stations, setStations] = useState<Station[]>(mockStations);
-  const [cargoItems, setCargoItems] = useState<CargoItem[]>(mockCargoItems);
-  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>(mockAttentionItems);
+  const [stations, setStations] = useState<Station[]>([]);
+  const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
+  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([]);
   const [kpiData, setKpiData] = useState({
-    personnel: "12",
-    cargo: "5",
-    assets: "10",
-    inventory: "94%",
-    missions: "04",
+    personnel: "...",
+    personnelSubtext: "Loading roster...",
+    cargo: "...",
+    cargoSubtext: "Loading cargo...",
+    assets: "...",
+    assetsSubtext: "Loading fleet...",
+    inventory: "...",
+    inventorySubtext: "Loading readiness...",
+    missions: "...",
+    missionsSubtext: "Loading missions...",
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,30 +58,87 @@ export default function DashboardPage() {
     ]).then(([stationsRes, cargoRes, personnelRes, assetsRes, missionsRes, intelRes, reportsRes]) => {
       if (!isMounted) return;
 
-      if (stationsRes.status === "fulfilled" && stationsRes.value && stationsRes.value.length > 0) {
+      if (stationsRes.status === "fulfilled" && stationsRes.value) {
         setStations(stationsRes.value);
       }
-      if (cargoRes.status === "fulfilled" && cargoRes.value && cargoRes.value.length > 0) {
+      if (cargoRes.status === "fulfilled" && cargoRes.value) {
         setCargoItems(cargoRes.value);
       }
-      if (intelRes.status === "fulfilled" && intelRes.value && intelRes.value.length > 0) {
+      if (intelRes.status === "fulfilled" && intelRes.value) {
         setAttentionItems(intelRes.value);
       }
 
-      const pCount = personnelRes.status === "fulfilled" && personnelRes.value ? String(personnelRes.value.length) : "12";
-      const cCount = cargoRes.status === "fulfilled" && cargoRes.value ? String(cargoRes.value.length) : "5";
-      const aCount = assetsRes.status === "fulfilled" && assetsRes.value ? String(assetsRes.value.length) : "10";
-      const mCount = missionsRes.status === "fulfilled" && missionsRes.value ? String(missionsRes.value.length).padStart(2, "0") : "04";
-      const invPct = reportsRes.status === "fulfilled" && reportsRes.value && reportsRes.value.expeditionReadinessPct
-        ? `${Math.round(reportsRes.value.expeditionReadinessPct)}%`
-        : "94%";
+      // 1. Active Personnel
+      // Services map raw DB "ACTIVE" → "Active", "ON_MISSION" → "On Mission".
+      // toUpperCase() handles both the mapped display strings and raw DB values.
+      let pVal = "——";
+      let pSub = "Unavailable";
+      if (personnelRes.status === "fulfilled" && personnelRes.value) {
+        const pList = personnelRes.value;
+        const activeCount = pList.filter((p) => {
+          const s = String(p.status ?? "").toUpperCase().trim();
+          return s === "ACTIVE" || s === "ON MISSION" || s === "ON_MISSION";
+        }).length;
+        pVal = String(activeCount);
+        pSub = "Active + On Mission";
+      }
+
+      // 2. Tracked Cargo (total manifest items tracked by the system)
+      let cVal = "——";
+      let cSub = "Unavailable";
+      if (cargoRes.status === "fulfilled" && cargoRes.value) {
+        cVal = String(cargoRes.value.length);
+        cSub = "Manifest items tracked";
+      }
+
+      // 3. Operational Assets (fleet in operational status)
+      let aVal = "——";
+      let aSub = "Unavailable";
+      if (assetsRes.status === "fulfilled" && assetsRes.value) {
+        const aList = assetsRes.value;
+        const opCount = aList.filter((a) => {
+          const cond = String(a.condition ?? (a as any).status ?? "").toUpperCase().trim();
+          return cond === "OPERATIONAL";
+        }).length;
+        aVal = String(opCount);
+        aSub = "Operational fleet";
+      }
+
+      // 4. Expedition Readiness (from reports/summary endpoint)
+      let invVal = "——";
+      let invSub = "Life Support & Reserves";
+      if (
+        reportsRes.status === "fulfilled" &&
+        reportsRes.value &&
+        typeof reportsRes.value.expeditionReadinessPct === "number"
+      ) {
+        invVal = `${Math.round(reportsRes.value.expeditionReadinessPct)}%`;
+      }
+
+      // 5. Active Missions (active missions/traverses across operations)
+      let mVal = "——";
+      let mSub = "Unavailable";
+      if (missionsRes.status === "fulfilled" && missionsRes.value) {
+        const mList = missionsRes.value;
+        const activeCount = mList.filter((m) => {
+          const s = String(m.status ?? "").toUpperCase().trim();
+          return s === "ACTIVE";
+        }).length;
+        mVal = String(activeCount).padStart(2, "0");
+        mSub = "Across active expedition operations";
+      }
 
       setKpiData({
-        personnel: pCount,
-        cargo: cCount,
-        assets: aCount,
-        inventory: invPct,
-        missions: mCount,
+        personnel: pVal,
+        personnelSubtext: pSub,
+        cargo: cVal,
+        cargoSubtext: cSub,
+        assets: aVal,
+        assetsSubtext: aSub,
+        inventory: invVal,
+        inventorySubtext: invSub,
+        missions: mVal,
+        missionsSubtext: mSub,
       });
 
       setIsLoading(false);
@@ -88,38 +149,38 @@ export default function DashboardPage() {
 
   const kpis = [
     {
-      label: "PERSONNEL",
+      label: "ACTIVE PERSONNEL",
       value: kpiData.personnel,
       status: "DEPLOYED",
-      subtext: "Stations & Traverse",
-      href: "/personnel",
+      subtext: kpiData.personnelSubtext,
+      href: "/personnel?status=active-deployed",
     },
     {
-      label: "CARGO",
+      label: "TRACKED CARGO",
       value: kpiData.cargo,
       status: "TRACKED",
-      subtext: "Containers & Units",
+      subtext: kpiData.cargoSubtext,
       href: "/cargo",
     },
     {
-      label: "ASSETS",
+      label: "OPERATIONAL ASSETS",
       value: kpiData.assets,
       status: "OPERATIONAL",
-      subtext: "Vehicles & Generators",
+      subtext: kpiData.assetsSubtext,
       href: "/assets",
     },
     {
-      label: "INVENTORY",
+      label: "EXPEDITION READINESS",
       value: kpiData.inventory,
       status: "READY",
-      subtext: "Life Support Reserve",
+      subtext: kpiData.inventorySubtext,
       href: "/inventory",
     },
     {
-      label: "MISSIONS",
+      label: "ACTIVE MISSIONS",
       value: kpiData.missions,
       status: "ACTIVE",
-      subtext: "Field Science Traverses",
+      subtext: kpiData.missionsSubtext,
       href: "/missions",
     },
   ];

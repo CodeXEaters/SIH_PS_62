@@ -11,12 +11,11 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
-import { mockCargoItems } from "@/data/mock";
 import { cargoService } from "@/services/cargo";
 import { CargoItem } from "@/types";
 
 export default function CargoDashboardPage() {
-  const [cargoList, setCargoList] = useState<CargoItem[]>(mockCargoItems);
+  const [cargoList, setCargoList] = useState<CargoItem[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isLoading, setIsLoading] = useState(true);
@@ -26,9 +25,7 @@ export default function CargoDashboardPage() {
     cargoService
       .getAllCargo()
       .then((data) => {
-        if (data && data.length > 0) {
-          setCargoList(data);
-        }
+        setCargoList(data || []);
       })
       .catch((err) => console.warn("Failed to fetch cargo from backend:", err))
       .finally(() => setIsLoading(false));
@@ -137,70 +134,84 @@ export default function CargoDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#242424]/60 text-[#A5A29C]">
-                {filteredCargo.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-[#111111] transition-colors cursor-pointer"
-                    onClick={() => window.location.href = `/cargo/${item.id}`}
-                  >
-                    <td className="py-3.5 px-4 font-bold text-[#F5F3EE] whitespace-nowrap">
-                      {item.id}
-                    </td>
-
-                    <td className="py-3.5 px-4 font-sans text-[#F5F3EE] max-w-[240px] truncate">
-                      {item.description}
-                      <span className="block font-mono text-[10px] text-[#6F6D68]">
-                        {item.owner} &bull; {item.weightKg} kg
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap text-[#F5F3EE]">
-                      {item.destination}
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="flex items-center gap-1.5">
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            item.status === "Delayed"
-                              ? "bg-[#C49A55]"
-                              : item.status === "Received"
-                              ? "bg-[#7FAF91]"
-                              : "bg-[#C8C8C5]"
-                          }`}
-                        />
-                        <span>{item.status.toUpperCase()}</span>
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap text-[#6F6D68]">
-                      {item.eta}
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span
-                        className={
-                          item.riskLevel === "CRITICAL"
-                            ? "text-[#B85C5C] font-bold"
-                            : item.riskLevel === "HIGH"
-                            ? "text-[#C49A55]"
-                            : "text-[#6F6D68]"
-                        }
-                      >
-                        {item.riskLevel}
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <Link href={`/cargo/${item.id}`}>
-                        <Button variant="secondary" size="sm" className="font-mono text-xs h-7 px-2">
-                          <span>Twin</span>
-                          <ArrowRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </Link>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-[#6F6D68] font-mono">
+                      LOADING CARGO MANIFEST RECORDS...
                     </td>
                   </tr>
-                ))}
+                ) : filteredCargo.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-[#6F6D68] font-mono">
+                      NO CARGO MANIFEST ITEMS FOUND
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCargo.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-[#111111] transition-colors cursor-pointer"
+                      onClick={() => window.location.href = `/cargo/${item.id}`}
+                    >
+                      <td className="py-3.5 px-4 font-bold text-[#F5F3EE] whitespace-nowrap">
+                        {item.id}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-sans text-[#F5F3EE] max-w-[240px] truncate">
+                        {item.description}
+                        <span className="block font-mono text-[10px] text-[#6F6D68]">
+                          {item.owner} &bull; {item.weightKg} kg
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 whitespace-nowrap text-[#F5F3EE]">
+                        {item.destination}
+                      </td>
+
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              item.status === "Delayed"
+                                ? "bg-[#C49A55]"
+                                : item.status === "Received"
+                                ? "bg-[#7FAF91]"
+                                : "bg-[#C8C8C5]"
+                            }`}
+                          />
+                          <span>{item.status.toUpperCase()}</span>
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 whitespace-nowrap text-[#6F6D68]">
+                        {item.eta}
+                      </td>
+
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span
+                          className={
+                            item.riskLevel === "CRITICAL"
+                              ? "text-[#B85C5C] font-bold"
+                              : item.riskLevel === "HIGH"
+                              ? "text-[#C49A55]"
+                              : "text-[#6F6D68]"
+                          }
+                        >
+                          {item.riskLevel}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <Link href={`/cargo/${item.id}`}>
+                          <Button variant="secondary" size="sm" className="font-mono text-xs h-7 px-2">
+                            <span>Twin</span>
+                            <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

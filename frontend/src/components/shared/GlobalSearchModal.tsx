@@ -8,23 +8,23 @@ import { cargoService } from "@/services/cargo";
 import { personnelService } from "@/services/personnel";
 import { missionsService } from "@/services/missions";
 import { stationsService } from "@/services/stations";
-import { mockCargoItems, mockPersonnel, mockMissions, mockStations } from "@/data/mock";
+import { CargoItem, Personnel, Mission, Station } from "@/types";
 
 export const GlobalSearchModal: React.FC = () => {
   const router = useRouter();
   const { searchOpen, setSearchOpen } = useAppStore();
   const [query, setQuery] = useState("");
-  const [cargoItems, setCargoItems] = useState(mockCargoItems);
-  const [personnel, setPersonnel] = useState(mockPersonnel);
-  const [missions, setMissions] = useState(mockMissions);
-  const [stations, setStations] = useState(mockStations);
+  const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
+  const [personnel, setPersonnel] = useState<Personnel[]>([]);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [stations, setStations] = useState<Station[]>([]);
 
   useEffect(() => {
     if (!searchOpen) return;
-    cargoService.getAllCargo().then(setCargoItems).catch(() => {});
-    personnelService.getAllPersonnel().then(setPersonnel).catch(() => {});
-    missionsService.getAllMissions().then(setMissions).catch(() => {});
-    stationsService.getAllStations().then(setStations).catch(() => {});
+    cargoService.getAllCargo().then((items) => setCargoItems(items || [])).catch(() => {});
+    personnelService.getAllPersonnel().then((items) => setPersonnel(items || [])).catch(() => {});
+    missionsService.getAllMissions().then((items) => setMissions(items || [])).catch(() => {});
+    stationsService.getAllStations().then((items) => setStations(items || [])).catch(() => {});
   }, [searchOpen]);
 
   useEffect(() => {

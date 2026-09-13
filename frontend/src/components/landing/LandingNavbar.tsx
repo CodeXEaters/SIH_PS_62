@@ -41,7 +41,22 @@ export const LandingNavbar: React.FC = () => {
         {/* Left: DHRUV Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group select-none">
           <div className="flex items-center gap-2">
-            <Image src="/images/dhruv-logo-transparent.png" alt="DHRUV" width={34} height={34} className="h-8 w-8 object-contain" priority />
+            <Image
+              src="/images/dhruv-logo-transparent.png"
+              alt="DHRUV"
+              width={34}
+              height={34}
+              className="h-8 w-8 object-contain light-only:hidden"
+              priority
+            />
+            <Image
+              src="/images/dhruv-logo-dark.png"
+              alt="DHRUV"
+              width={34}
+              height={34}
+              className="h-8 w-8 object-contain hidden light-only:block"
+              priority
+            />
             <span className="text-xl font-black tracking-[0.25em] text-[#F5F3EE]">
               DHRUV
             </span>
