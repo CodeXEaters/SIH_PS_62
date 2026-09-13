@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Square,
   Search,
+  Upload,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
@@ -35,9 +36,11 @@ export default function QrScannerPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [scanAuditMsg, setScanAuditMsg] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDecodingImage, setIsDecodingImage] = useState(false);
 
-  // References for html5-qrcode instance and lifecycle control
+  // References for html5-qrcode instance, file picker, and lifecycle control
   const scannerRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isScanningRef = useRef<boolean>(false);
   const hasDecodedRef = useRef<boolean>(false);
 
@@ -108,6 +111,7 @@ export default function QrScannerPage() {
             ? `[DEMO / SIMULATED SCAN] Verified: ${scanResult.cargo.id}`
             : `✓ Optical scan recorded at Terminal`
         );
+        setScannerState("SUCCESS");
       } catch (apiErr: any) {
         const errDetail =
           apiErr?.data?.detail || apiErr?.message || "Backend scan recording failed";
@@ -234,6 +238,60 @@ export default function QrScannerPage() {
     }
   };
 
+  // Handle local QR code image upload and real decoding
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // Clear file input so the same file can be reselected
+    if (!file) return;
+
+    // 1. If camera is scanning, stop it cleanly first
+    await stopScanner();
+
+    setErrorMessage(null);
+    setStatusMessage(null);
+    setScanAuditMsg(null);
+
+    // 2. Validate file type: PNG, JPG/JPEG, WEBP
+    const validMimeTypes = ["image/png", "image/jpeg", "image/webp"];
+    const validExtensions = [".png", ".jpg", ".jpeg", ".webp"];
+    const fileNameLower = file.name.toLowerCase();
+    const hasValidExt = validExtensions.some((ext) => fileNameLower.endsWith(ext));
+
+    if (!validMimeTypes.includes(file.type) && !hasValidExt) {
+      setScannerState("ERROR");
+      setErrorMessage("Invalid file format. Please upload a PNG, JPG, or WEBP image.");
+      return;
+    }
+
+    setIsDecodingImage(true);
+    let decodedText: string | null = null;
+    let html5QrCode: any = null;
+
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      html5QrCode = new Html5Qrcode("qr-file-reader");
+      decodedText = await html5QrCode.scanFile(file, false);
+    } catch (decodeErr: any) {
+      setScannerState("ERROR");
+      setErrorMessage("Could not detect a QR code in this image.");
+      return;
+    } finally {
+      if (html5QrCode) {
+        try {
+          html5QrCode.clear();
+        } catch {}
+      }
+      setIsDecodingImage(false);
+    }
+
+    if (decodedText && decodedText.trim()) {
+      await processDecodedPayload(decodedText.trim(), false);
+    } else {
+      setScannerState("ERROR");
+      setErrorMessage("Could not detect a QR code in this image.");
+    }
+  };
+
   // Manual cargo code or QR lookup fallback
   const handleManualSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,28 +350,38 @@ export default function QrScannerPage() {
 
           <span
             className={`text-xs font-mono flex items-center gap-1.5 ${
-              scannerState === "SCANNING"
+              isDecodingImage
+                ? "text-[#C8A96B]"
+                : scannerState === "SCANNING"
                 ? "text-[#7FAF91]"
                 : scannerState === "STARTING"
                 ? "text-[#C8A96B]"
                 : scannerState === "ERROR" || scannerState === "PERMISSION_DENIED"
                 ? "text-[#E06C75]"
+                : scannerState === "SUCCESS"
+                ? "text-[#7FAF91]"
                 : "text-[#A5A29C]"
             }`}
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                scannerState === "SCANNING"
+                isDecodingImage
+                  ? "bg-[#C8A96B] animate-ping"
+                  : scannerState === "SCANNING"
                   ? "bg-[#7FAF91] animate-pulse"
                   : scannerState === "STARTING"
                   ? "bg-[#C8A96B] animate-ping"
                   : scannerState === "ERROR" || scannerState === "PERMISSION_DENIED"
                   ? "bg-[#E06C75]"
+                  : scannerState === "SUCCESS"
+                  ? "bg-[#7FAF91]"
                   : "bg-[#6F6D68]"
               }`}
             />
             <span>
-              {scannerState === "SCANNING"
+              {isDecodingImage
+                ? "DECODING IMAGE..."
+                : scannerState === "SCANNING"
                 ? "OPTICAL SENSOR ACTIVE"
                 : scannerState === "STARTING"
                 ? "INITIALIZING..."
@@ -338,6 +406,19 @@ export default function QrScannerPage() {
                 className="w-full h-full absolute inset-0 overflow-hidden"
               />
 
+              {/* Dedicated isolated container for file-based QR decoding */}
+              <div id="qr-file-reader" className="hidden" style={{ display: "none" }} />
+
+              {/* Hidden file input for local QR image uploads */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                style={{ display: "none" }}
+                onChange={handleFileUpload}
+              />
+
               {/* Gold Corner Markers */}
               <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-[#C8A96B] pointer-events-none z-20" />
               <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-[#C8A96B] pointer-events-none z-20" />
@@ -354,16 +435,32 @@ export default function QrScannerPage() {
                         OPTICAL SCANNER STANDBY
                       </span>
                       <p className="text-[11px] text-[#A5A29C] max-w-xs mb-5">
-                        Click below to activate camera and scan physical cargo QR codes.
+                        Point camera at physical cargo QR codes or select an image file to decode.
                       </p>
-                      <Button
-                        variant="primary"
-                        size="md"
-                        onClick={startScanner}
-                        className="font-mono text-xs px-6"
-                      >
-                        START CAMERA
-                      </Button>
+                      <div className="flex flex-wrap items-center justify-center gap-3">
+                        <Button
+                          variant="primary"
+                          size="md"
+                          onClick={startScanner}
+                          className="font-mono text-xs px-6"
+                          disabled={isDecodingImage}
+                        >
+                          START CAMERA
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="md"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="font-mono text-xs px-6 flex items-center gap-2"
+                          disabled={isDecodingImage}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isDecodingImage ? "DECODING IMAGE..." : "UPLOAD QR IMAGE"}</span>
+                        </Button>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#6F6D68] mt-3">
+                        or upload a QR image
+                      </span>
                     </>
                   )}
 
@@ -389,14 +486,27 @@ export default function QrScannerPage() {
                         {errorMessage ||
                           "Camera permission denied. Allow camera access in your browser settings and try again."}
                       </p>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={startScanner}
-                        className="font-mono text-xs"
-                      >
-                        TRY AGAIN
-                      </Button>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={startScanner}
+                          className="font-mono text-xs"
+                          disabled={isDecodingImage}
+                        >
+                          TRY AGAIN
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="font-mono text-xs flex items-center gap-1.5"
+                          disabled={isDecodingImage}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isDecodingImage ? "DECODING..." : "UPLOAD QR IMAGE"}</span>
+                        </Button>
+                      </div>
                     </>
                   )}
 
@@ -409,14 +519,27 @@ export default function QrScannerPage() {
                       <p className="text-[11px] text-[#F5F3EE] max-w-xs mb-4">
                         {errorMessage || "An unexpected camera error occurred."}
                       </p>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={startScanner}
-                        className="font-mono text-xs"
-                      >
-                        RETRY CAMERA
-                      </Button>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={startScanner}
+                          className="font-mono text-xs"
+                          disabled={isDecodingImage}
+                        >
+                          RETRY CAMERA
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="font-mono text-xs flex items-center gap-1.5"
+                          disabled={isDecodingImage}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isDecodingImage ? "DECODING..." : "UPLOAD QR IMAGE"}</span>
+                        </Button>
+                      </div>
                     </>
                   )}
 
@@ -429,14 +552,27 @@ export default function QrScannerPage() {
                       <p className="text-[11px] font-mono text-[#A5A29C] max-w-xs truncate mb-4">
                         {decodedPayload}
                       </p>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={startScanner}
-                        className="font-mono text-xs"
-                      >
-                        SCAN NEXT TARGET
-                      </Button>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={startScanner}
+                          className="font-mono text-xs"
+                          disabled={isDecodingImage}
+                        >
+                          SCAN NEXT TARGET
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="font-mono text-xs flex items-center gap-1.5"
+                          disabled={isDecodingImage}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isDecodingImage ? "DECODING..." : "UPLOAD QR IMAGE"}</span>
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
@@ -460,7 +596,7 @@ export default function QrScannerPage() {
             </div>
 
             {/* Camera Control Action Buttons */}
-            {scannerState === "SCANNING" && (
+            {scannerState === "SCANNING" ? (
               <Button
                 variant="danger"
                 size="sm"
@@ -470,35 +606,64 @@ export default function QrScannerPage() {
                 <Square className="w-3.5 h-3.5 fill-current" />
                 <span>STOP CAMERA</span>
               </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={startScanner}
+                  className="flex-1 font-mono text-xs flex items-center justify-center gap-2"
+                  disabled={isDecodingImage}
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>START CAMERA</span>
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 font-mono text-xs flex items-center justify-center gap-2"
+                  disabled={isDecodingImage}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{isDecodingImage ? "DECODING..." : "UPLOAD QR IMAGE"}</span>
+                </Button>
+              </div>
             )}
 
             {/* Real Camera State Indicator (Frame Rate / Sensor State) */}
             <div className="text-center text-xs font-mono py-1">
-              {scannerState === "SCANNING" && (
+              {isDecodingImage && (
+                <span className="text-[#C8A96B] flex items-center gap-1.5 justify-center">
+                  <span className="w-2 h-2 rounded-full bg-[#C8A96B] animate-ping" />
+                  <span>DECODING IMAGE...</span>
+                </span>
+              )}
+              {!isDecodingImage && scannerState === "SCANNING" && (
                 <span className="text-[#7FAF91] flex items-center gap-1.5 justify-center">
                   <span className="w-2 h-2 rounded-full bg-[#7FAF91] animate-pulse" />
                   <span>CAMERA ACTIVE</span>
                 </span>
               )}
-              {scannerState === "STARTING" && (
+              {!isDecodingImage && scannerState === "STARTING" && (
                 <span className="text-[#C8A96B] flex items-center gap-1.5 justify-center">
                   <span className="w-2 h-2 rounded-full bg-[#C8A96B] animate-ping" />
                   <span>CAMERA STARTING</span>
                 </span>
               )}
-              {(scannerState === "ERROR" || scannerState === "PERMISSION_DENIED") && (
+              {!isDecodingImage && (scannerState === "ERROR" || scannerState === "PERMISSION_DENIED") && (
                 <span className="text-[#E06C75] flex items-center gap-1.5 justify-center">
                   <span className="w-2 h-2 rounded-full bg-[#E06C75]" />
-                  <span>CAMERA ERROR</span>
+                  <span>SENSOR FAULT</span>
                 </span>
               )}
-              {scannerState === "IDLE" && (
+              {!isDecodingImage && scannerState === "IDLE" && (
                 <span className="text-[#6F6D68] flex items-center gap-1.5 justify-center">
                   <span className="w-2 h-2 rounded-full bg-[#6F6D68]" />
-                  <span>CAMERA OFFLINE</span>
+                  <span>OPTICAL SENSOR READY</span>
                 </span>
               )}
-              {scannerState === "SUCCESS" && (
+              {!isDecodingImage && scannerState === "SUCCESS" && (
                 <span className="text-[#7FAF91] flex items-center gap-1.5 justify-center">
                   <span className="w-2 h-2 rounded-full bg-[#7FAF91]" />
                   <span>TARGET ACQUIRED</span>
