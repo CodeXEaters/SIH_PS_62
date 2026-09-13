@@ -1,5 +1,6 @@
 import { apiClient } from "./apiClient";
 import { Expedition, Station } from "@/types";
+import { stationsService } from "./stations";
 
 function mapBackendStationToStation(s: any): Station {
   const isMaitri = (s.name || "").toLowerCase().includes("maitri");
@@ -68,14 +69,10 @@ export const expeditionService = {
   },
 
   async getStations(): Promise<Station[]> {
-    const backendStations = await apiClient.get<any[]>("/stations");
-    const mapped = backendStations.map(mapBackendStationToStation);
-    const unique = Array.from(new Map(mapped.map((s) => [s.id, s])).values());
-    return unique;
+    return await stationsService.getAllStations();
   },
 
   async getStationById(id: string): Promise<Station | undefined> {
-    const stations = await this.getStations();
-    return stations.find((s) => s.id === id.toLowerCase());
+    return await stationsService.getStationById(id);
   },
 };

@@ -1,8 +1,9 @@
 import { apiClient } from "./apiClient";
 import { Asset } from "@/types";
+import { getStationSlug } from "./stations";
 
 function mapBackendAssetToAsset(a: any): Asset {
-  const stationId = a.station_id === 2 ? "maitri" : "bharati";
+  const stationId = getStationSlug(a.station_id);
   let cat: Asset["category"] = "Vehicles";
   const rawType = (a.asset_type || "").toUpperCase();
   if (rawType.includes("GENERATOR") || rawType.includes("POWER")) {

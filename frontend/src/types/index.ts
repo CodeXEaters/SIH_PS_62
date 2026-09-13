@@ -18,7 +18,7 @@ export interface StationWeather {
 }
 
 export interface Station {
-  id: "maitri" | "bharati";
+  id: "maitri" | "bharati" | (string & {});
   name: string;
   coordinates: GeoCoordinate;
   elevation: string;
@@ -63,7 +63,14 @@ export type CargoStatus =
   | "In Transit"
   | "Received"
   | "Delayed"
-  | "Exception";
+  | "Exception"
+  | "PLANNED"
+  | "PACKED"
+  | "DISPATCHED"
+  | "IN_TRANSIT"
+  | "DELAYED"
+  | "ARRIVED"
+  | "DELIVERED";
 
 export interface CargoTimelineStep {
   step: string;
@@ -126,7 +133,7 @@ export interface Personnel {
   name: string;
   role: string;
   team: "Meteorology & Climatology" | "Glaciology & Ice Coring" | "Logistics & Heavy Transport" | "Station Operations" | "Medical & Life Support" | "Upper Atmosphere Physics";
-  stationId: "maitri" | "bharati" | "transit";
+  stationId: "maitri" | "bharati" | "transit" | (string & {});
   location: string;
   status: PersonnelStatus;
   medicalClearance: "VALID" | "UNDER_REVIEW" | "SPECIAL_MONITORING";
@@ -151,7 +158,7 @@ export interface Asset {
   id: string;
   name: string;
   category: "Vehicles" | "Generators" | "Communication Equipment" | "Scientific Equipment" | "Medical Equipment";
-  stationId: "maitri" | "bharati";
+  stationId: "maitri" | "bharati" | (string & {});
   condition: AssetCondition;
   utilizationPct: number;
   operatingHours: number;
@@ -169,7 +176,7 @@ export interface InventoryItem {
   id: string;
   name: string;
   category: "Fuel & Power" | "Life Support" | "Medical & Pharma" | "Station Infrastructure" | "Vehicle Spares";
-  stationId: "maitri" | "bharati";
+  stationId: "maitri" | "bharati" | (string & {});
   currentStock: number;
   unit: string;
   dailyConsumption: number;
@@ -191,7 +198,7 @@ export interface Mission {
   teamLead: string;
   teamLeadId: string;
   membersCount: number;
-  stationId: "maitri" | "bharati";
+  stationId: "maitri" | "bharati" | (string & {});
   location: string;
   coordinates: GeoCoordinate[];
   startTime: string;

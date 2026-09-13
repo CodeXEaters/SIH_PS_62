@@ -2,6 +2,7 @@ import { apiClient } from "./apiClient";
 import { InventoryItem } from "@/types";
 import { db } from "@/lib/offline/storage/db";
 import { cacheEntityData } from "@/lib/offline/sync/syncEngine";
+import { getStationSlug, getStationName } from "./stations";
 
 function mapBackendInventoryToItem(inv: any): InventoryItem {
   const days =
@@ -21,7 +22,8 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     categoryMapped = "Vehicle Spares";
   }
 
-  const stationId = inv.station_id === 2 ? "maitri" : "bharati";
+  const stationId = getStationSlug(inv.station_id);
+  const stationName = getStationName(inv.station_id);
   const status: InventoryItem["status"] =
     (inv.quantity ?? 0) <= (inv.minimum_threshold ?? 0) || (days > 0 && days <= 5)
       ? "Critical"
@@ -54,7 +56,7 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
         ? Math.round(inv.minimum_threshold / daily)
         : 0,
     status,
-    storageLocation: `${stationId.toUpperCase()} Core Storage Bay`,
+    storageLocation: `${stationName} Core Storage Bay`,
     minimumThreshold: inv.minimum_threshold ?? 0,
     replenishmentETA: inv.expiry_date ? String(inv.expiry_date) : "Unscheduled",
     forecastHistory: history,
