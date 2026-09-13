@@ -69,20 +69,20 @@ export default function DashboardPage() {
         setAttentionItems(intelRes.value);
       }
 
-      // 1. Active Personnel (DEPLOYED, ACTIVE, AT STATION, ON MISSION)
+      // 1. Active Personnel (Real backend statuses: ACTIVE and ON_MISSION)
       let pVal = "——";
       let pSub = "Unavailable";
       if (personnelRes.status === "fulfilled" && personnelRes.value) {
         const pList = personnelRes.value;
         const activeCount = pList.filter((p) => {
           const s = String(p.status).toUpperCase();
-          return s === "ACTIVE" || s === "DEPLOYED" || s === "AT STATION" || s === "ON MISSION";
+          return s === "ACTIVE" || s === "ON MISSION" || s === "ON_MISSION";
         }).length;
         pVal = String(activeCount);
         pSub = `${pList.length} Total Roster`;
       }
 
-      // 2. Tracked Cargo
+      // 2. Tracked Cargo (Total units in manifest)
       let cVal = "——";
       let cSub = "Unavailable";
       if (cargoRes.status === "fulfilled" && cargoRes.value) {
@@ -90,7 +90,7 @@ export default function DashboardPage() {
         cSub = "In Transit & Staged";
       }
 
-      // 3. Operational Assets
+      // 3. Operational Assets (Real backend status: OPERATIONAL)
       let aVal = "——";
       let aSub = "Unavailable";
       if (assetsRes.status === "fulfilled" && assetsRes.value) {
@@ -103,21 +103,21 @@ export default function DashboardPage() {
         aSub = `${aList.length} Registered Fleet`;
       }
 
-      // 4. Expedition Readiness
+      // 4. Expedition Readiness (Real backend percentage from reports service)
       let invVal = "——";
       let invSub = "Life Support & Reserves";
       if (reportsRes.status === "fulfilled" && reportsRes.value && typeof reportsRes.value.expeditionReadinessPct === "number") {
         invVal = `${Math.round(reportsRes.value.expeditionReadinessPct)}%`;
       }
 
-      // 5. Active Missions (ONGOING or ACTIVE)
+      // 5. Active Missions (Real backend status: ACTIVE)
       let mVal = "——";
       let mSub = "Unavailable";
       if (missionsRes.status === "fulfilled" && missionsRes.value) {
         const mList = missionsRes.value;
         const activeCount = mList.filter((m) => {
           const s = String(m.status).toUpperCase();
-          return s === "ONGOING" || s === "ACTIVE";
+          return s === "ACTIVE";
         }).length;
         mVal = String(activeCount).padStart(2, "0");
         mSub = `${mList.length} Total Registered`;

@@ -59,10 +59,10 @@ export const mockExpedition: Expedition = {
   endDate: "2027-04-10",
   leader: "Dr. Arvind Sharan (Scientist 'G', NCPOR)",
   vessel: "MV Vasiliy Golovnin (Charter Icebreaker)",
-  personnelCount: 124,
-  cargoTonnage: 1842,
-  activeMissionsCount: 8,
-  overallReadinessPct: 92,
+  personnelCount: 50,
+  cargoTonnage: 42.6,
+  activeMissionsCount: 117,
+  overallReadinessPct: 93,
   milestones: [
     {
       id: "M1",

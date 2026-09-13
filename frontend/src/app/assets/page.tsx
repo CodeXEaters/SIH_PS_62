@@ -87,7 +87,7 @@ export default function AssetsPage() {
               </span>
               <span className="text-polar-muted">&bull;</span>
               <span className="text-[10px] font-mono text-emerald-400">
-                326 TOTAL REGISTERED UNITS
+                {assetsList.length > 0 ? `${assetsList.length} TOTAL REGISTERED UNITS` : "..."}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
