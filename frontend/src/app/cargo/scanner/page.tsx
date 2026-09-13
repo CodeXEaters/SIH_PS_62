@@ -108,15 +108,14 @@ export default function QrScannerPage() {
             ? `[DEMO / SIMULATED SCAN] Verified: ${scanResult.cargo.id}`
             : `✓ Optical scan recorded at Terminal`
         );
-        setScannerState("SUCCESS");
       } catch (apiErr: any) {
         const errDetail =
           apiErr?.data?.detail || apiErr?.message || "Backend scan recording failed";
-        setScanAuditMsg(`Cargo resolved locally; note: ${errDetail}`);
-        setStatusMessage(
-          `✓ Target resolved: ${match.cargo.id}\nNotice: ${errDetail}`
+        setScanAuditMsg(`Cargo resolved but backend mutation rejected: ${errDetail}`);
+        setErrorMessage(
+          `Backend scan registration failed for ${match.cargo.id}: ${errDetail}`
         );
-        setScannerState("SUCCESS");
+        setScannerState("ERROR");
       }
     } catch (err: any) {
       setScannerState("ERROR");
