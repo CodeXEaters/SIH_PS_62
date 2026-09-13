@@ -20,6 +20,8 @@ import { useAppStore } from "@/store";
 import { mockAttentionItems } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { authService, UserSession } from "@/services/auth";
+import { intelligenceService } from "@/services/intelligence";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { syncOfflineQueue } from "@/lib/offline/sync/syncEngine";
 
 export const Topbar: React.FC = () => {
@@ -35,12 +37,34 @@ export const Topbar: React.FC = () => {
   } = useAppStore();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [attentionItems, setAttentionItems] = useState(mockAttentionItems);
   const [profileOpen, setProfileOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+
+  useEffect(() => {
+    intelligenceService
+      .getAttentionItems()
+      .then((items) => {
+        if (items && items.length > 0) setAttentionItems(items);
+      })
+      .catch(() => {});
+  }, []);
+
+  useWebSocket({
+    channel: "alerts",
+    onMessage: () => {
+      intelligenceService
+        .getAttentionItems()
+        .then((items) => {
+          if (items && items.length > 0) setAttentionItems(items);
+        })
+        .catch(() => {});
+    },
+  });
 
   useEffect(() => {
     // Attempt to hydrate current authenticated session from token
@@ -187,7 +211,7 @@ export const Topbar: React.FC = () => {
             title="Operational Alerts"
           >
             <Bell className="w-4 h-4" />
-            {mockAttentionItems.length > 0 && (
+            {attentionItems.length > 0 && (
               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#B85C5C]" />
             )}
           </button>
@@ -199,11 +223,11 @@ export const Topbar: React.FC = () => {
                   ACTIVE NOTIFICATIONS
                 </span>
                 <span className="text-[10px] font-mono text-[#C49A55]">
-                  {mockAttentionItems.length} alerts
+                  {attentionItems.length} alerts
                 </span>
               </div>
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {mockAttentionItems.slice(0, 3).map((item) => (
+                {attentionItems.slice(0, 3).map((item) => (
                   <div
                     key={item.id}
                     className="p-2 rounded bg-[#101010] border border-[#242424] text-xs"
