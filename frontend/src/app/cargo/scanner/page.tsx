@@ -27,10 +27,17 @@ type ScannerState =
   | "ERROR"
   | "PERMISSION_DENIED";
 
+interface VerifiedCargoIdentity {
+  id: number; // actual numeric PostgreSQL database ID
+  cargo_code: string;
+  qr_code: string;
+}
+
 export default function QrScannerPage() {
   const [scannerState, setScannerState] = useState<ScannerState>("IDLE");
   const [manualId, setManualId] = useState("");
   const [scannedItem, setScannedItem] = useState<CargoItem | null>(null);
+  const [verifiedCargo, setVerifiedCargo] = useState<VerifiedCargoIdentity | null>(null);
   const [decodedPayload, setDecodedPayload] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -83,11 +90,15 @@ export default function QrScannerPage() {
     setErrorMessage(null);
     setDecodedPayload(payload);
 
+    console.log("Decoded QR:", payload);
+
     try {
       // 1. Resolve real cargo record from backend
       const match = await cargoService.resolveCargoByQr(payload);
       if (!match) {
         setScannerState("ERROR");
+        setVerifiedCargo(null);
+        setScannedItem(null);
         setErrorMessage(
           `QR detected, but it is not a recognized DHRUV cargo QR: "${payload}"`
         );
@@ -95,12 +106,23 @@ export default function QrScannerPage() {
         return;
       }
 
+      console.log("Resolved cargo:", {
+        id: match.id,
+        cargo_code: match.cargo_code,
+        qr_code: match.qr_code,
+      });
+
+      setVerifiedCargo({
+        id: match.id,
+        cargo_code: match.cargo_code,
+        qr_code: match.qr_code,
+      });
       setScannedItem(match.cargo);
 
       // 2. Call backend scan endpoint: POST /api/v1/cargo/{id}/scan
       try {
         const scanResult = await cargoService.scanCargo(
-          match.rawId,
+          match.id,
           payload,
           "Terminal Optical Scanner"
         );
@@ -108,8 +130,8 @@ export default function QrScannerPage() {
         setScanAuditMsg(scanResult.message);
         setStatusMessage(
           isSimulated
-            ? `[DEMO / SIMULATED SCAN] Verified: ${scanResult.cargo.id}`
-            : `✓ Optical scan recorded at Terminal`
+            ? `[DEMO / SIMULATED SCAN] Verified: ${match.cargo_code} (DB ID: #${match.id})`
+            : `✓ Optical scan recorded at Terminal for ${match.cargo_code}`
         );
         setScannerState("SUCCESS");
       } catch (apiErr: any) {
@@ -117,12 +139,13 @@ export default function QrScannerPage() {
           apiErr?.data?.detail || apiErr?.message || "Backend scan recording failed";
         setScanAuditMsg(`Cargo resolved but backend mutation rejected: ${errDetail}`);
         setErrorMessage(
-          `Backend scan registration failed for ${match.cargo.id}: ${errDetail}`
+          `Backend scan registration failed for ${match.cargo_code}: ${errDetail}`
         );
         setScannerState("ERROR");
       }
     } catch (err: any) {
       setScannerState("ERROR");
+      setVerifiedCargo(null);
       setErrorMessage(
         err?.data?.detail || err?.message || "Failed to query cargo registry from backend."
       );
@@ -308,22 +331,75 @@ export default function QrScannerPage() {
   };
 
   // Confirm receipt / custody handover action
-  const handleConfirmReceipt = async () => {
-    if (!scannedItem) return;
+  const handleConfirmHandover = async () => {
+    // Defensive validation before submission (Requirement 5)
+    if (!verifiedCargo) {
+      setErrorMessage("No verified cargo available for custody handover.");
+      return;
+    }
+
+    if (
+      typeof verifiedCargo.id !== "number" ||
+      isNaN(verifiedCargo.id) ||
+      verifiedCargo.id <= 0
+    ) {
+      setErrorMessage(
+        `Invalid cargo database ID (${verifiedCargo.id}). Cannot perform custody handover without a valid numeric ID.`
+      );
+      return;
+    }
+
+    if (!verifiedCargo.cargo_code) {
+      setErrorMessage("Missing cargo code on verified cargo record.");
+      return;
+    }
+
+    if (!verifiedCargo.qr_code) {
+      setErrorMessage("Missing QR identity on verified cargo record.");
+      return;
+    }
+
+    console.log("Handover cargo ID:", verifiedCargo.id);
+    console.log(`Final request: POST /api/v1/cargo/${verifiedCargo.id}/scan`);
+
+    setIsProcessing(true);
+    setErrorMessage(null);
+
     try {
-      const updated = await cargoService.updateCargoStatus(
-        scannedItem.id,
-        "Received",
-        "Terminal Station Warehouse"
+      const scanResult = await cargoService.scanCargo(
+        verifiedCargo.id,
+        {
+          qr_code: verifiedCargo.qr_code,
+          location: "Terminal Station Warehouse",
+          event_type: "SCANNED",
+          remarks: `Physical custody handover verified and logged at Terminal Station Warehouse for ${verifiedCargo.cargo_code}.`,
+        }
       );
-      setScannedItem(updated);
+
+      setScannedItem(scanResult.cargo);
       setStatusMessage(
-        `✓ Custody confirmed for ${scannedItem.id}. Station custody recorded into database.`
+        `✓ Custody handover confirmed for ${verifiedCargo.cargo_code} (DB ID: #${verifiedCargo.id}). Chain of custody event recorded.`
       );
+      setScanAuditMsg(scanResult.message);
     } catch (err: any) {
-      setStatusMessage(
-        `Failed to update cargo status: ${err?.data?.detail || err?.message}`
-      );
+      console.error("Custody handover error:", err);
+      // Requirement 10: Specific error handling
+      const status = err?.status || err?.response?.status;
+      const detail = err?.data?.detail || err?.response?.data?.detail || err?.message;
+
+      if (status === 404) {
+        setErrorMessage(`Cargo not found (404): ${detail || `Cargo ID ${verifiedCargo.id} not found in database.`}`);
+      } else if (status === 403) {
+        setErrorMessage(`Unauthorized operation (403): ${detail || "You do not have permission to log custody handovers."}`);
+      } else if (status === 400 || status === 422) {
+        setErrorMessage(`Validation error (${status}): ${detail || "Invalid scan payload parameters."}`);
+      } else if (status >= 500) {
+        setErrorMessage(`Server error (${status}): ${detail || "Internal backend error during custody recording."}`);
+      } else {
+        setErrorMessage(`Custody handover failed: ${detail || "Unknown network error."}`);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -797,12 +873,13 @@ export default function QrScannerPage() {
                     variant="primary"
                     size="sm"
                     className="w-full sm:w-auto flex-1 font-mono text-xs"
-                    onClick={handleConfirmReceipt}
+                    onClick={handleConfirmHandover}
+                    disabled={isProcessing || !verifiedCargo}
                   >
-                    Confirm Custody Handover
+                    {isProcessing ? "Processing Handover..." : "Confirm Custody Handover"}
                   </Button>
                   <Link
-                    href={`/cargo/${scannedItem.id}`}
+                    href={`/cargo/${scannedItem.cargo_code || scannedItem.id}`}
                     className="w-full sm:w-auto"
                   >
                     <Button
