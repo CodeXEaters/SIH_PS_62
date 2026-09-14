@@ -33,6 +33,8 @@ class CargoEventResponse(CargoEventBase):
     cargo_id: int
     timestamp: datetime
     updated_by: Optional[int] = None
+    updated_by_user: Optional[str] = None
+    updated_by_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -54,6 +56,8 @@ class CargoTimelineResponse(BaseModel):
     cargo_name: str
     current_status: CargoStatus
     current_location: str
+    created_at: Optional[datetime] = None
     events: List[CargoEventResponse]
 
     model_config = ConfigDict(from_attributes=True)
+

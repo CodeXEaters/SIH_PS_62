@@ -14,7 +14,19 @@ export const intelligenceService = {
   },
 
   async predictCargoDelay(cargoId: number | string) {
-    const numId = typeof cargoId === "number" ? cargoId : parseInt(String(cargoId).replace(/\D/g, ""), 10) || 1;
+    let numId: number;
+    if (typeof cargoId === "number") {
+      numId = cargoId;
+    } else if (/^\d+$/.test(cargoId)) {
+      numId = parseInt(cargoId, 10);
+    } else {
+      try {
+        const c = await apiClient.get<any>(`/cargo/${cargoId}`);
+        numId = c?.id || 1;
+      } catch {
+        numId = 1;
+      }
+    }
     try {
       return await apiClient.get<any>(`/intelligence/cargo/${numId}/delay-prediction`);
     } catch (err: any) {

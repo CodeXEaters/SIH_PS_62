@@ -137,5 +137,6 @@ class CargoEventService:
             cargo_name=cargo.name,
             current_status=cargo.status,
             current_location=cargo.current_location,
+            created_at=cargo.created_at,
             events=events,
         )

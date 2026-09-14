@@ -79,9 +79,10 @@ def test_member2_end_to_end_logistics_workflow(client, auth_headers):
     assert timeline_res.status_code == 200
     timeline = timeline_res.json()
     assert timeline["cargo_id"] == cargo_id
-    assert len(timeline["events"]) == 2
-    assert timeline["events"][0]["event_type"] == "PACKED"
-    assert timeline["events"][1]["event_type"] == "LOADED"
+    assert len(timeline["events"]) == 3
+    assert timeline["events"][0]["event_type"] == "CREATED"
+    assert timeline["events"][1]["event_type"] == "PACKED"
+    assert timeline["events"][2]["event_type"] == "LOADED"
 
     # 6. Register Transport
     transport_name = f"PistenBully Arctic Hauler {uuid.uuid4().hex[:6]}"

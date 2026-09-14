@@ -93,7 +93,10 @@ export interface CargoAIAssessment {
 
 export interface CargoItem {
   id: string;
+  dbId?: number;
   rawId?: number;
+  cargo_code?: string;
+  qr_code?: string;
   description: string;
   owner: string;
   category: "Scientific Instrumentation" | "Fuel & Energy" | "Fuel & Power" | "Life Support & Rations" | "Heavy Machinery Spares" | "Medical Supplies";
@@ -112,6 +115,8 @@ export interface CargoItem {
   qrCode: string;
   lastScannedBy?: string;
   lastScannedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type PersonnelStatus =

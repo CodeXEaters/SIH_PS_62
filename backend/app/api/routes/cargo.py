@@ -51,7 +51,7 @@ def create_cargo(
     current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.OPERATIONS, UserRole.LOGISTICS)),
 ):
     """Register a new cargo package. Auto-generates unique cargo code and QR identity."""
-    return CargoService.create_cargo(db=db, cargo_in=cargo_in)
+    return CargoService.create_cargo(db=db, cargo_in=cargo_in, current_user=current_user)
 
 
 @router.get("/{id}", response_model=CargoResponse)

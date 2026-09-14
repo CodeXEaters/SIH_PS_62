@@ -4,7 +4,9 @@ from sqlalchemy import func
 from fastapi import HTTPException, status
 
 from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
+from app.models.cargo_event import CargoEvent, CargoEventType
 from app.models.station import Station
+from app.models.user import User
 from app.schemas.cargo import CargoCreate, CargoUpdate, CargoStatusUpdate
 
 
@@ -34,8 +36,13 @@ class CargoService:
             seq += 1
 
     @classmethod
-    def create_cargo(cls, db: Session, cargo_in: CargoCreate) -> Cargo:
-        """Creates and registers a new cargo package with auto-generated QR identity."""
+    def create_cargo(
+        cls,
+        db: Session,
+        cargo_in: CargoCreate,
+        current_user: Optional[User] = None,
+    ) -> Cargo:
+        """Creates and registers a new cargo package with auto-generated QR identity and initial CREATED event."""
         # 1. Validate stations
         origin = db.query(Station).filter(Station.id == cargo_in.origin_station_id).first()
         if not origin:
@@ -85,6 +92,22 @@ class CargoService:
         )
 
         db.add(cargo)
+        db.flush()  # Generates cargo.id within current transaction
+
+        # 5. Create atomic initial CREATED event
+        creator_info = current_user.email if current_user and current_user.email else "Central Logistics Directorate"
+        creation_event = CargoEvent(
+            cargo_id=cargo.id,
+            event_type=CargoEventType.CREATED,
+            location=current_loc,
+            station_id=cargo_in.origin_station_id,
+            latitude=origin.latitude if origin else None,
+            longitude=origin.longitude if origin else None,
+            remarks=f"Consignment manifested and registered by {creator_info}",
+            updated_by=current_user.id if current_user else None,
+        )
+        db.add(creation_event)
+
         db.commit()
         db.refresh(cargo)
         return cargo

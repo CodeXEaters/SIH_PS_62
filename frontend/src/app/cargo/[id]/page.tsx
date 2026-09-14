@@ -19,7 +19,7 @@ import { Badge, Button } from "@/components/ui";
 import { cargoService } from "@/services/cargo";
 import { intelligenceService } from "@/services/intelligence";
 import { CargoItem } from "@/types";
-import { formatKg } from "@/lib/utils";
+import { formatKg, formatDateTime, formatCoords } from "@/lib/utils";
 
 export default function CargoDigitalTwinPage() {
   const params = useParams();
@@ -92,17 +92,18 @@ export default function CargoDigitalTwinPage() {
     };
   }, [id]);
 
-  // Derive corridor steps from real timeline events if available
+  const latestEvent = React.useMemo(() => {
+    if (timelineEvents.length === 0) return null;
+    return timelineEvents[timelineEvents.length - 1];
+  }, [timelineEvents]);
+
+  // Derive corridor steps strictly from real backend timeline events
   const corridorSteps = React.useMemo(() => {
     if (!cargo) return [];
     if (timelineEvents.length > 0) {
       const steps = timelineEvents.map((evt, idx) => {
         const isLatest = idx === timelineEvents.length - 1;
-        const eventDate = new Date(evt.timestamp).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
+        const eventDate = formatDateTime(evt.timestamp);
         return {
           name: (evt.event_type || "").replace(/_/g, " "),
           detail: evt.remarks || evt.location,
@@ -120,21 +121,29 @@ export default function CargoDigitalTwinPage() {
           detail: `${cargo.destination} Science Lab 2 & Inventory Bay`,
           location: cargo.destination,
           status: "PENDING",
-          date: "Scheduled Resupply Slot #02",
+          date: "Scheduled Resupply Slot",
         });
       }
       return steps;
     }
 
+    // When no events exist yet, use only real creation info from cargo
+    const initialDate = cargo.createdAt ? formatDateTime(cargo.createdAt) : "Registration Pending";
     return [
-      { name: "CREATED", detail: "Electronic manifest registered at NCPOR", status: "COMPLETED", date: "10 Nov 2026" },
-      { name: "PACKED", detail: "Hermetic climate-controlled crate sealed", status: "COMPLETED", date: "12 Nov 2026" },
-      { name: "LOADED", detail: "Staged onto feeder convoy", status: "COMPLETED", date: "15 Nov 2026" },
-      { name: "GOA", detail: "NCPOR Central Logistics Depot dispatch", status: "COMPLETED", date: "15 Nov 2026" },
-      { name: "CAPE TOWN", detail: "Berth 4 Cold Store staging transfer", status: "COMPLETED", date: "01 Dec 2026" },
-      { name: "VESSEL", detail: "MV Vasiliy Golovnin (Hold 1, Bay 02)", status: "COMPLETED", date: "04 Dec 2026" },
-      { name: "ANTARCTICA", detail: `${cargo.destination} fast-ice offshore mooring`, status: "CURRENT", date: `CURRENT • ${cargo.status}` },
-      { name: cargo.destination.toUpperCase(), detail: `${cargo.destination} Science Lab 2`, status: "PENDING", date: "Scheduled Resupply Slot #02" },
+      {
+        name: "CREATED",
+        detail: `Manifest registered for transit from ${cargo.origin} to ${cargo.destination}`,
+        location: cargo.origin,
+        status: "CURRENT",
+        date: initialDate,
+      },
+      {
+        name: cargo.destination.toUpperCase(),
+        detail: `Scheduled delivery to ${cargo.destination}`,
+        location: cargo.destination,
+        status: "PENDING",
+        date: "Scheduled Resupply Slot",
+      },
     ];
   }, [timelineEvents, cargo]);
 
@@ -198,13 +207,25 @@ export default function CargoDigitalTwinPage() {
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F5F3EE]">
                 CARGO DIGITAL TWIN
               </h1>
-              <Badge variant={cargo.status === "Delayed" ? "warning" : "default"} dot>
+              <Badge variant={cargo.status === "Delayed" || cargo.status === "DELAYED" ? "warning" : "default"} dot>
                 {cargo.status}
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-[#A5A29C] mt-1 max-w-2xl">
               {cargo.description}
             </p>
+            {cargo.createdAt && (
+              <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] font-mono text-[#6F6D68]">
+                <Clock className="w-3.5 h-3.5 text-[#C8A96B]" />
+                <span>Registered: <span className="text-[#F5F3EE]">{formatDateTime(cargo.createdAt)}</span></span>
+                {timelineEvents.length > 0 && (timelineEvents[0]?.updated_by_user || timelineEvents[0]?.updated_by_name) && (
+                  <>
+                    <span>&bull;</span>
+                    <span>Created by: <span className="text-[#F5F3EE]">{timelineEvents[0].updated_by_name || timelineEvents[0].updated_by_user}</span></span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 font-mono text-xs">
@@ -233,8 +254,16 @@ export default function CargoDigitalTwinPage() {
 
           <div className="p-4 rounded bg-[#101010] border border-[#242424]">
             <span className="text-[10px] text-[#6F6D68] uppercase block">CURRENT LOCATION</span>
-            <span className="text-[#C8A96B] font-bold mt-1 block">Prydz Bay Offshore</span>
-            <span className="text-[10px] text-[#A5A29C] mt-0.5 block">MV Vasiliy Golovnin</span>
+            <span className="text-[#C8A96B] font-bold mt-1 block">
+              {latestEvent?.location || cargo.currentLocation || "In Transit / Staging"}
+            </span>
+            <span className="text-[10px] text-[#A5A29C] mt-0.5 block truncate">
+              {latestEvent?.timestamp
+                ? `Updated: ${formatDateTime(latestEvent.timestamp)}`
+                : cargo.lastScannedAt
+                ? `Updated: ${formatDateTime(cargo.lastScannedAt)}`
+                : cargo.transportMode || "Logistics Network"}
+            </span>
           </div>
 
           <div className="p-4 rounded bg-[#101010] border border-[#242424]">
@@ -246,7 +275,7 @@ export default function CargoDigitalTwinPage() {
           <div className="p-4 rounded bg-[#101010] border border-[#242424]">
             <span className="text-[10px] text-[#6F6D68] uppercase block">DESTINATION</span>
             <span className="text-[#F5F3EE] font-bold mt-1 block">{cargo.destination}</span>
-            <span className="text-[10px] text-[#A5A29C] mt-0.5 block">Via {cargo.transportMode}</span>
+            <span className="text-[10px] text-[#A5A29C] mt-0.5 block">Origin: {cargo.origin}</span>
           </div>
         </div>
 
@@ -390,16 +419,23 @@ export default function CargoDigitalTwinPage() {
                 <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
                   GEOSPATIAL SECTOR
                 </span>
-                <span className="text-[10px] font-mono text-[#6F6D68]">69°24&apos;S &bull; 76°11&apos;E</span>
+                <span className="text-[10px] font-mono text-[#6F6D68]">
+                  {latestEvent?.latitude != null && latestEvent?.longitude != null
+                    ? formatCoords(latestEvent.latitude, latestEvent.longitude)
+                    : cargo.currentLocation || "Sector Polar Grid"}
+                </span>
               </div>
 
               <div className="aspect-[16/9] rounded bg-[#050505] border border-[#242424] relative overflow-hidden flex items-center justify-center">
                 <div className="absolute w-40 h-40 rounded-full border border-[#202020]" />
                 <div className="absolute w-24 h-24 rounded-full border border-dashed border-[#C8A96B]/30" />
-                <div className="flex flex-col items-center z-10">
+                <div className="flex flex-col items-center z-10 text-center px-4">
                   <span className="w-3 h-3 rounded-full bg-[#C8A96B] ring-4 ring-[#C8A96B]/20" />
-                  <span className="mt-1 px-1.5 py-0.2 rounded bg-[#0A0A0A] border border-[#242424] text-[9px] font-mono text-[#F5F3EE]">
-                    MV VASUNDHARA
+                  <span className="mt-1.5 px-2 py-0.5 rounded bg-[#0A0A0A] border border-[#242424] text-[10px] font-mono font-bold text-[#F5F3EE] max-w-[220px] truncate">
+                    {latestEvent?.location || cargo.currentLocation || "In Transit"}
+                  </span>
+                  <span className="text-[9px] font-mono text-[#C8A96B] mt-0.5">
+                    {latestEvent?.event_type ? `EVENT: ${latestEvent.event_type}` : cargo.status}
                   </span>
                 </div>
               </div>
@@ -427,12 +463,18 @@ export default function CargoDigitalTwinPage() {
                   </thead>
                   <tbody className="divide-y divide-[#242424]/60 text-[#A5A29C]">
                     {timelineEvents.length > 0 ? (
-                      timelineEvents.slice(-3).map((evt, idx, arr) => {
+                      timelineEvents.slice(-5).map((evt, idx, arr) => {
                         const isLatest = idx === arr.length - 1;
+                        const custodianName =
+                          evt.updated_by_name ||
+                          evt.updated_by_user ||
+                          (evt.updated_by ? `Officer #${evt.updated_by}` : "NCPOR Officer");
+                        const timeStr = formatDateTime(evt.timestamp);
                         return (
                           <tr key={evt.id || idx}>
-                            <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">
-                              {evt.user?.full_name || (evt.updated_by ? `Officer #${evt.updated_by}` : "NCPOR Logistics Wing")}
+                            <td className="py-2.5 px-3">
+                              <span className="font-bold text-[#F5F3EE] block">{custodianName}</span>
+                              <span className="text-[10px] text-[#6F6D68] block">{timeStr}</span>
                             </td>
                             <td className="py-2.5 px-3 max-w-[150px] truncate">{evt.location}</td>
                             <td className={`py-2.5 px-3 ${isLatest ? "text-[#C8A96B]" : "text-[#7FAF91]"}`}>
@@ -442,23 +484,11 @@ export default function CargoDigitalTwinPage() {
                         );
                       })
                     ) : (
-                      <>
-                        <tr>
-                          <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">R. K. Sharma (NCPOR)</td>
-                          <td className="py-2.5 px-3">Goa Depot</td>
-                          <td className="py-2.5 px-3 text-[#7FAF91]">Signed &bull; SHA-256</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">Trans-Africa Logistics</td>
-                          <td className="py-2.5 px-3">Cape Town Berth 4</td>
-                          <td className="py-2.5 px-3 text-[#7FAF91]">Signed &bull; SHA-256</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2.5 px-3 font-bold text-[#F5F3EE]">Capt. V. Golovnin</td>
-                          <td className="py-2.5 px-3">Icebreaker Hold 2</td>
-                          <td className="py-2.5 px-3 text-[#C8A96B]">Current Custody</td>
-                        </tr>
-                      </>
+                      <tr>
+                        <td colSpan={3} className="py-6 text-center text-[#6F6D68]">
+                          No custody events recorded yet.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
