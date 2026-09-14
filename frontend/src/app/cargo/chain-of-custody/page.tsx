@@ -57,10 +57,10 @@ export default function ChainOfCustodyPage() {
                   minute: "2-digit",
                 }) + " UTC",
               action: ev.event_type || "CUSTODY_TRANSFER",
-              fromLocation: prevEv ? prevEv.location : "NCPOR Central Logistics Depot, Goa",
+              fromLocation: prevEv ? prevEv.location : ev.location,
               toLocation: ev.location,
-              actorName: `Logistics Specialist #${ev.updated_by || 1}`,
-              actorRole: ev.event_type === "DELAY_REPORTED" ? "Incident Reporter" : "Custody Officer",
+              actorName: ev.updated_by_name || ev.updated_by_user || `Logistics Officer #${ev.updated_by || 1}`,
+              actorRole: ev.event_type === "CREATED" ? "Manifest Registrar" : ev.event_type === "DELAY_REPORTED" ? "Incident Reporter" : "Custody Officer",
               verificationHash: `SHA256:${String(ev.id * 834923 + 104921).padStart(8, "0")}`,
               notes: ev.remarks || `Cargo verified and scanned at ${ev.location}.`,
             };

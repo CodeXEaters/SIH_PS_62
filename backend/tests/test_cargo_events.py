@@ -122,10 +122,11 @@ def test_cargo_timeline_chronological_order(client, auth_headers):
     assert response.status_code == 200
     timeline = response.json()
     assert timeline["cargo_id"] == cargo_id
-    assert len(timeline["events"]) == 3
-    assert timeline["events"][0]["event_type"] == "PACKED"
-    assert timeline["events"][1]["event_type"] == "LOADED"
-    assert timeline["events"][2]["event_type"] == "ARRIVED_AT_HUB"
+    assert len(timeline["events"]) == 4
+    assert timeline["events"][0]["event_type"] == "CREATED"
+    assert timeline["events"][1]["event_type"] == "PACKED"
+    assert timeline["events"][2]["event_type"] == "LOADED"
+    assert timeline["events"][3]["event_type"] == "ARRIVED_AT_HUB"
     assert timeline["current_location"] == "Maitri Station Helipad Depot"
 
 

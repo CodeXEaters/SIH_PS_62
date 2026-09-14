@@ -8,9 +8,12 @@ import {
   FileSpreadsheet,
   ArrowRight,
   RefreshCw,
+  Plus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
+import { RegisterCargoModal } from "@/components/cargo/RegisterCargoModal";
+import { useAppStore } from "@/store";
 import { cargoService } from "@/services/cargo";
 import { CargoItem } from "@/types";
 
@@ -19,6 +22,11 @@ export default function CargoDashboardPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
+
+  const user = useAppStore((s) => s.user);
+  const isAuthorizedToRegister =
+    !user || ["ADMIN", "OPERATIONS", "LOGISTICS"].includes(user.role?.toUpperCase() || "");
 
   const fetchCargo = () => {
     setIsLoading(true);
@@ -76,8 +84,22 @@ export default function CargoDashboardPage() {
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
               <span>Refresh</span>
             </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setRegisterModalOpen(true)}
+              className="gap-2 font-mono text-xs bg-[#C8A96B] hover:bg-[#B89858] text-black font-semibold"
+              title={
+                isAuthorizedToRegister
+                  ? "Register new cargo consignment in PostgreSQL"
+                  : "Authority required: LOGISTICS, OPERATIONS, or ADMIN"
+              }
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Register Cargo</span>
+            </Button>
             <Link href="/cargo/scanner">
-              <Button variant="primary" size="sm" className="gap-2 font-mono text-xs">
+              <Button variant="secondary" size="sm" className="gap-2 font-mono text-xs">
                 <QrCode className="w-3.5 h-3.5" />
                 <span>QR Scanner</span>
               </Button>
@@ -217,6 +239,14 @@ export default function CargoDashboardPage() {
           </div>
         </div>
       </div>
+
+      <RegisterCargoModal
+        isOpen={registerModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        onCargoCreated={() => {
+          fetchCargo();
+        }}
+      />
     </AppShell>
   );
 }

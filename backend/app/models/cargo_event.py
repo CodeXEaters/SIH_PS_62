@@ -5,6 +5,7 @@ from app.database.base import Base
 
 
 class CargoEventType(str, enum.Enum):
+    CREATED = "CREATED"
     PACKED = "PACKED"
     SCANNED = "SCANNED"
     LOADED = "LOADED"
@@ -31,4 +32,17 @@ class CargoEvent(Base):
     # Relationships
     cargo = relationship("Cargo", back_populates="events")
     station = relationship("Station", foreign_keys=[station_id])
-    user = relationship("User", foreign_keys=[updated_by])
+    user = relationship("User", foreign_keys=[updated_by], lazy="joined")
+
+    @property
+    def updated_by_user(self):
+        if self.user:
+            return self.user.email or self.user.full_name
+        return None
+
+    @property
+    def updated_by_name(self):
+        if self.user:
+            return self.user.full_name or self.user.email
+        return None
+
