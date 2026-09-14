@@ -84,42 +84,42 @@ export default function ExpeditionPlannerPage() {
       risk: "HIGH",
       detail: "Sustained winds >35 kts ground Ka-32 helicopters. Flight envelopes average 3.8 hours per day.",
       status: "Active Constraint",
-      color: "text-amber-400 border-amber-800/40 bg-amber-950/20",
+      color: "text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/20",
     },
     {
       category: "Vessel Cargo Capacity",
       risk: "NOMINAL",
       detail: "1,842 tonnes stowed. Deck capacity at 94% limit. Offload sequence must maintain ship stability.",
       status: "Monitored",
-      color: "text-sky-400 border-sky-800/40 bg-sky-950/20",
+      color: "text-sky-700 dark:text-sky-400 border-sky-300 dark:border-sky-800/40 bg-sky-50 dark:bg-sky-950/20",
     },
     {
       category: "Hazard Class Restrictions",
       risk: "CRITICAL",
       detail: "50,000L polar diesel transfer requires floating hose over 1.8m fast ice with crack sensor acoustic monitoring.",
       status: "Strict Protocol",
-      color: "text-red-400 border-red-800/40 bg-red-950/20",
+      color: "text-red-700 dark:text-red-400 border-red-300 dark:border-red-800/40 bg-red-50 dark:bg-red-950/20",
     },
     {
       category: "Aircraft Payload Limit",
       risk: "MEDIUM",
       detail: "Ka-32 external sling limit is 3,500 kg per sortie at -20°C density altitude.",
       status: "Payload Guarded",
-      color: "text-amber-400 border-amber-800/40 bg-amber-950/20",
+      color: "text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/20",
     },
     {
       category: "Personnel Availability",
       risk: "NOMINAL",
       detail: "124 personnel active. All hold certified polar survival and cold-injury triage certs.",
       status: "100% Certified",
-      color: "text-emerald-400 border-emerald-800/40 bg-emerald-950/20",
+      color: "text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-950/20",
     },
     {
       category: "Station Fuel Reserve",
       risk: "CRITICAL",
       detail: "Bharati current diesel: 6.9 days left. Resupply pumping from ship is the top operational priority.",
       status: "Priority #1",
-      color: "text-red-400 border-red-800/40 bg-red-950/20",
+      color: "text-red-700 dark:text-red-400 border-red-300 dark:border-red-800/40 bg-red-50 dark:bg-red-950/20",
     },
   ];
 
@@ -154,7 +154,7 @@ export default function ExpeditionPlannerPage() {
         </div>
 
         {/* Operational Constraints Panel */}
-        <div className="p-5 rounded-lg bg-polar-deep/90 border border-polar-border shadow-sm space-y-4">
+        <div className="p-5 rounded-lg bg-polar-deep border border-polar-border shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono font-bold tracking-wider text-polar-snow uppercase">
               OPERATIONAL CONSTRAINTS &bull; REAL-TIME ENFORCEMENT
@@ -166,7 +166,7 @@ export default function ExpeditionPlannerPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {constraints.map((c) => (
-              <div key={c.category} className={`p-3.5 rounded-lg border ${c.color} text-xs space-y-1`}>
+              <div key={c.category} className={`p-3.5 rounded-lg border ${c.color} text-xs space-y-1 shadow-sm`}>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-polar-snow">{c.category}</span>
                   <span className="font-mono text-[10px] font-semibold uppercase">{c.status}</span>
@@ -189,10 +189,10 @@ export default function ExpeditionPlannerPage() {
                 key={phase.id}
                 className={`p-5 rounded-lg border transition-all ${
                   phase.status === "ACTIVE"
-                    ? "bg-polar-deep border-polar-cyan/60 shadow-[0_0_20px_rgba(200,169,107,0.15)]"
+                    ? "bg-polar-deep border-polar-cyan/80 shadow-[0_0_20px_rgba(2,132,199,0.12)] dark:shadow-[0_0_20px_rgba(200,169,107,0.15)]"
                     : phase.status === "COMPLETED"
-                    ? "bg-polar-deep/60 border-polar-border"
-                    : "bg-polar-midnight/60 border-polar-border/60"
+                    ? "bg-polar-deep/90 border-polar-border"
+                    : "bg-polar-surface/90 border-polar-border"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
@@ -200,10 +200,10 @@ export default function ExpeditionPlannerPage() {
                     <span
                       className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${
                         phase.status === "ACTIVE"
-                          ? "bg-polar-cyan/20 text-polar-cyan border-polar-cyan"
+                          ? "bg-sky-50 text-sky-700 border-sky-300 dark:bg-polar-cyan/20 dark:text-polar-cyan dark:border-polar-cyan"
                           : phase.status === "COMPLETED"
-                          ? "bg-emerald-950/60 text-emerald-300 border-emerald-800"
-                          : "bg-polar-surface text-polar-muted border-polar-border"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                          : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-polar-surface dark:text-polar-muted dark:border-polar-border"
                       }`}
                     >
                       {phase.status}
@@ -217,7 +217,7 @@ export default function ExpeditionPlannerPage() {
                 </div>
 
                 {/* Sub-tasks */}
-                <div className="space-y-2 mt-3 pt-3 border-t border-polar-border/60">
+                <div className="space-y-2 mt-3 pt-3 border-t border-polar-border">
                   {phase.tasks.map((task) => (
                     <div
                       key={task.name}
@@ -225,11 +225,11 @@ export default function ExpeditionPlannerPage() {
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-polar-cyan">&bull;</span>
-                        <span className="text-polar-snow/90">{task.name}</span>
+                        <span className="text-polar-snow font-medium">{task.name}</span>
                         <span className="text-polar-muted text-[10px]">({task.owner})</span>
                       </div>
                       <div className="flex items-center gap-3 w-44 shrink-0">
-                        <div className="flex-1 h-1.5 bg-polar-midnight rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-slate-200 dark:bg-polar-midnight rounded-full overflow-hidden">
                           <div
                             className="h-full bg-polar-cyan transition-all"
                             style={{ width: `${task.progress}%` }}

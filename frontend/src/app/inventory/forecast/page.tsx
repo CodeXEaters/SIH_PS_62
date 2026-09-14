@@ -17,8 +17,17 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { inventoryService } from "@/services/inventory";
 import { InventoryItem } from "@/types";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function InventoryForecastPage() {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const gridStroke = isLight ? "#E2E8F0" : "#242424";
+  const axisStroke = isLight ? "#475569" : "#6F6D68";
+  const tooltipBg = isLight ? "#FFFFFF" : "#0A0A0A";
+  const tooltipBorder = isLight ? "#E2E8F0" : "#242424";
+  const tooltipColor = isLight ? "#0F172A" : "#F5F3EE";
+
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -168,16 +177,16 @@ export default function InventoryForecastPage() {
           <div className="h-72 w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={item.forecastHistory} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="2 2" stroke="#1F1F1F" />
-                <XAxis dataKey="day" stroke="#6F6D68" fontSize={10} tickLine={false} />
-                <YAxis stroke="#6F6D68" fontSize={10} tickLine={false} />
+                <CartesianGrid strokeDasharray="2 2" stroke={gridStroke} />
+                <XAxis dataKey="day" stroke={axisStroke} fontSize={10} tickLine={false} />
+                <YAxis stroke={axisStroke} fontSize={10} tickLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0A0A0A",
-                    borderColor: "#242424",
+                    backgroundColor: tooltipBg,
+                    borderColor: tooltipBorder,
                     borderRadius: "4px",
                     fontSize: "11px",
-                    color: "#F5F3EE",
+                    color: tooltipColor,
                     fontFamily: "monospace",
                   }}
                 />
