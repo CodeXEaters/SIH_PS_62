@@ -6,12 +6,14 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { missionsService } from "@/services/missions";
 import { Mission } from "@/types";
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw, Plus } from "lucide-react";
+import { PlanMissionModal } from "@/components/missions/PlanMissionModal";
 
 export default function MissionsPage() {
   const [missionsList, setMissionsList] = useState<Mission[]>([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   const fetchMissions = () => {
     setIsLoading(true);
@@ -52,7 +54,7 @@ export default function MissionsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono">
+          <div className="flex items-center gap-2.5 text-xs font-mono">
             <span className="text-[#6F6D68]">STATUS:</span>
             <select
               value={statusFilter}
@@ -65,6 +67,15 @@ export default function MissionsPage() {
               <option value="Completed">COMPLETED</option>
               <option value="Emergency">EMERGENCY</option>
             </select>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsPlanModalOpen(true)}
+              className="flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Plan Mission</span>
+            </Button>
           </div>
         </div>
 
@@ -158,6 +169,12 @@ export default function MissionsPage() {
             ))}
           </div>
         )}
+
+        <PlanMissionModal
+          isOpen={isPlanModalOpen}
+          onClose={() => setIsPlanModalOpen(false)}
+          onMissionCreated={() => fetchMissions()}
+        />
       </div>
     </AppShell>
   );

@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowLeftRight, Fuel, CheckCircle2, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Fuel, CheckCircle2, RefreshCw, Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { inventoryService } from "@/services/inventory";
+import { InitiateTransferModal } from "@/components/inventory/InitiateTransferModal";
 
 export default function InventoryTransfersPage() {
   const [transfers, setTransfers] = useState<Array<{
@@ -20,18 +21,18 @@ export default function InventoryTransfersPage() {
     notes?: string;
   }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+
+  const loadTransfers = () => {
+    setIsLoading(true);
+    inventoryService.getInventoryTransfers()
+      .then((data) => setTransfers(data || []))
+      .catch((err) => console.warn("Failed to load inventory transfers:", err))
+      .finally(() => setIsLoading(false));
+  };
 
   useEffect(() => {
-    let isMounted = true;
-    inventoryService.getInventoryTransfers()
-      .then((data) => {
-        if (isMounted) setTransfers(data);
-      })
-      .catch((err) => console.warn("Failed to load inventory transfers:", err))
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-    return () => { isMounted = false; };
+    loadTransfers();
   }, []);
 
   return (
@@ -53,6 +54,16 @@ export default function InventoryTransfersPage() {
               Authorized transfers between vessels, stationary fuel farms, and traverse teams.
             </p>
           </div>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsTransferModalOpen(true)}
+            className="flex items-center gap-1.5 font-mono text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Initiate Transfer</span>
+          </Button>
         </div>
 
         {/* Transfers Table */}
@@ -105,6 +116,12 @@ export default function InventoryTransfersPage() {
             </table>
           </div>
         </div>
+
+        <InitiateTransferModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          onTransferCreated={() => loadTransfers()}
+        />
       </div>
     </AppShell>
   );

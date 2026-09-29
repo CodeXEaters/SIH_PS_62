@@ -55,7 +55,12 @@ class InventoryForecaster:
 
             # Contractual Alert Generation Rule: days_remaining <= 14
             if generate_alerts and days_left <= 14.0:
-                severity = AlertSeverity.CRITICAL if days_left <= 5.0 else AlertSeverity.HIGH
+                if days_left <= 3.0:
+                    severity = AlertSeverity.CRITICAL
+                elif days_left <= 7.0:
+                    severity = AlertSeverity.HIGH
+                else:
+                    severity = AlertSeverity.WARNING
                 AlertService.create_alert(
                     db=db,
                     alert_in=AlertCreate(

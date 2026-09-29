@@ -54,3 +54,79 @@ def test_create_and_update_inventory(client, auth_headers):
     # Verify item now appears in low-stock query
     low_res = client.get("/inventory/low-stock", headers=auth_headers)
     assert any(i["id"] == item_id for i in low_res.json())
+
+
+def test_create_inventory_transfer(client, auth_headers):
+    """Test executing an atomic inter-station inventory transfer."""
+    stations = client.get("/stations", headers=auth_headers).json()
+    st1_id = stations[0]["id"]
+    st2_id = stations[1]["id"]
+
+    # 1. Create stock at Station 1
+    create_res = client.post(
+        "/inventory",
+        json={
+            "item_name": "Emergency Cold Weather MRE Packs",
+            "category": "RATIONS",
+            "station_id": st1_id,
+            "quantity": 100.0,
+            "minimum_threshold": 20.0,
+            "daily_consumption": 2.0,
+            "unit": "BOX",
+        },
+        headers=auth_headers,
+    )
+    assert create_res.status_code == 201
+    item_id = create_res.json()["id"]
+
+    # 2. Reject transfer to same station
+    same_res = client.post(
+        "/inventory/transfers",
+        json={
+            "item_id": item_id,
+            "from_station_id": st1_id,
+            "to_station_id": st1_id,
+            "quantity": 10.0,
+        },
+        headers=auth_headers,
+    )
+    assert same_res.status_code == 400
+
+    # 3. Reject transfer exceeding available stock
+    excess_res = client.post(
+        "/inventory/transfers",
+        json={
+            "item_id": item_id,
+            "from_station_id": st1_id,
+            "to_station_id": st2_id,
+            "quantity": 999.0,
+        },
+        headers=auth_headers,
+    )
+    assert excess_res.status_code == 400
+
+    # 4. Valid transfer of 30 units from Station 1 to Station 2
+    trf_res = client.post(
+        "/inventory/transfers",
+        json={
+            "item_id": item_id,
+            "from_station_id": st1_id,
+            "to_station_id": st2_id,
+            "quantity": 30.0,
+            "notes": "Emergency ration buffer transfer",
+        },
+        headers=auth_headers,
+    )
+    assert trf_res.status_code == 201
+    transfer_data = trf_res.json()
+    assert transfer_data["status"] == "COMPLETED"
+    assert "30" in transfer_data["quantity"]
+
+    # 5. Check origin stock was decremented to 70
+    updated_st1 = client.get(f"/inventory/{item_id}", headers=auth_headers).json()
+    assert updated_st1["quantity"] == 70.0
+
+    # 6. Verify transfer appears in transfer list
+    list_trf = client.get("/inventory/transfers", headers=auth_headers).json()
+    assert any(t["id"] == transfer_data["id"] for t in list_trf)
+

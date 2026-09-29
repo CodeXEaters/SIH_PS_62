@@ -101,4 +101,29 @@ export const emergencyService = {
     cachedIncident = mapBackendEmergencyToIncident(res);
     return cachedIncident;
   },
+
+  async triggerEmergency(payload: {
+    title: string;
+    emergency_type: string;
+    severity?: string;
+    description: string;
+    station_id?: number;
+    location_description?: string;
+    latitude?: number;
+    longitude?: number;
+  }): Promise<EmergencyIncident> {
+    const res = await apiClient.post<any>("/emergency", {
+      title: payload.title,
+      emergency_type: payload.emergency_type,
+      severity: payload.severity || "CRITICAL",
+      description: payload.description,
+      station_id: payload.station_id || 4,
+      location_description: payload.location_description || "Antarctic Traverse Sector",
+      latitude: payload.latitude ?? -69.4087,
+      longitude: payload.longitude ?? 76.1872,
+    });
+    cachedIncident = mapBackendEmergencyToIncident(res);
+    return cachedIncident;
+  },
 };
+

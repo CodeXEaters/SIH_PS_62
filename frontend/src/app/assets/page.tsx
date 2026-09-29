@@ -13,11 +13,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   RefreshCw,
+  Plus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
 import { assetsService } from "@/services/assets";
 import { Asset, AssetCondition } from "@/types";
+import { RegisterAssetModal } from "@/components/assets/RegisterAssetModal";
+import { LogMaintenanceModal } from "@/components/assets/LogMaintenanceModal";
 
 export default function AssetsPage() {
   const [assetsList, setAssetsList] = useState<Asset[]>([]);
@@ -25,6 +28,8 @@ export default function AssetsPage() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [conditionFilter, setConditionFilter] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isLogMaintModalOpen, setIsLogMaintModalOpen] = useState(false);
 
   const fetchAssets = () => {
     setIsLoading(true);
@@ -95,12 +100,31 @@ export default function AssetsPage() {
             </p>
           </div>
 
-          <Link href="/assets/maintenance">
-            <Button variant="secondary" size="sm" className="gap-1.5">
-              <Wrench className="w-3.5 h-3.5" />
-              <span>Maintenance Schedule</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="gap-1.5 font-mono text-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Register Asset</span>
             </Button>
-          </Link>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsLogMaintModalOpen(true)}
+              className="gap-1.5 font-mono text-xs"
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Log Service</span>
+            </Button>
+            <Link href="/assets/maintenance">
+              <Button variant="secondary" size="sm" className="gap-1.5 font-mono text-xs">
+                <span>Schedule</span>
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Filter Toolbar */}
@@ -225,6 +249,18 @@ export default function AssetsPage() {
             </table>
           </div>
         </div>
+
+        <RegisterAssetModal
+          isOpen={isRegisterModalOpen}
+          onClose={() => setIsRegisterModalOpen(false)}
+          onAssetCreated={() => fetchAssets()}
+        />
+
+        <LogMaintenanceModal
+          isOpen={isLogMaintModalOpen}
+          onClose={() => setIsLogMaintModalOpen(false)}
+          onMaintenanceLogged={() => fetchAssets()}
+        />
       </div>
     </AppShell>
   );

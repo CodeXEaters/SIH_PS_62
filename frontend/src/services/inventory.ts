@@ -144,4 +144,70 @@ export const inventoryService = {
       throw err;
     }
   },
+
+  async createInventoryItem(payload: {
+    item_name: string;
+    category: string;
+    station_id: number;
+    quantity: number;
+    minimum_threshold: number;
+    daily_consumption: number;
+    unit: string;
+    expiry_date?: string;
+  }): Promise<InventoryItem> {
+    try {
+      const res = await apiClient.post<any>("/inventory", payload);
+      return mapBackendInventoryToItem(res);
+    } catch (err: any) {
+      if (err?.isOffline) {
+        const { queueOfflineAction } = await import("@/lib/offline/sync/syncEngine");
+        await queueOfflineAction({
+          type: "INVENTORY_CREATE",
+          endpoint: "/inventory",
+          method: "POST",
+          payload,
+        });
+        return mapBackendInventoryToItem({
+          id: Date.now(),
+          ...payload,
+        });
+      }
+      throw err;
+    }
+  },
+
+  async createTransfer(payload: {
+    item_id: number;
+    from_station_id: number;
+    to_station_id: number;
+    quantity: number;
+    notes?: string;
+  }): Promise<any> {
+    try {
+      return await apiClient.post<any>("/inventory/transfers", payload);
+    } catch (err: any) {
+      if (err?.isOffline) {
+        const { queueOfflineAction } = await import("@/lib/offline/sync/syncEngine");
+        await queueOfflineAction({
+          type: "INVENTORY_TRANSFER",
+          endpoint: "/inventory/transfers",
+          method: "POST",
+          payload,
+        });
+        return {
+          id: `TRF-${Date.now()}`,
+          item: `Item #${payload.item_id}`,
+          quantity: `${payload.quantity} units`,
+          from_location: `Station #${payload.from_station_id}`,
+          to_location: `Station #${payload.to_station_id}`,
+          status: "QUEUED_OFFLINE",
+          timestamp: new Date().toISOString(),
+          officer: "Field Officer (Offline)",
+          notes: payload.notes,
+        };
+      }
+      throw err;
+    }
+  },
 };
+

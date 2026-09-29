@@ -91,14 +91,14 @@ class RiskEngine:
         # Bound score to [0, 100]
         final_score = max(5, min(100, score))
 
-        # Risk Classification
-        if final_score >= 80:
+        # Risk Classification (0-30 LOW, 31-60 MEDIUM, 61-80 HIGH, 81-100 CRITICAL)
+        if final_score >= 81:
             level = MissionRiskLevel.CRITICAL
             action = "HALT TRAVERSE IMMEDIATELY. Dispatch support snowcat or emergency air beacon."
-        elif final_score >= 60:
+        elif final_score >= 61:
             level = MissionRiskLevel.HIGH
             action = "Require hourly satellite check-in and stage nearest rescue vehicle on standby."
-        elif final_score >= 35:
+        elif final_score >= 31:
             level = MissionRiskLevel.MEDIUM
             action = "Maintain regular radio schedule and monitor katabatic wind fronts."
         else:

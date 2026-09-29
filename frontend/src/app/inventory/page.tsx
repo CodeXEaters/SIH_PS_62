@@ -7,17 +7,20 @@ import {
   Search,
   ArrowLeftRight,
   RefreshCw,
+  Plus,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
 import { inventoryService } from "@/services/inventory";
 import { InventoryItem } from "@/types";
+import { AddInventoryModal } from "@/components/inventory/AddInventoryModal";
 
 export default function InventoryPage() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [stationFilter, setStationFilter] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchInventory = () => {
     setIsLoading(true);
@@ -64,10 +67,19 @@ export default function InventoryPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsAddModalOpen(true)}
+              className="gap-2 font-mono text-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Stock Item</span>
+            </Button>
             <Link href="/inventory/forecast">
-              <Button variant="primary" size="sm" className="gap-2 font-mono text-xs">
+              <Button variant="secondary" size="sm" className="gap-2 font-mono text-xs">
                 <TrendingDown className="w-3.5 h-3.5" />
-                <span>Burn Rate Forecast</span>
+                <span>Burn Rate</span>
               </Button>
             </Link>
             <Link href="/inventory/transfers">
@@ -239,6 +251,12 @@ export default function InventoryPage() {
             </table>
           </div>
         </div>
+
+        <AddInventoryModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onItemAdded={() => fetchInventory()}
+        />
       </div>
     </AppShell>
   );
