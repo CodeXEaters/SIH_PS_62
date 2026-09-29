@@ -56,4 +56,57 @@ export const assetsService = {
       return all.find((a) => a.id === id);
     }
   },
+
+  async createAsset(payload: {
+    asset_name: string;
+    asset_type: string;
+    qr_code: string;
+    station_id: number;
+    location: string;
+    status?: string;
+    health_score?: number;
+    last_maintenance?: string;
+    next_maintenance?: string;
+  }): Promise<Asset> {
+    try {
+      const res = await apiClient.post<any>("/assets", payload);
+      return mapBackendAssetToAsset(res);
+    } catch (err: any) {
+      if (err?.isOffline) {
+        const { queueOfflineAction } = await import("@/lib/offline/sync/syncEngine");
+        await queueOfflineAction({
+          type: "ASSET_CREATE",
+          endpoint: "/assets",
+          method: "POST",
+          payload,
+        });
+        return mapBackendAssetToAsset({
+          id: Date.now(),
+          ...payload,
+        });
+      }
+      throw err;
+    }
+  },
+
+  async logMaintenance(
+    assetId: string | number,
+    payload: {
+      status?: string;
+      health_score?: number;
+      last_maintenance?: string;
+      next_maintenance?: string;
+      notes?: string;
+    }
+  ): Promise<Asset> {
+    const numericId = typeof assetId === "number" ? assetId : parseInt(assetId.replace(/\D/g, ""), 10) || 1;
+    const res = await apiClient.put<any>(`/assets/${numericId}`, {
+      status: payload.status || "OPERATIONAL",
+      health_score: payload.health_score ?? 100.0,
+      last_maintenance: payload.last_maintenance || new Date().toISOString().split("T")[0],
+      next_maintenance: payload.next_maintenance,
+    });
+    return mapBackendAssetToAsset(res);
+  },
 };
+

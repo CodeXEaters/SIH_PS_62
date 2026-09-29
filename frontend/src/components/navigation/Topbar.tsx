@@ -26,6 +26,7 @@ import { intelligenceService } from "@/services/intelligence";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { syncOfflineQueue } from "@/lib/offline/sync/syncEngine";
 import { AttentionItem } from "@/types";
+import { OfflineSyncDrawer } from "./OfflineSyncDrawer";
 
 export const Topbar: React.FC = () => {
   const {
@@ -48,6 +49,7 @@ export const Topbar: React.FC = () => {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [offlineDrawerOpen, setOfflineDrawerOpen] = useState(false);
 
   useEffect(() => {
     intelligenceService
@@ -189,7 +191,7 @@ export const Topbar: React.FC = () => {
 
         {/* Connection Status Indicator */}
         <button
-          onClick={toggleConnection}
+          onClick={() => setOfflineDrawerOpen(true)}
           className={cn(
             "flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono border transition-all cursor-pointer",
             connectionStatus === "OPERATIONAL" &&
@@ -199,7 +201,7 @@ export const Topbar: React.FC = () => {
             connectionStatus === "OFFLINE" &&
               "bg-[#141008] text-[#C49A55] border-[#C49A55]/30 hover:border-[#C49A55]/50"
           )}
-          title="Click to toggle network status and trigger synchronization"
+          title="Click to inspect offline queue and trigger sync"
         >
           {connectionStatus === "OPERATIONAL" && (
             <>
@@ -371,6 +373,11 @@ export const Topbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      <OfflineSyncDrawer
+        isOpen={offlineDrawerOpen}
+        onClose={() => setOfflineDrawerOpen(false)}
+      />
     </header>
   );
 };

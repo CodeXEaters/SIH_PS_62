@@ -88,4 +88,41 @@ export const missionsService = {
       throw err;
     }
   },
+
+  async createMission(payload: {
+    mission_name: string;
+    mission_type: string;
+    origin: string;
+    destination: string;
+    team_lead_id: number;
+    origin_station_id?: number;
+    destination_station_id?: number;
+    start_time: string;
+    expected_return: string;
+    status?: string;
+    risk_level?: string;
+  }): Promise<Mission> {
+    try {
+      const res = await apiClient.post<any>("/missions", payload);
+      return mapBackendMissionToMission(res);
+    } catch (err: any) {
+      if (err?.isOffline) {
+        const { queueOfflineAction } = await import("@/lib/offline/sync/syncEngine");
+        await queueOfflineAction({
+          type: "MISSION_CREATE",
+          endpoint: "/missions",
+          method: "POST",
+          payload,
+        });
+        return mapBackendMissionToMission({
+          id: Date.now(),
+          ...payload,
+          status: payload.status || "PLANNED",
+          risk_level: payload.risk_level || "LOW",
+        });
+      }
+      throw err;
+    }
+  },
 };
+

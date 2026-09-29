@@ -53,6 +53,7 @@ def get_transport(
 
 
 @router.put("/{id}", response_model=TransportResponse)
+@router.patch("/{id}", response_model=TransportResponse)
 def update_transport(
     id: int,
     transport_in: TransportUpdate,

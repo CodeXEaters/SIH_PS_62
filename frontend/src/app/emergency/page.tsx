@@ -8,11 +8,13 @@ import {
   XCircle,
   Edit3,
   RefreshCw,
+  ShieldAlert,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { emergencyService } from "@/services/emergency";
 import { EmergencyIncident } from "@/types";
+import { TriggerEmergencyModal } from "@/components/emergency/TriggerEmergencyModal";
 
 export default function EmergencyCommandPage() {
   const [incident, setIncident] = useState<EmergencyIncident | null>(null);
@@ -20,6 +22,7 @@ export default function EmergencyCommandPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [decision, setDecision] = useState<"PENDING" | "APPROVED" | "MODIFIED" | "REJECTED">("PENDING");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isTriggerModalOpen, setIsTriggerModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -95,6 +98,15 @@ export default function EmergencyCommandPage() {
 
           <div className="flex items-center gap-2">
             <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setIsTriggerModalOpen(true)}
+              className="gap-1.5 font-mono text-xs bg-[#B85C5C] hover:bg-[#A34A4A] text-white"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Trigger Emergency SOS</span>
+            </Button>
+            <Button
               variant="secondary"
               size="sm"
               onClick={() => {
@@ -110,7 +122,7 @@ export default function EmergencyCommandPage() {
             <Link href="/emergency/history">
               <Button variant="secondary" size="sm" className="gap-2 font-mono text-xs">
                 <Clock className="w-3.5 h-3.5" />
-                <span>Incident History</span>
+                <span>History</span>
               </Button>
             </Link>
           </div>
@@ -320,6 +332,16 @@ export default function EmergencyCommandPage() {
             </div>
           </div>
         </div>
+
+        <TriggerEmergencyModal
+          isOpen={isTriggerModalOpen}
+          onClose={() => setIsTriggerModalOpen(false)}
+          onEmergencyTriggered={(newInc) => {
+            setIncident(newInc);
+            setDecision("PENDING");
+            setStatusMessage(`🚨 ACTIVE EMERGENCY SOS BROADCAST: ${newInc.incidentCode} awaiting Commander decision.`);
+          }}
+        />
       </div>
     </AppShell>
   );

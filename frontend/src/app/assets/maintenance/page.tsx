@@ -2,17 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Wrench, Calendar, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Wrench, Calendar, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button } from "@/components/ui";
 import { assetsService } from "@/services/assets";
 import { Asset } from "@/types";
+import { LogMaintenanceModal } from "@/components/assets/LogMaintenanceModal";
 
 export default function AssetMaintenancePage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchAssets = () => {
+    setIsLoading(true);
     assetsService
       .getAllAssets()
       .then((data) => {
@@ -20,7 +23,12 @@ export default function AssetMaintenancePage() {
       })
       .catch(console.warn)
       .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchAssets();
   }, []);
+
   return (
     <AppShell>
       <div className="space-y-6 max-w-5xl mx-auto">
@@ -40,6 +48,16 @@ export default function AssetMaintenancePage() {
               Scheduled engine overhauls, hydraulic oil flushes, and antenna calibration cycles.
             </p>
           </div>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 font-mono text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Log Service Event</span>
+          </Button>
         </div>
 
         {/* Schedule Table */}
@@ -104,6 +122,12 @@ export default function AssetMaintenancePage() {
             </table>
           </div>
         </div>
+
+        <LogMaintenanceModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onMaintenanceLogged={() => fetchAssets()}
+        />
       </div>
     </AppShell>
   );

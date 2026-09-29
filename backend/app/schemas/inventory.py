@@ -36,6 +36,14 @@ class InventoryResponse(InventoryBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class InventoryTransferCreate(BaseModel):
+    item_id: int
+    from_station_id: int
+    to_station_id: int
+    quantity: float
+    notes: Optional[str] = None
+
+
 class InventoryTransferResponse(BaseModel):
     id: str
     item: str
@@ -48,3 +56,4 @@ class InventoryTransferResponse(BaseModel):
     notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
