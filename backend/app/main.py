@@ -55,6 +55,7 @@ app.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
 
 @app.get("/", tags=["Health"])
+@app.get("/health", tags=["Health"])
 def health():
     """Root health check endpoint."""
     return {"status": "ok", "message": "DHRUV backend is running"}

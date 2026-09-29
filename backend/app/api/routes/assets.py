@@ -107,6 +107,7 @@ def get_asset(
 
 
 @router.put("/{id}", response_model=AssetResponse)
+@router.patch("/{id}", response_model=AssetResponse)
 def update_asset(
     id: int,
     asset_in: AssetUpdate,
