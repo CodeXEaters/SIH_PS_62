@@ -59,7 +59,7 @@ The repository provides a complete declarative Infrastructure-as-Code blueprint 
 | Key | Render Configuration | Description |
 | :--- | :--- | :--- |
 | `DATABASE_URL` | `fromDatabase: { name: dhruv-db, property: connectionString }` | Internal PostgreSQL connection URI. Automatically translated from `postgres://` to `postgresql://` in `app/config.py`. |
-| `SECRET_KEY` | `generateValue: true`, `sync: false` | 64-character cryptographic JWT signing key. |
+| `SECRET_KEY` | `generateValue: true` | 64-character cryptographic JWT signing key. |
 | `ALGORITHM` | `HS256` | JWT signature algorithm. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `1440` | Session validity duration (24 hours). |
 | `ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://dhruv-frontend.onrender.com` | Allowed CORS origins. Wildcard `*` is filtered out to preserve credentialed cookie/token security. |
