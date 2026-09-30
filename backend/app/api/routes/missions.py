@@ -54,7 +54,22 @@ def get_mission(
     return MissionService.get_mission_by_id(db=db, mission_id=id)
 
 
+from app.schemas.expedition_evaluation import PlanEvaluationRequest, PlanEvaluationResponse
+from app.services.expedition_planner_service import ExpeditionPlannerService
+
+
+@router.post("/evaluate-plan", response_model=PlanEvaluationResponse)
+def evaluate_mission_plan(
+    payload: PlanEvaluationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Pre-flight clearance check: Evaluates permit validity, personnel readiness, asset health, and environmental hazards."""
+    return ExpeditionPlannerService.evaluate_plan(db=db, payload=payload)
+
+
 @router.put("/{id}", response_model=MissionResponse)
+@router.patch("/{id}", response_model=MissionResponse)
 def update_mission(
     id: int,
     mission_in: MissionUpdate,
@@ -74,3 +89,4 @@ def patch_mission_status(
 ):
     """Update mission lifecycle status and optional risk level."""
     return MissionService.patch_mission_status(db=db, mission_id=id, status_in=status_in)
+

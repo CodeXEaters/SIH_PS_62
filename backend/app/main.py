@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database.database import Base, engine, check_db_connection
+from app.database.database import Base, engine, check_db_connection, run_schema_migrations
 import app.models  # Ensure all models are registered with Base metadata
 from app.api.router import api_router
 
@@ -22,7 +22,8 @@ async def lifespan(app: FastAPI):
         check_db_connection()
         logger.info("Connected to PostgreSQL database successfully.")
         Base.metadata.create_all(bind=engine)
-        logger.info("Database tables verified / created.")
+        run_schema_migrations()
+        logger.info("Database tables and schema migrations verified / created.")
     except Exception as exc:
         logger.error("Database initialization check failed: %s", exc)
     yield

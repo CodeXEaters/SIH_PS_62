@@ -1,6 +1,6 @@
 from app.models.user import User, UserRole
 from app.models.station import Station
-from app.models.personnel import Personnel
+from app.models.personnel import Personnel, ReadinessStatus, HealthClearanceStatus
 from app.models.inventory import Inventory
 from app.models.asset import Asset
 from app.models.cargo import Cargo, CargoCategory, CargoPriority, CargoStatus
@@ -14,11 +14,24 @@ from app.models.emergency import Emergency, EmergencySeverity, EmergencyType, Em
 from app.models.inventory_transfer import InventoryTransfer
 from app.models.fuel_log import FuelLog
 
+# New models for strict PPT parity
+from app.models.permit import Permit, PermitStatus, PermitType
+from app.models.environmental_observation import (
+    EnvironmentalObservation,
+    ObservationSourceType,
+    WeatherCondition,
+    SeaIceCondition,
+)
+from app.models.waste_record import WasteRecord, WasteCategory, WasteStatus, DisposalMethod
+from app.models.recommendation_feedback import RecommendationFeedback, FeedbackDecision, FeedbackOutcome
+
 __all__ = [
     "User",
     "UserRole",
     "Station",
     "Personnel",
+    "ReadinessStatus",
+    "HealthClearanceStatus",
     "Inventory",
     "Asset",
     "Cargo",
@@ -48,6 +61,18 @@ __all__ = [
     "EmergencyDecision",
     "InventoryTransfer",
     "FuelLog",
+    "Permit",
+    "PermitStatus",
+    "PermitType",
+    "EnvironmentalObservation",
+    "ObservationSourceType",
+    "WeatherCondition",
+    "SeaIceCondition",
+    "WasteRecord",
+    "WasteCategory",
+    "WasteStatus",
+    "DisposalMethod",
+    "RecommendationFeedback",
+    "FeedbackDecision",
+    "FeedbackOutcome",
 ]
-
-

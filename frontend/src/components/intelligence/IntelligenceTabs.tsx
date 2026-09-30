@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldAlert, Sparkles, AlertTriangle, Sliders, Brain } from "lucide-react";
+import { ShieldAlert, Sparkles, AlertTriangle, Sliders, Brain, CloudSnow } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const IntelligenceTabs: React.FC = () => {
@@ -11,6 +11,7 @@ export const IntelligenceTabs: React.FC = () => {
 
   const tabs = [
     { label: "RISK", href: "/intelligence/risk", icon: ShieldAlert },
+    { label: "ENVIRONMENT", href: "/intelligence/environment", icon: CloudSnow },
     { label: "PREDICTIONS", href: "/intelligence/predictions", icon: Sparkles },
     { label: "ANOMALIES", href: "/intelligence/anomalies", icon: AlertTriangle, badge: "1 Alert" },
     { label: "OPTIMIZATION", href: "/intelligence/optimization", icon: Sliders },

@@ -60,3 +60,27 @@ def get_db() -> Generator[Session, None, None]:
         ) from exc
     finally:
         db.close()
+
+
+def run_schema_migrations():
+    """
+    Idempotent schema migrations to ensure new columns on existing tables
+    (e.g., personnel readiness fields) exist in PostgreSQL without requiring full drops.
+    """
+    migration_statements = [
+        "ALTER TABLE personnel ADD COLUMN IF NOT EXISTS health_clearance_status VARCHAR DEFAULT 'APPROVED';",
+        "ALTER TABLE personnel ADD COLUMN IF NOT EXISTS clearance_expiry TIMESTAMP WITH TIME ZONE;",
+        "ALTER TABLE personnel ADD COLUMN IF NOT EXISTS readiness_status VARCHAR DEFAULT 'READY';",
+        "ALTER TABLE personnel ADD COLUMN IF NOT EXISTS medical_review_date TIMESTAMP WITH TIME ZONE;",
+        "ALTER TABLE personnel ADD COLUMN IF NOT EXISTS deployment_eligibility VARCHAR DEFAULT 'FIT_FOR_DEPLOYMENT';",
+        "ALTER TABLE personnel ADD COLUMN IF NOT EXISTS restrictions_notes TEXT;",
+    ]
+    with engine.connect() as conn:
+        for stmt in migration_statements:
+            try:
+                conn.execute(text(stmt))
+            except Exception as e:
+                logger.warning("Migration statement note (%s): %s", stmt[:40], e)
+        conn.commit()
+    logger.info("Schema migrations executed successfully.")
+

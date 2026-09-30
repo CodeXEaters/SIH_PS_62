@@ -10,3 +10,7 @@ export * from "./intelligence";
 export * from "./emergency";
 export * from "./tracking";
 export * from "./reports";
+export * from "./permits";
+export * from "./environment";
+export * from "./waste";
+export * from "./feedback";
