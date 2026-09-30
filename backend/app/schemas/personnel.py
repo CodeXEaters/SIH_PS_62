@@ -67,6 +67,13 @@ class PersonnelReadinessSummary(BaseModel):
     limited: int
     not_ready: int
     clearance_expired: int
+    # Compatibility aliases for frontend and reporting
+    total_personnel: Optional[int] = None
+    ready_count: Optional[int] = None
+    limited_count: Optional[int] = None
+    expired_count: Optional[int] = None
+    unfit_count: Optional[int] = None
+    readiness_percentage: Optional[float] = None
 
 
 class PersonnelResponse(PersonnelBase):

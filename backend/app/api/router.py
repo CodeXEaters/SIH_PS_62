@@ -41,7 +41,9 @@ api_router.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 # Parity modules
 api_router.include_router(permits_router, prefix="/permits", tags=["Permits"])
 api_router.include_router(environment_router, prefix="/environment", tags=["Environmental Intelligence"])
+api_router.include_router(waste_router, prefix="/waste", tags=["Waste"])
 api_router.include_router(waste_router, prefix="/environment/waste", tags=["Environmental Waste"])
+api_router.include_router(feedback_router, prefix="/feedback", tags=["Feedback"])
 api_router.include_router(feedback_router, prefix="/intelligence/feedback", tags=["Intelligence Feedback"])
 
 __all__ = ["api_router"]

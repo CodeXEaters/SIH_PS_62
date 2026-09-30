@@ -90,10 +90,23 @@ class PersonnelService:
         for p in personnel_list:
             cls.evaluate_readiness(p, db)
 
+        tot = len(personnel_list)
+        ready_cnt = sum(1 for p in personnel_list if (p.readiness_status or "READY") == ReadinessStatus.READY.value)
+        limited_cnt = sum(1 for p in personnel_list if p.readiness_status == ReadinessStatus.LIMITED.value)
+        not_ready_cnt = sum(1 for p in personnel_list if p.readiness_status == ReadinessStatus.NOT_READY.value)
+        expired_cnt = sum(1 for p in personnel_list if p.readiness_status == ReadinessStatus.CLEARANCE_EXPIRED.value)
+        pct = round((ready_cnt / tot * 100.0), 1) if tot > 0 else 0.0
+
         return PersonnelReadinessSummary(
-            total=len(personnel_list),
-            ready=sum(1 for p in personnel_list if (p.readiness_status or "READY") == ReadinessStatus.READY.value),
-            limited=sum(1 for p in personnel_list if p.readiness_status == ReadinessStatus.LIMITED.value),
-            not_ready=sum(1 for p in personnel_list if p.readiness_status == ReadinessStatus.NOT_READY.value),
-            clearance_expired=sum(1 for p in personnel_list if p.readiness_status == ReadinessStatus.CLEARANCE_EXPIRED.value),
+            total=tot,
+            ready=ready_cnt,
+            limited=limited_cnt,
+            not_ready=not_ready_cnt,
+            clearance_expired=expired_cnt,
+            total_personnel=tot,
+            ready_count=ready_cnt,
+            limited_count=limited_cnt,
+            expired_count=expired_cnt,
+            unfit_count=not_ready_cnt,
+            readiness_percentage=pct,
         )

@@ -56,6 +56,25 @@ def get_readiness_summary(
     return PersonnelService.get_readiness_summary(db)
 
 
+@router.get("/readiness", response_model=List[PersonnelResponse])
+def get_personnel_readiness(
+    station_id: Optional[int] = Query(None, description="Filter personnel by station ID"),
+    status: Optional[str] = Query(None, description="Filter by readiness status"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve personnel readiness records."""
+    query = db.query(Personnel)
+    if station_id is not None:
+        query = query.filter(Personnel.station_id == station_id)
+    if status:
+        query = query.filter(Personnel.readiness_status == status.upper())
+    results = query.all()
+    for p in results:
+        PersonnelService.evaluate_readiness(p, db)
+    return results
+
+
 @router.post("", response_model=PersonnelResponse, status_code=status.HTTP_201_CREATED)
 def create_personnel(
     personnel_in: PersonnelCreate,
