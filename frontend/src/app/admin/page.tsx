@@ -178,14 +178,14 @@ export default function AdminPage() {
                   <label className="text-[10px] text-polar-muted block uppercase mb-1">
                     FastAPI Endpoint Base URL
                   </label>
-                  <Input defaultValue="http://localhost:8000/api/v1" readOnly />
+                  <Input defaultValue={process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"} readOnly />
                 </div>
 
                 <div>
                   <label className="text-[10px] text-polar-muted block uppercase mb-1">
                     Iridium Telemetry WebSocket URL
                   </label>
-                  <Input defaultValue="ws://localhost:8000/ws" readOnly />
+                  <Input defaultValue={process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws"} readOnly />
                 </div>
 
                 <div>

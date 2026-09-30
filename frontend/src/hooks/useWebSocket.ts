@@ -37,9 +37,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, [onMessage]);
 
   const getWsUrl = useCallback(() => {
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+      const explicitWs = process.env.NEXT_PUBLIC_WS_URL.replace(/\/+$/, "");
+      return `${explicitWs}/${channel}`;
+    }
     const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-    // Convert http(s) to ws(s)
-    let wsHost = rawApiUrl.replace(/^http/, "ws");
+    // Convert https:// -> wss:// and http:// -> ws://
+    let wsHost = rawApiUrl.startsWith("https://")
+      ? rawApiUrl.replace(/^https:\/\//, "wss://")
+      : rawApiUrl.replace(/^http:\/\//, "ws://");
     // Ensure clean path
     if (wsHost.endsWith("/api/v1")) {
       return `${wsHost}/ws/${channel}`;

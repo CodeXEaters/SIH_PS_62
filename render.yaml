@@ -1,0 +1,55 @@
+databases:
+  - name: dhruv-db
+    databaseName: dhruv_db
+    user: dhruv_user
+    region: singapore
+    plan: free
+
+services:
+  # ---------------------------------------------------------------------------
+  # DHRUV FastAPI Backend Web Service
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: dhruv-backend
+    runtime: python
+    region: singapore
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dhruv-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+        sync: false
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: ALLOWED_ORIGINS
+        value: "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://dhruv-frontend.onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
+  # ---------------------------------------------------------------------------
+  # DHRUV Next.js Frontend Web Service
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: dhruv-frontend
+    runtime: node
+    region: singapore
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://dhruv-backend.onrender.com/api/v1
+      - key: NEXT_PUBLIC_WS_URL
+        value: wss://dhruv-backend.onrender.com/ws
+      - key: NODE_VERSION
+        value: "20.18.0"
