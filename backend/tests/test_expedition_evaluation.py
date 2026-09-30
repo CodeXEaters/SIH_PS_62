@@ -4,6 +4,17 @@ from app.models.permit import PermitType
 
 def test_evaluate_mission_plan_pass(client, auth_headers):
     now = datetime.now(timezone.utc)
+    # Ensure Personnel 1 has active health clearance and readiness
+    client.patch(
+        "/api/v1/personnel/1/readiness",
+        json={
+            "readiness_status": "READY",
+            "health_clearance_status": "APPROVED",
+            "clearance_expiry": (now + timedelta(days=180)).isoformat(),
+        },
+        headers=auth_headers,
+    )
+
     # Create valid permit
     permit_payload = {
         "permit_type": PermitType.SCIENTIFIC_RESEARCH.value,
@@ -92,6 +103,10 @@ def test_evaluate_mission_plan_blocked_expired_personnel(client, auth_headers):
     # Reset personnel 1 back to READY
     client.patch(
         "/api/v1/personnel/1/readiness",
-        json={"readiness_status": "READY", "clearance_expiry": (now + timedelta(days=180)).isoformat()},
+        json={
+            "readiness_status": "READY",
+            "health_clearance_status": "APPROVED",
+            "clearance_expiry": (now + timedelta(days=180)).isoformat(),
+        },
         headers=auth_headers,
     )

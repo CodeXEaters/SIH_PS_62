@@ -505,8 +505,8 @@ def run_tests():
     # E. Expedition Pre-Flight Clearance Evaluator
     eval_req_pass = {
         "mission_name": "Routine Port Logistics Survey",
-        "origin_station_id": goa_id,
-        "destination_station_id": goa_id,
+        "origin_station_id": capetown_id,
+        "destination_station_id": capetown_id,
         "mission_type": "LOGISTICS_SUPPLY",
         "team_lead_id": leader_id,
         "assigned_personnel_ids": [leader_id],
