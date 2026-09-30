@@ -15,6 +15,12 @@ from app.api.routes.reports import router as reports_router
 from app.api.routes.expeditions import router as expeditions_router
 from app.api.routes.websocket import router as ws_router
 
+# Strict PPT Parity additions
+from app.api.routes.permits import router as permits_router
+from app.api.routes.environment import router as environment_router
+from app.api.routes.waste import router as waste_router
+from app.api.routes.feedback import router as feedback_router
+
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(stations_router, prefix="/stations", tags=["Stations"])
@@ -32,8 +38,10 @@ api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 api_router.include_router(expeditions_router, prefix="/expeditions", tags=["Expeditions"])
 api_router.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
+# Parity modules
+api_router.include_router(permits_router, prefix="/permits", tags=["Permits"])
+api_router.include_router(environment_router, prefix="/environment", tags=["Environmental Intelligence"])
+api_router.include_router(waste_router, prefix="/environment/waste", tags=["Environmental Waste"])
+api_router.include_router(feedback_router, prefix="/intelligence/feedback", tags=["Intelligence Feedback"])
+
 __all__ = ["api_router"]
-
-
-
-

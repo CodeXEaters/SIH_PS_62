@@ -2,14 +2,16 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.main import app
-from app.database.session import SessionLocal, get_db
+from app.database.database import Base, engine, SessionLocal, get_db, run_schema_migrations
 from app.database.seed import seed_database
+from app.main import app
 
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
-    """Ensure database tables exist and are seeded before test suite runs."""
+    """Ensure database tables exist, schemas are migrated, and are seeded before test suite runs."""
+    Base.metadata.create_all(bind=engine)
+    run_schema_migrations()
     seed_database()
 
 

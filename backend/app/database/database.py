@@ -1,4 +1,4 @@
 from app.database.base import Base
-from app.database.session import engine, SessionLocal, get_db, check_db_connection
+from app.database.session import engine, SessionLocal, get_db, check_db_connection, run_schema_migrations
 
-__all__ = ["Base", "engine", "SessionLocal", "get_db", "check_db_connection"]
+__all__ = ["Base", "engine", "SessionLocal", "get_db", "check_db_connection", "run_schema_migrations"]

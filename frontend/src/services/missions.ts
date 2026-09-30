@@ -46,6 +46,33 @@ function mapBackendMissionToMission(m: any): Mission {
   };
 }
 
+export interface PlanEvaluationRequest {
+  mission_name: string;
+  origin_station_id: number;
+  destination_station_id: number;
+  mission_type: string;
+  team_lead_id: number;
+  assigned_personnel_ids?: number[];
+  assigned_asset_ids?: number[];
+  start_time: string;
+  expected_return: string;
+  requires_permit?: boolean;
+  permit_id?: number | null;
+}
+
+export interface PlanEvaluationCheckItem {
+  category: "PERMIT" | "PERSONNEL" | "ASSET" | "ENVIRONMENT" | string;
+  status: "PASS" | "WARNING" | "BLOCKED" | string;
+  details: string;
+}
+
+export interface PlanEvaluationResponse {
+  overall_status: "PASS" | "WARNING" | "BLOCKED" | string;
+  checks: PlanEvaluationCheckItem[];
+  recommendations: string[];
+  evaluated_at: string;
+}
+
 export const missionsService = {
   async getAllMissions(): Promise<Mission[]> {
     try {
@@ -123,6 +150,10 @@ export const missionsService = {
       }
       throw err;
     }
+  },
+
+  async evaluatePlan(payload: PlanEvaluationRequest): Promise<PlanEvaluationResponse> {
+    return apiClient.post<PlanEvaluationResponse>("/missions/evaluate-plan", payload);
   },
 };
 

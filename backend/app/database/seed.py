@@ -18,6 +18,11 @@ from app.models.alert import Alert, AlertSeverity, AlertType, AlertStatus, Alert
 from app.models.emergency import Emergency, EmergencySeverity, EmergencyType, EmergencyStatus, EmergencyDecision
 from app.models.inventory_transfer import InventoryTransfer
 from app.models.fuel_log import FuelLog
+from app.models.permit import Permit, PermitType, PermitStatus
+from app.models.environmental_observation import EnvironmentalObservation, WeatherCondition, SeaIceCondition, ObservationSourceType
+from app.models.waste_record import WasteRecord, WasteCategory, WasteStatus, DisposalMethod
+from app.models.recommendation_feedback import RecommendationFeedback, FeedbackDecision, FeedbackOutcome
+from app.models.personnel import ReadinessStatus, HealthClearanceStatus
 from app.core.security import get_password_hash
 
 logger = logging.getLogger("dhruv.seed")
@@ -1181,6 +1186,310 @@ def seed_database(db: Session = None) -> None:
             db.add(Emergency(**emergency_incident))
         db.commit()
 
+        # ==========================================
+        # 16. Seed Antarctic Permits & Compliance
+        # ==========================================
+        now_dt = datetime.now(timezone.utc)
+        permits_data = [
+            {
+                "permit_number": "PRM-SCI-2026-001",
+                "permit_type": PermitType.SCIENTIFIC_RESEARCH.value,
+                "issuing_authority": "National Centre for Polar and Ocean Research (NCPOR)",
+                "expedition_id": "44-isea",
+                "station_id": created_stations["Bharati Station"].id,
+                "issue_date": now_dt - timedelta(days=60),
+                "expiry_date": now_dt + timedelta(days=120),
+                "status": PermitStatus.APPROVED.value,
+                "conditions": "Sample collection strictly non-destructive; GPS tagged cores only; annual report mandatory.",
+                "responsible_officer": "Dr. Priya Nair",
+                "notes": "44th ISEA Larsemann Hills Glaciological Survey",
+            },
+            {
+                "permit_number": "PRM-FLT-2026-002",
+                "permit_type": PermitType.FLIGHT_OPERATIONS.value,
+                "issuing_authority": "Ministry of Earth Sciences / DGCA",
+                "expedition_id": "44-isea",
+                "station_id": created_stations["Maitri Station"].id,
+                "issue_date": now_dt - timedelta(days=30),
+                "expiry_date": now_dt + timedelta(days=75),
+                "status": PermitStatus.APPROVED.value,
+                "conditions": "Visual flight rules (VFR); minimum clearance 2000ft AGL over seal and penguin sanctuaries.",
+                "responsible_officer": "Wing Cdr. R. Sharma",
+                "notes": "Twin Otter ski-plane blue ice runway sorties",
+            },
+            {
+                "permit_number": "PRM-WST-2026-003",
+                "permit_type": PermitType.WASTE_MANAGEMENT.value,
+                "issuing_authority": "Antarctic Treaty Secretariat (ATS)",
+                "expedition_id": "44-isea",
+                "station_id": created_stations["Bharati Station"].id,
+                "issue_date": now_dt - timedelta(days=90),
+                "expiry_date": now_dt + timedelta(days=18),
+                "status": PermitStatus.EXPIRING.value,
+                "conditions": "All Category-A and Category-B hazardous residues must be retrograded on vessel MV Vasiliy Golovnin.",
+                "responsible_officer": "Sanjay Deshmukh",
+                "notes": "Expiring within 30-day window; charter vessel clearance pending",
+            },
+            {
+                "permit_number": "PRM-WLD-2025-099",
+                "permit_type": PermitType.WILDLIFE_ACCESS.value,
+                "issuing_authority": "Committee for Environmental Protection (CEP)",
+                "expedition_id": "43-isea",
+                "station_id": created_stations["Field Camp Alpha"].id,
+                "issue_date": now_dt - timedelta(days=380),
+                "expiry_date": now_dt - timedelta(days=15),
+                "status": PermitStatus.EXPIRED.value,
+                "conditions": "Acoustic survey restricted to buffer zone 5km from rookery perimeter.",
+                "responsible_officer": "Dr. Anand Sen",
+                "notes": "Expired; operations suspended until 45th ISEA renewal",
+            },
+        ]
+        for p_item in permits_data:
+            if not db.query(Permit).filter(Permit.permit_number == p_item["permit_number"]).first():
+                db.add(Permit(**p_item))
+        db.commit()
+
+        # ==========================================
+        # 17. Seed Personnel Readiness & Medical Status
+        # ==========================================
+        all_personnel = db.query(Personnel).all()
+        for i, p in enumerate(all_personnel):
+            if i % 6 == 0:
+                p.readiness_status = ReadinessStatus.LIMITED.value
+                p.health_clearance_status = HealthClearanceStatus.RESTRICTED.value
+                p.clearance_expiry = now_dt + timedelta(days=45)
+                p.restrictions_notes = "Restricted from high-altitude plateau traverses; camp duties only."
+            elif i % 11 == 0:
+                p.readiness_status = ReadinessStatus.CLEARANCE_EXPIRED.value
+                p.health_clearance_status = HealthClearanceStatus.PENDING.value
+                p.clearance_expiry = now_dt - timedelta(days=5)
+                p.restrictions_notes = "Annual echocardiogram renewal overdue; ground medical review scheduled."
+            else:
+                p.readiness_status = ReadinessStatus.READY.value
+                p.health_clearance_status = HealthClearanceStatus.APPROVED.value
+                p.clearance_expiry = now_dt + timedelta(days=180 + (i * 10))
+                p.restrictions_notes = None
+            p.medical_review_date = now_dt - timedelta(days=60)
+            p.deployment_eligibility = "FIT_FOR_DEPLOYMENT" if p.readiness_status != ReadinessStatus.CLEARANCE_EXPIRED.value else "UNFIT_PENDING_REVIEW"
+        db.commit()
+
+        # ==========================================
+        # 18. Seed Environmental & Cryospheric Observations
+        # ==========================================
+        env_obs_data = [
+            {
+                "station_id": created_stations["Bharati Station"].id,
+                "latitude": -69.4072,
+                "longitude": 76.1914,
+                "temperature": -21.4,
+                "wind_speed": 28.5,
+                "wind_direction": "SSW",
+                "visibility": 8.0,
+                "pressure": 986.2,
+                "weather_condition": WeatherCondition.LIGHT_SNOW.value,
+                "sea_ice_condition": SeaIceCondition.OPEN_PACK.value,
+                "sea_ice_concentration": 45.0,
+                "source_type": ObservationSourceType.SIMULATED.value,
+                "confidence": 0.96,
+                "is_simulated": True,
+            },
+            {
+                "station_id": created_stations["Maitri Station"].id,
+                "latitude": -70.7667,
+                "longitude": 11.7333,
+                "temperature": -28.6,
+                "wind_speed": 38.0,
+                "wind_direction": "SE",
+                "visibility": 2.5,
+                "pressure": 978.5,
+                "weather_condition": WeatherCondition.HIGH_WINDS.value,
+                "sea_ice_condition": SeaIceCondition.FAST_ICE.value,
+                "sea_ice_concentration": 85.0,
+                "source_type": ObservationSourceType.SIMULATED.value,
+                "confidence": 0.94,
+                "is_simulated": True,
+            },
+            {
+                "station_id": created_stations["Field Camp Alpha"].id,
+                "latitude": -71.2000,
+                "longitude": 12.5000,
+                "temperature": -32.0,
+                "wind_speed": 46.0,
+                "wind_direction": "S",
+                "visibility": 0.8,
+                "pressure": 972.1,
+                "weather_condition": WeatherCondition.BLIZZARD.value,
+                "sea_ice_condition": SeaIceCondition.ICE_SHELF.value,
+                "sea_ice_concentration": 95.0,
+                "source_type": ObservationSourceType.SIMULATED.value,
+                "confidence": 0.98,
+                "is_simulated": True,
+            },
+            {
+                "station_id": created_stations["Field Camp Echo"].id,
+                "latitude": -69.7500,
+                "longitude": 73.5000,
+                "temperature": -11.5,
+                "wind_speed": 16.0,
+                "wind_direction": "NW",
+                "visibility": 12.0,
+                "pressure": 1004.0,
+                "weather_condition": WeatherCondition.PARTLY_CLOUDY.value,
+                "sea_ice_condition": SeaIceCondition.VERY_OPEN_PACK.value,
+                "sea_ice_concentration": 20.0,
+                "source_type": ObservationSourceType.SIMULATED.value,
+                "confidence": 0.95,
+                "is_simulated": True,
+            },
+            {
+                "station_id": created_stations["NCPOR Goa"].id,
+                "latitude": 15.4026,
+                "longitude": 73.8055,
+                "temperature": 29.0,
+                "wind_speed": 9.5,
+                "wind_direction": "W",
+                "visibility": 10.0,
+                "pressure": 1008.2,
+                "weather_condition": WeatherCondition.CLEAR.value,
+                "sea_ice_condition": SeaIceCondition.OPEN_WATER.value,
+                "sea_ice_concentration": 0.0,
+                "source_type": ObservationSourceType.SIMULATED.value,
+                "confidence": 0.92,
+                "is_simulated": True,
+            },
+            {
+                "station_id": created_stations["Cape Town Transit Hub"].id,
+                "latitude": -33.9249,
+                "longitude": 18.4241,
+                "temperature": 17.5,
+                "wind_speed": 12.0,
+                "wind_direction": "ESE",
+                "visibility": 20.0,
+                "pressure": 1016.0,
+                "weather_condition": WeatherCondition.CLEAR.value,
+                "sea_ice_condition": SeaIceCondition.OPEN_WATER.value,
+                "sea_ice_concentration": 0.0,
+                "source_type": ObservationSourceType.SIMULATED.value,
+                "confidence": 0.99,
+                "is_simulated": True,
+            },
+        ]
+        for obs_item in env_obs_data:
+            existing_obs = db.query(EnvironmentalObservation).filter(EnvironmentalObservation.station_id == obs_item["station_id"]).first()
+            if not existing_obs:
+                db.add(EnvironmentalObservation(**obs_item, timestamp=now_dt))
+        db.commit()
+
+        # ==========================================
+        # 19. Seed Environmental Waste Records
+        # ==========================================
+        waste_data = [
+            {
+                "station_id": created_stations["Bharati Station"].id,
+                "waste_category": WasteCategory.GENERAL.value,
+                "quantity": 420.0,
+                "unit": "KG",
+                "disposal_method": DisposalMethod.COMPACTED_STORAGE.value,
+                "storage_location": "Bharati Waste Compactor Vault #1",
+                "hazardous": False,
+                "status": WasteStatus.STORED.value,
+                "notes": "Compacted domestic solids prepared for 2026 retrograde cargo",
+            },
+            {
+                "station_id": created_stations["Maitri Station"].id,
+                "waste_category": WasteCategory.HAZARDOUS.value,
+                "quantity": 310.0,
+                "unit": "KG",
+                "disposal_method": DisposalMethod.RETROGRADE_SHIPMENT.value,
+                "storage_location": "Maitri Hazardous Waste Containment Shed",
+                "hazardous": True,
+                "status": WasteStatus.STORED.value,
+                "notes": "Spent vehicle batteries and hydraulic oils in double-walled drums",
+            },
+            {
+                "station_id": created_stations["Bharati Station"].id,
+                "waste_category": WasteCategory.BIOLOGICAL.value,
+                "quantity": 45.0,
+                "unit": "KG",
+                "disposal_method": DisposalMethod.INCINERATION.value,
+                "storage_location": "Bharati High-Temp Incinerator Room",
+                "hazardous": True,
+                "status": WasteStatus.STORED.value,
+                "notes": "Autoclaved biological lab and clinic waste",
+            },
+            {
+                "station_id": created_stations["Cape Town Transit Hub"].id,
+                "waste_category": WasteCategory.RECYCLABLE.value,
+                "quantity": 180.0,
+                "unit": "KG",
+                "disposal_method": DisposalMethod.RETROGRADE_SHIPMENT.value,
+                "storage_location": "Cape Town Port Berth B5 Depot",
+                "hazardous": False,
+                "status": WasteStatus.TRANSFERRED.value,
+                "notes": "Recycled metal canisters received from 43rd ISEA retrograde shipment",
+            },
+            {
+                "station_id": created_stations["Maitri Station"].id,
+                "waste_category": WasteCategory.SCIENTIFIC.value,
+                "quantity": 85.0,
+                "unit": "KG",
+                "disposal_method": DisposalMethod.NEUTRALIZATION.value,
+                "storage_location": "Maitri Earth Sciences Prep Vault",
+                "hazardous": False,
+                "status": WasteStatus.STORED.value,
+                "notes": "Neutralized sediment wash and test tube glass fragments",
+            },
+        ]
+        for w_item in waste_data:
+            existing_w = db.query(WasteRecord).filter(
+                WasteRecord.station_id == w_item["station_id"],
+                WasteRecord.waste_category == w_item["waste_category"]
+            ).first()
+            if not existing_w:
+                db.add(WasteRecord(**w_item, generated_at=now_dt - timedelta(days=20)))
+        db.commit()
+
+        # ==========================================
+        # 20. Seed Recommendation Feedback Log
+        # ==========================================
+        feedback_data = [
+            {
+                "recommendation_id": "REC-EMG-001",
+                "operator_id": ops_user_id,
+                "decision": FeedbackDecision.APPROVED.value,
+                "reason": "Expedition Commander approved PistenBully trauma unit dispatch to Sector 4 crevasse.",
+                "outcome": FeedbackOutcome.SUCCESSFUL.value,
+            },
+            {
+                "recommendation_id": "REC-TRAV-042",
+                "operator_id": ops_user_id,
+                "decision": FeedbackDecision.APPROVED.value,
+                "reason": "Traverse detour via Waypoint Foxtrot approved to avoid drifting sastrugi.",
+                "outcome": FeedbackOutcome.SUCCESSFUL.value,
+            },
+            {
+                "recommendation_id": "REC-GEN-108",
+                "operator_id": ops_user_id,
+                "decision": FeedbackDecision.ALTERNATIVE_SELECTED.value,
+                "reason": "Engaged auxiliary genset #3 rather than shedding scientific laboratory power.",
+                "outcome": FeedbackOutcome.MITIGATED.value,
+            },
+            {
+                "recommendation_id": "REC-AIR-015",
+                "operator_id": ops_user_id,
+                "decision": FeedbackDecision.REJECTED.value,
+                "reason": "Twin Otter sortie scrubbed due to dropping cloud ceiling; rescheduled for daylight window.",
+                "outcome": FeedbackOutcome.MITIGATED.value,
+            },
+        ]
+        for fb_item in feedback_data:
+            existing_fb = db.query(RecommendationFeedback).filter(
+                RecommendationFeedback.recommendation_id == fb_item["recommendation_id"]
+            ).first()
+            if not existing_fb:
+                db.add(RecommendationFeedback(**fb_item, timestamp=now_dt - timedelta(days=2)))
+        db.commit()
+
         logger.info("DHRUV database seeded successfully!")
         print("[OK] DHRUV database seeded successfully:")
         print(f"   * Users: {db.query(User).count()}")
@@ -1197,6 +1506,10 @@ def seed_database(db: Session = None) -> None:
         print(f"   * Fuel Logs: {db.query(FuelLog).count()}")
         print(f"   * Alerts: {db.query(Alert).count()}")
         print(f"   * Emergencies: {db.query(Emergency).count()}")
+        print(f"   * Permits: {db.query(Permit).count()}")
+        print(f"   * Environmental Observations: {db.query(EnvironmentalObservation).count()}")
+        print(f"   * Waste Records: {db.query(WasteRecord).count()}")
+        print(f"   * Recommendation Feedback: {db.query(RecommendationFeedback).count()}")
 
     finally:
         if should_close:

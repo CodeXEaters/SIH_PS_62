@@ -30,6 +30,9 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  FileText,
+  CloudSnow,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store";
@@ -115,6 +118,14 @@ export const Sidebar: React.FC = () => {
         { label: "Anomalies", href: "/intelligence/anomalies", icon: AlertTriangle },
         { label: "Optimization", href: "/intelligence/optimization", icon: Sliders },
         { label: "What-if", href: "/intelligence/what-if", icon: Brain },
+      ],
+    },
+    {
+      title: "ENVIRONMENT",
+      items: [
+        { label: "Treaty Permits", href: "/permits", icon: FileText },
+        { label: "Waste Register", href: "/environment/waste", icon: Trash2 },
+        { label: "Met & Cryosphere", href: "/intelligence/environment", icon: CloudSnow },
       ],
     },
     {

@@ -36,6 +36,37 @@ function mapBackendPersonnelToPersonnel(p: any): Personnel {
   };
 }
 
+export interface PersonnelReadiness {
+  id: number;
+  name: string;
+  station_id: number;
+  designation: string;
+  role: string;
+  readiness_status: "READY" | "LIMITED" | "CLEARANCE_EXPIRED" | "UNFIT" | string;
+  health_clearance_status: "APPROVED" | "RESTRICTED" | "PENDING" | "REJECTED" | string;
+  clearance_expiry?: string;
+  medical_review_date?: string;
+  deployment_eligibility: string;
+  restrictions_notes?: string;
+}
+
+export interface PersonnelReadinessSummary {
+  total_personnel: number;
+  ready_count: number;
+  limited_count: number;
+  expired_count: number;
+  unfit_count: number;
+  readiness_percentage: number;
+}
+
+export interface UpdateReadinessPayload {
+  readiness_status?: string;
+  health_clearance_status?: string;
+  clearance_expiry?: string;
+  deployment_eligibility?: string;
+  restrictions_notes?: string;
+}
+
 export const personnelService = {
   async getAllPersonnel(): Promise<Personnel[]> {
     try {
@@ -77,5 +108,21 @@ export const personnelService = {
       }
       throw err;
     }
+  },
+
+  async getPersonnelReadiness(status?: string, stationId?: number): Promise<PersonnelReadiness[]> {
+    const params = new URLSearchParams();
+    if (status) params.append("status", status);
+    if (stationId) params.append("station_id", String(stationId));
+    const qs = params.toString();
+    return apiClient.get<PersonnelReadiness[]>(qs ? `/personnel/readiness?${qs}` : "/personnel/readiness");
+  },
+
+  async getReadinessSummary(): Promise<PersonnelReadinessSummary> {
+    return apiClient.get<PersonnelReadinessSummary>("/personnel/readiness/summary");
+  },
+
+  async updateReadiness(id: number, payload: UpdateReadinessPayload): Promise<PersonnelReadiness> {
+    return apiClient.patch<PersonnelReadiness>(`/personnel/${id}/readiness`, payload);
   },
 };

@@ -88,8 +88,8 @@ export default function OperationsMapPage() {
                 POLAR PROJECTION &bull; 70°S
               </span>
               <span className="text-[#303030]">&bull;</span>
-              <span className="text-[10px] font-mono text-[#7FAF91]">
-                ● AIS &amp; IRIDIUM FEEDS LIVE
+              <span className="text-[10px] font-mono text-[#8EB8E5]">
+                ● AIS &amp; IRIDIUM FEEDS (SIMULATED TELEMETRY)
               </span>
             </div>
             <h1 className="text-base sm:text-lg font-bold text-[#F5F3EE] tracking-tight">

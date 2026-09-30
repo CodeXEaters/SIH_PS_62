@@ -3,10 +3,10 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Input } from "@/components/ui";
-import { personnelService } from "@/services/personnel";
+import { personnelService, PersonnelReadinessSummary } from "@/services/personnel";
 import { Personnel } from "@/types";
 
 function normalizeStatusParam(param: string | null | undefined): string {
@@ -28,6 +28,7 @@ function PersonnelContent() {
   const rawStatus = searchParams?.get("status");
 
   const [personnelList, setPersonnelList] = useState<Personnel[]>([]);
+  const [readinessSummary, setReadinessSummary] = useState<PersonnelReadinessSummary | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(() => normalizeStatusParam(rawStatus));
   const [stationFilter, setStationFilter] = useState("ALL");
@@ -52,10 +53,13 @@ function PersonnelContent() {
 
   const fetchPersonnel = () => {
     setIsLoading(true);
-    personnelService
-      .getAllPersonnel()
-      .then((data) => {
+    Promise.all([
+      personnelService.getAllPersonnel(),
+      personnelService.getReadinessSummary().catch(() => null),
+    ])
+      .then(([data, summary]) => {
         setPersonnelList(data || []);
+        if (summary) setReadinessSummary(summary);
       })
       .catch((err) => console.warn("Failed to fetch personnel:", err))
       .finally(() => setIsLoading(false));
@@ -116,6 +120,43 @@ function PersonnelContent() {
           </Link>
         </div>
       </div>
+
+      {/* Expedition Readiness KPI Cards */}
+      {readinessSummary && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="bg-[#101010] border border-[#242424] p-3.5 rounded-lg">
+            <div className="text-[10px] font-mono text-[#888] uppercase">Total Expedition Roster</div>
+            <div className="text-xl font-bold font-mono text-[#F5F3EE] mt-1">{readinessSummary.total_personnel}</div>
+            <div className="text-[10px] text-[#666] mt-0.5">Winter &amp; Summer Teams</div>
+          </div>
+          <div className="bg-[#101010] border border-[#242424] p-3.5 rounded-lg">
+            <div className="text-[10px] font-mono text-[#7FAF91] uppercase flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" /> Ready for Sorties
+            </div>
+            <div className="text-xl font-bold font-mono text-[#7FAF91] mt-1">{readinessSummary.ready_count}</div>
+            <div className="text-[10px] text-[#666] mt-0.5">Full Medical Clearance</div>
+          </div>
+          <div className="bg-[#101010] border border-[#242424] p-3.5 rounded-lg">
+            <div className="text-[10px] font-mono text-[#E0A96D] uppercase flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Limited Duty
+            </div>
+            <div className="text-xl font-bold font-mono text-[#E0A96D] mt-1">{readinessSummary.limited_count}</div>
+            <div className="text-[10px] text-[#666] mt-0.5">Camp Duties Only</div>
+          </div>
+          <div className="bg-[#101010] border border-[#242424] p-3.5 rounded-lg">
+            <div className="text-[10px] font-mono text-[#E06D6D] uppercase flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Clearance Expired
+            </div>
+            <div className="text-xl font-bold font-mono text-[#E06D6D] mt-1">{readinessSummary.expired_count}</div>
+            <div className="text-[10px] text-[#666] mt-0.5">Renewal Mandatory</div>
+          </div>
+          <div className="bg-[#101010] border border-[#242424] p-3.5 rounded-lg">
+            <div className="text-[10px] font-mono text-[#8EB8E5] uppercase">Fleet Readiness Rate</div>
+            <div className="text-xl font-bold font-mono text-[#8EB8E5] mt-1">{readinessSummary.readiness_percentage.toFixed(1)}%</div>
+            <div className="text-[10px] text-[#666] mt-0.5">Operational Deployment</div>
+          </div>
+        </div>
+      )}
 
       {/* Filter Toolbar */}
       <div className="p-4 rounded bg-[#0A0A0A] border border-[#242424] flex flex-col sm:flex-row items-center justify-between gap-3">
