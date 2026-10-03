@@ -34,18 +34,53 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
       visibilityM: 800,
       blizzardWindowHours: 4,
     },
-    recommendedResponse: {
-      primaryAssetId: em.asset_id ? `AST-${em.asset_id}` : "DISPATCH-PENDING",
-      primaryAssetName: assetName,
-      medicalTeamLeader: "Chief Medical Officer",
-      estimatedTransitHours: 1.8,
-      fuelRequiredLiters: 48,
-      routeRiskScore: 32,
-      optimalDepartureWindow: "IMMEDIATE",
-      contingencyPlan:
-        em.recommended_response ||
-        "Deploy rescue snowcat unit via surveyed corridor. Evacuate casualty to station infirmary.",
-    },
+    recommendedResponse: (() => {
+      let transitHours = 1.8;
+      let fuelLiters = 48;
+      let medicalLeader = "Chief Medical Officer";
+      let recommendedAsset = assetName;
+
+      const resp = em.recommended_response || "";
+      const transitMatch = resp.match(/transit:\s*([\d\.]+)\s*hrs/i);
+      if (transitMatch) {
+        transitHours = parseFloat(transitMatch[1]);
+      } else {
+        const etaMatch = resp.match(/ETA:\s*(\d+)h(?:\s*(\d+)m)?/i);
+        if (etaMatch) {
+          const h = parseInt(etaMatch[1], 10);
+          const m = etaMatch[2] ? parseInt(etaMatch[2], 10) : 0;
+          transitHours = Math.round((h + m / 60) * 10) / 10;
+        }
+      }
+
+      const fuelMatch = resp.match(/fuel:\s*([\d\.]+)\s*L/i);
+      if (fuelMatch) {
+        fuelLiters = parseFloat(fuelMatch[1]);
+      }
+
+      const leaderMatch = resp.match(/under\s+([^\.]+)\./i);
+      if (leaderMatch) {
+        medicalLeader = leaderMatch[1].trim();
+      }
+
+      const vehicleMatch = resp.match(/Deploy\s+([^\s]+(?:\s+[^\s]+)*?)\s+from/i);
+      if (vehicleMatch && !em.asset_name) {
+        recommendedAsset = vehicleMatch[1].trim();
+      }
+
+      return {
+        primaryAssetId: em.asset_id ? `AST-${em.asset_id}` : "DISPATCH-PENDING",
+        primaryAssetName: recommendedAsset,
+        medicalTeamLeader: medicalLeader,
+        estimatedTransitHours: transitHours,
+        fuelRequiredLiters: fuelLiters,
+        routeRiskScore: 32,
+        optimalDepartureWindow: "IMMEDIATE",
+        contingencyPlan:
+          em.recommended_response ||
+          "Deploy rescue snowcat unit via surveyed corridor. Evacuate casualty to station infirmary.",
+      };
+    })(),
     humanDecision: (em.human_decision || "PENDING") as any,
     decisionTimestamp: em.decision_timestamp
       ? new Date(em.decision_timestamp).toLocaleTimeString("en-GB", {

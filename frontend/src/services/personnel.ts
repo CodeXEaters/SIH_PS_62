@@ -24,7 +24,22 @@ function mapBackendPersonnelToPersonnel(p: any): Personnel {
     stationSlug,
     location: locationName,
     status: statusMapped,
-    medicalClearance: p.medical_clearance === false ? "SPECIAL_MONITORING" : "VALID",
+    medicalClearance: (() => {
+      const health = (p.health_clearance_status || "").toUpperCase();
+      const ready = (p.readiness_status || "").toUpperCase();
+      if (health === "PENDING") return "UNDER_REVIEW";
+      if (
+        health === "RESTRICTED" ||
+        health === "REVOKED" ||
+        ready === "CLEARANCE_EXPIRED" ||
+        ready === "NOT_READY" ||
+        ready === "LIMITED" ||
+        p.medical_clearance === false
+      ) {
+        return "SPECIAL_MONITORING";
+      }
+      return "VALID";
+    })(),
     trainingStatus: p.training_status || "STANDARD",
     lastCheckIn: p.last_check_in ? String(p.last_check_in) : "Unrecorded",
     bloodGroup: p.blood_group || "UNRECORDED",

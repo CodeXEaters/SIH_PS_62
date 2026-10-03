@@ -879,7 +879,7 @@ def seed_database(db: Session = None) -> None:
         # 10. Seed Missions (2 active missions)
         # ==========================================
         lead1 = db.query(Personnel).filter(Personnel.name == "Dr. Priya Nair").first()
-        lead2 = db.query(Personnel).filter(Personnel.name == "Col. Vikram Malhotra").first()
+        lead2 = db.query(Personnel).filter(Personnel.name.in_(["Arun Mehra", "Suresh Rane", "Commander Sunita Rao"])).first()
         first_personnel = db.query(Personnel).first()
         lead1_id = lead1.id if lead1 else first_personnel.id
         lead2_id = lead2.id if lead2 else first_personnel.id
@@ -1069,17 +1069,18 @@ def seed_database(db: Session = None) -> None:
         # ==========================================
         maitri_st = created_stations["Maitri Station"]
         bharati_st = created_stations["Bharati Station"]
+        today_date = date.today()
         fuel_logs_data = [
-            {"station_id": maitri_st.id, "week_label": "Wk 48", "liters_consumed": 2450.0, "recorded_date": date(2026, 11, 29), "notes": "Nominal heating cycle"},
-            {"station_id": bharati_st.id, "week_label": "Wk 48", "liters_consumed": 1260.0, "recorded_date": date(2026, 11, 29), "notes": "Nominal operations"},
-            {"station_id": maitri_st.id, "week_label": "Wk 49", "liters_consumed": 2520.0, "recorded_date": date(2026, 12, 6), "notes": "Standard load"},
-            {"station_id": bharati_st.id, "week_label": "Wk 49", "liters_consumed": 1310.0, "recorded_date": date(2026, 12, 6), "notes": "Cold front surge"},
-            {"station_id": maitri_st.id, "week_label": "Wk 50", "liters_consumed": 2600.0, "recorded_date": date(2026, 12, 13), "notes": "Secondary generator test"},
-            {"station_id": bharati_st.id, "week_label": "Wk 50", "liters_consumed": 1420.0, "recorded_date": date(2026, 12, 13), "notes": "Continuous laboratory heating"},
-            {"station_id": maitri_st.id, "week_label": "Wk 51", "liters_consumed": 2480.0, "recorded_date": date(2026, 12, 20), "notes": "Nominal heating"},
-            {"station_id": bharati_st.id, "week_label": "Wk 51", "liters_consumed": 1560.0, "recorded_date": date(2026, 12, 20), "notes": "Blizzard heating demand peak"},
-            {"station_id": maitri_st.id, "week_label": "Wk 52", "liters_consumed": 2510.0, "recorded_date": date(2026, 12, 27), "notes": "Stable operations"},
-            {"station_id": bharati_st.id, "week_label": "Wk 52", "liters_consumed": 1260.0, "recorded_date": date(2026, 12, 27), "notes": "Stabilized consumption"},
+            {"station_id": maitri_st.id, "week_label": "Wk 35", "liters_consumed": 2450.0, "recorded_date": today_date - timedelta(weeks=5), "notes": "Nominal heating cycle"},
+            {"station_id": bharati_st.id, "week_label": "Wk 35", "liters_consumed": 1260.0, "recorded_date": today_date - timedelta(weeks=5), "notes": "Nominal operations"},
+            {"station_id": maitri_st.id, "week_label": "Wk 36", "liters_consumed": 2520.0, "recorded_date": today_date - timedelta(weeks=4), "notes": "Standard load"},
+            {"station_id": bharati_st.id, "week_label": "Wk 36", "liters_consumed": 1310.0, "recorded_date": today_date - timedelta(weeks=4), "notes": "Cold front surge"},
+            {"station_id": maitri_st.id, "week_label": "Wk 37", "liters_consumed": 2600.0, "recorded_date": today_date - timedelta(weeks=3), "notes": "Secondary generator test"},
+            {"station_id": bharati_st.id, "week_label": "Wk 37", "liters_consumed": 1420.0, "recorded_date": today_date - timedelta(weeks=3), "notes": "Continuous laboratory heating"},
+            {"station_id": maitri_st.id, "week_label": "Wk 38", "liters_consumed": 2480.0, "recorded_date": today_date - timedelta(weeks=2), "notes": "Nominal heating"},
+            {"station_id": bharati_st.id, "week_label": "Wk 38", "liters_consumed": 1560.0, "recorded_date": today_date - timedelta(weeks=2), "notes": "Blizzard heating demand peak"},
+            {"station_id": maitri_st.id, "week_label": "Wk 39", "liters_consumed": 2510.0, "recorded_date": today_date - timedelta(weeks=1), "notes": "Stable operations"},
+            {"station_id": bharati_st.id, "week_label": "Wk 39", "liters_consumed": 1260.0, "recorded_date": today_date - timedelta(weeks=1), "notes": "Stabilized consumption"},
         ]
         for fl in fuel_logs_data:
             existing = (
@@ -1195,20 +1196,20 @@ def seed_database(db: Session = None) -> None:
                 "permit_number": "PRM-SCI-2026-001",
                 "permit_type": PermitType.SCIENTIFIC_RESEARCH.value,
                 "issuing_authority": "National Centre for Polar and Ocean Research (NCPOR)",
-                "expedition_id": "44-isea",
+                "expedition_id": "ISEA-46",
                 "station_id": created_stations["Bharati Station"].id,
                 "issue_date": now_dt - timedelta(days=60),
                 "expiry_date": now_dt + timedelta(days=120),
                 "status": PermitStatus.APPROVED.value,
                 "conditions": "Sample collection strictly non-destructive; GPS tagged cores only; annual report mandatory.",
                 "responsible_officer": "Dr. Priya Nair",
-                "notes": "44th ISEA Larsemann Hills Glaciological Survey",
+                "notes": "46th ISEA Larsemann Hills Glaciological Survey",
             },
             {
                 "permit_number": "PRM-FLT-2026-002",
                 "permit_type": PermitType.FLIGHT_OPERATIONS.value,
                 "issuing_authority": "Ministry of Earth Sciences / DGCA",
-                "expedition_id": "44-isea",
+                "expedition_id": "ISEA-46",
                 "station_id": created_stations["Maitri Station"].id,
                 "issue_date": now_dt - timedelta(days=30),
                 "expiry_date": now_dt + timedelta(days=75),
@@ -1221,7 +1222,7 @@ def seed_database(db: Session = None) -> None:
                 "permit_number": "PRM-WST-2026-003",
                 "permit_type": PermitType.WASTE_MANAGEMENT.value,
                 "issuing_authority": "Antarctic Treaty Secretariat (ATS)",
-                "expedition_id": "44-isea",
+                "expedition_id": "ISEA-46",
                 "station_id": created_stations["Bharati Station"].id,
                 "issue_date": now_dt - timedelta(days=90),
                 "expiry_date": now_dt + timedelta(days=18),
@@ -1234,14 +1235,14 @@ def seed_database(db: Session = None) -> None:
                 "permit_number": "PRM-WLD-2025-099",
                 "permit_type": PermitType.WILDLIFE_ACCESS.value,
                 "issuing_authority": "Committee for Environmental Protection (CEP)",
-                "expedition_id": "43-isea",
+                "expedition_id": "ISEA-45",
                 "station_id": created_stations["Field Camp Alpha"].id,
                 "issue_date": now_dt - timedelta(days=380),
                 "expiry_date": now_dt - timedelta(days=15),
                 "status": PermitStatus.EXPIRED.value,
                 "conditions": "Acoustic survey restricted to buffer zone 5km from rookery perimeter.",
                 "responsible_officer": "Dr. Anand Sen",
-                "notes": "Expired; operations suspended until 45th ISEA renewal",
+                "notes": "Expired; operations suspended until 46th ISEA renewal",
             },
         ]
         for p_item in permits_data:

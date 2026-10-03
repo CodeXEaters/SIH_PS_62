@@ -195,6 +195,7 @@ export interface InventoryItem {
   storageLocation: string;
   minimumThreshold: number;
   replenishmentETA: string;
+  expiryDate?: string;
   forecastHistory: { day: string; projected: number; threshold: number }[];
 }
 

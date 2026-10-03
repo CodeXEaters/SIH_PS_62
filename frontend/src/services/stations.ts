@@ -62,7 +62,7 @@ export function mapBackendToStation(s: BackendStation): Station {
     locationName: s.location,
     established: isMaitri ? 1989 : isBharati ? 2012 : 2000,
     capacity: isMaitri ? 65 : isBharati ? 72 : s.type === "HQ" ? 150 : 25,
-    currentOccupancy: isMaitri ? 38 : isBharati ? 47 : 12,
+    currentOccupancy: (s as any).currentOccupancy ?? (s as any).current_occupancy ?? (isMaitri ? 38 : isBharati ? 47 : 12),
     status:
       s.status === "OPERATIONAL"
         ? "OPERATIONAL"
@@ -78,7 +78,7 @@ export function mapBackendToStation(s: BackendStation): Station {
       visibilityKm: 10,
       condition: "Polar Nominal",
       blizzardRisk: "NONE",
-      lastUpdated: "Live Telemetry",
+      lastUpdated: "Simulated Telemetry",
     },
   };
 }

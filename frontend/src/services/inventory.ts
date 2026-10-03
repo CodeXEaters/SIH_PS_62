@@ -60,7 +60,14 @@ function mapBackendInventoryToItem(inv: any): InventoryItem {
     status,
     storageLocation: `${stationName} Core Storage Bay`,
     minimumThreshold: inv.minimum_threshold ?? 0,
-    replenishmentETA: inv.expiry_date ? String(inv.expiry_date) : "Unscheduled",
+    replenishmentETA: inv.replenishment_eta
+      ? String(inv.replenishment_eta)
+      : days > 0 && days <= 15
+      ? "Priority Airlift Requested"
+      : days > 0 && days <= 45
+      ? "Voyage 46 Resupply (Nov 2026)"
+      : "Nominal Stock Reserves",
+    expiryDate: inv.expiry_date ? String(inv.expiry_date) : undefined,
     forecastHistory: history,
   };
 }
