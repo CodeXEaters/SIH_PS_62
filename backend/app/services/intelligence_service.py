@@ -96,6 +96,8 @@ class IntelligenceService:
                 days_remaining=f["days_remaining"],
                 is_critical=f["is_critical"],
                 projected_stockout_date=f["projected_stockout_date"],
+                urgency=f.get("urgency", "NOMINAL"),
+                replenishment_recommendation=f.get("replenishment_recommendation"),
             )
             for f in raw_forecasts
         ]

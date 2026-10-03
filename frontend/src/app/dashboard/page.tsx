@@ -24,12 +24,14 @@ import { assetsService } from "@/services/assets";
 import { missionsService } from "@/services/missions";
 import { intelligenceService } from "@/services/intelligence";
 import { reportsService } from "@/services/reports";
-import { Station, CargoItem, AttentionItem } from "@/types";
+import { emergencyService } from "@/services/emergency";
+import { Station, CargoItem, AttentionItem, EmergencyIncident } from "@/types";
 
 export default function DashboardPage() {
   const [stations, setStations] = useState<Station[]>([]);
   const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
   const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([]);
+  const [activeEmergency, setActiveEmergency] = useState<EmergencyIncident | null>(null);
   const [kpiData, setKpiData] = useState({
     personnel: "...",
     personnelSubtext: "Loading roster...",
@@ -55,7 +57,8 @@ export default function DashboardPage() {
       missionsService.getAllMissions(),
       intelligenceService.getAttentionItems(),
       reportsService.getPerformanceSummary(),
-    ]).then(([stationsRes, cargoRes, personnelRes, assetsRes, missionsRes, intelRes, reportsRes]) => {
+      emergencyService.getActiveIncident(),
+    ]).then(([stationsRes, cargoRes, personnelRes, assetsRes, missionsRes, intelRes, reportsRes, emRes]) => {
       if (!isMounted) return;
 
       if (stationsRes.status === "fulfilled" && stationsRes.value) {
@@ -66,6 +69,9 @@ export default function DashboardPage() {
       }
       if (intelRes.status === "fulfilled" && intelRes.value) {
         setAttentionItems(intelRes.value);
+      }
+      if (emRes.status === "fulfilled" && emRes.value && emRes.value.humanDecision === "PENDING") {
+        setActiveEmergency(emRes.value);
       }
 
       // 1. Active Personnel
@@ -220,6 +226,62 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* ACTIVE EMERGENCY OVERRIDE BANNER (IF ACTIVE) */}
+        {activeEmergency && (
+          <div className="p-4 rounded-lg bg-red-950/40 border border-red-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-red-400 uppercase tracking-widest">
+                    ACTIVE EMERGENCY &bull; {activeEmergency.incidentCode}
+                  </span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-900/60 text-red-200 border border-red-500/40">
+                    {activeEmergency.humanDecision}
+                  </span>
+                </div>
+                <p className="text-xs text-[#F5F3EE] font-medium mt-0.5">{activeEmergency.title}</p>
+                <p className="text-[11px] text-[#A5A29C] truncate max-w-xl">{activeEmergency.recommendedResponse?.contingencyPlan}</p>
+              </div>
+            </div>
+            <Link href="/emergency">
+              <Button variant="danger" size="sm" className="font-mono text-xs whitespace-nowrap">
+                COMMAND OVERRIDE &rarr;
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* 10-FACET UNIFIED OPERATIONAL CAPABILITIES (PPT PARITY) */}
+        <div className="p-4 rounded-lg bg-[#0D0D0D] border border-[#242424] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-mono font-bold tracking-wider text-[#F5F3EE] uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#7FAF91]" />
+              UNIFIED OPERATIONAL PICTURE &bull; 10 CORE FACETS
+            </span>
+            <span className="text-[10px] font-mono text-[#6F6D68]">ALL DOMAINS SYNCHRONIZED</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 text-center text-[10px] font-mono">
+            {[
+              { facet: "EXPEDITIONS", status: "ACTIVE", link: "/expeditions/ISEA-46", color: "text-[#7FAF91]" },
+              { facet: "PERSONNEL", status: `${kpiData.personnel} READY`, link: "/personnel", color: "text-[#7FAF91]" },
+              { facet: "ASSETS", status: `${kpiData.assets} OPERATIONAL`, link: "/assets", color: "text-[#7FAF91]" },
+              { facet: "CARGO", status: `${kpiData.cargo} TRACKED`, link: "/cargo", color: "text-[#7FAF91]" },
+              { facet: "INVENTORY", status: kpiData.inventory, link: "/inventory", color: "text-[#7FAF91]" },
+              { facet: "MISSIONS", status: `${kpiData.missions} ACTIVE`, link: "/missions", color: "text-[#7FAF91]" },
+              { facet: "ENVIRONMENT", status: "SIMULATED", link: "/intelligence/environment", color: "text-[#C8A96B]" },
+              { facet: "RISK ENGINE", status: "EVALUATING", link: "/intelligence/risk", color: "text-[#7FAF91]" },
+              { facet: "ALERTS", status: `${attentionItems.length} NOTICES`, link: "/alerts", color: attentionItems.length > 0 ? "text-[#C49A55]" : "text-[#7FAF91]" },
+              { facet: "EMERGENCY", status: activeEmergency ? "INCIDENT" : "STANDBY", link: "/emergency", color: activeEmergency ? "text-[#B85C5C]" : "text-[#7FAF91]" },
+            ].map((f) => (
+              <Link key={f.facet} href={f.link} className="p-2 rounded bg-[#070707] border border-[#1A1A1A] hover:border-[#333] transition-colors">
+                <div className="text-[9px] text-[#6F6D68] truncate">{f.facet}</div>
+                <div className={`font-bold truncate mt-0.5 ${f.color}`}>{f.status}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* KPI Section: Flat Black Panels with Thin Separators */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {kpis.map((kpi) => (
@@ -327,7 +389,7 @@ export default function DashboardPage() {
               <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
                 STATION TELEMETRY
               </span>
-              <span className="text-[10px] font-mono text-[#7FAF91]">● SATELLITE LINK ACTIVE</span>
+              <span className="text-[10px] font-mono text-[#C8A96B]">● TELEMETRY SYNTHESIS [SIMULATED]</span>
             </div>
 
             <div className="space-y-3">

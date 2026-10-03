@@ -54,6 +54,8 @@ export interface PlanEvaluationRequest {
   team_lead_id: number;
   assigned_personnel_ids?: number[];
   assigned_asset_ids?: number[];
+  assigned_cargo_ids?: number[];
+  itinerary_tasks?: string[];
   start_time: string;
   expected_return: string;
   requires_permit?: boolean;
@@ -61,13 +63,15 @@ export interface PlanEvaluationRequest {
 }
 
 export interface PlanEvaluationCheckItem {
-  category: "PERMIT" | "PERSONNEL" | "ASSET" | "ENVIRONMENT" | string;
+  category: "PERMIT" | "PERSONNEL" | "ASSET" | "ENVIRONMENT" | "CARGO" | "INVENTORY" | "RISK" | string;
   status: "PASS" | "WARNING" | "BLOCKED" | string;
   details: string;
 }
 
 export interface PlanEvaluationResponse {
   overall_status: "PASS" | "WARNING" | "BLOCKED" | string;
+  readiness_score?: number;
+  risk_level?: string;
   checks: PlanEvaluationCheckItem[];
   recommendations: string[];
   evaluated_at: string;

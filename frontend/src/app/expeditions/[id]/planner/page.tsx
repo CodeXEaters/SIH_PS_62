@@ -18,9 +18,37 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge, Button, Card } from "@/components/ui";
+import { missionsService, PlanEvaluationResponse } from "@/services/missions";
 
 export default function ExpeditionPlannerPage() {
   const [selectedPhase, setSelectedPhase] = useState("transport");
+  const [evaluation, setEvaluation] = useState<PlanEvaluationResponse | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+
+  const handleRunEvaluation = async () => {
+    setIsEvaluating(true);
+    try {
+      const res = await missionsService.evaluatePlan({
+        mission_name: "46th ISEA Field Traverse Sortie",
+        origin_station_id: 4,
+        destination_station_id: 1,
+        mission_type: "SCIENCE",
+        team_lead_id: 1,
+        assigned_personnel_ids: [1, 2],
+        assigned_asset_ids: [1],
+        assigned_cargo_ids: [],
+        itinerary_tasks: ["Deploy seismic array", "Sample lake ice core", "Station fuel buffer check"],
+        start_time: new Date().toISOString(),
+        expected_return: new Date(Date.now() + 48 * 3600000).toISOString(),
+        requires_permit: false,
+      });
+      setEvaluation(res);
+    } catch (err) {
+      console.error("Evaluation failed", err);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
 
   const timelinePhases = [
     {
@@ -175,6 +203,103 @@ export default function ExpeditionPlannerPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* PRE-FLIGHT OPERATIONAL READINESS EVALUATION (PPT PARITY) */}
+        <div className="p-5 rounded-lg bg-polar-deep border border-polar-border shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-polar-cyan animate-pulse" />
+                <h2 className="text-xs font-mono font-bold tracking-wider text-polar-snow uppercase">
+                  PRE-FLIGHT OPERATIONAL READINESS EVALUATION
+                </h2>
+              </div>
+              <p className="text-[11px] text-polar-muted mt-0.5">
+                Multi-factor validation across permits, personnel readiness, fleet health, environmental hazards, cargo manifests, and life-support reserves.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRunEvaluation}
+              disabled={isEvaluating}
+              className="font-mono text-xs whitespace-nowrap gap-2"
+            >
+              <span>{isEvaluating ? "Evaluating Sortie..." : "Run Pre-Flight Check"}</span>
+            </Button>
+          </div>
+
+          {evaluation && (
+            <div className="space-y-4 pt-3 border-t border-polar-border">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded bg-polar-midnight/80 border border-polar-border">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-mono text-polar-muted">OVERALL STATUS:</span>
+                  <span
+                    className={`text-xs font-mono font-bold px-2 py-0.5 rounded border uppercase ${
+                      evaluation.overall_status === "PASS"
+                        ? "bg-emerald-950/60 text-emerald-300 border-emerald-800"
+                        : evaluation.overall_status === "WARNING"
+                        ? "bg-amber-950/60 text-amber-300 border-amber-800"
+                        : "bg-red-950/60 text-red-300 border-red-800"
+                    }`}
+                  >
+                    {evaluation.overall_status}
+                  </span>
+                </div>
+                {evaluation.readiness_score !== undefined && (
+                  <div className="flex items-center gap-2 font-mono text-xs">
+                    <span className="text-polar-muted">COMPOSITE READINESS:</span>
+                    <span className="font-bold text-polar-cyan">{evaluation.readiness_score}%</span>
+                  </div>
+                )}
+                {evaluation.risk_level && (
+                  <div className="flex items-center gap-2 font-mono text-xs">
+                    <span className="text-polar-muted">RISK LEVEL:</span>
+                    <span className="font-bold text-polar-snow">{evaluation.risk_level}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {evaluation.checks.map((c, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded bg-polar-surface/60 border border-polar-border text-xs space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-polar-cyan text-[11px]">{c.category}</span>
+                      <span
+                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded border uppercase font-semibold ${
+                          c.status === "PASS"
+                            ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/40"
+                            : c.status === "WARNING"
+                            ? "bg-amber-950/40 text-amber-400 border-amber-800/40"
+                            : "bg-red-950/40 text-red-400 border-red-800/40"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-polar-muted leading-relaxed">{c.details}</p>
+                  </div>
+                ))}
+              </div>
+
+              {evaluation.recommendations.length > 0 && (
+                <div className="p-3 rounded bg-polar-surface/40 border border-polar-border text-xs space-y-1">
+                  <span className="font-mono font-bold text-polar-snow text-[11px] uppercase">
+                    ACTIONABLE RECOMMENDATIONS:
+                  </span>
+                  <ul className="list-disc list-inside text-[11px] text-polar-muted space-y-0.5">
+                    {evaluation.recommendations.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Visual Scheduling Timeline Cards */}

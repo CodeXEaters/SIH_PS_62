@@ -144,4 +144,27 @@ def update_asset(
 
     db.commit()
     db.refresh(asset)
+
+    # Cross-module integration: Trigger maintenance alert if asset health is low or maintenance required
+    if asset.status in ["MAINTENANCE_REQUIRED", "IN_REPAIR"] or (asset.health_score is not None and asset.health_score < 60.0):
+        try:
+            from app.services.alert_service import AlertService
+            from app.schemas.alert import AlertCreate
+            from app.models.alert import AlertType, AlertSeverity, AlertEntityType
+            sev = AlertSeverity.CRITICAL if (asset.health_score is not None and asset.health_score < 40.0) else AlertSeverity.WARNING
+            AlertService.create_alert(
+                db=db,
+                alert_in=AlertCreate(
+                    alert_type=AlertType.MAINTENANCE_ALERT,
+                    severity=sev,
+                    title=f"Maintenance Required: {asset.name}",
+                    message=f"Asset {asset.name} ({asset.asset_type}) health score is {asset.health_score}%. Status: {asset.status}",
+                    entity_type=AlertEntityType.ASSET,
+                    entity_id=asset.id,
+                    station_id=asset.station_id,
+                ),
+            )
+        except Exception:
+            pass
+
     return asset

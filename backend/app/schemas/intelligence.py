@@ -57,6 +57,8 @@ class InventoryShortageForecastItem(BaseModel):
     days_remaining: float
     is_critical: bool
     projected_stockout_date: Optional[str] = None
+    urgency: Optional[str] = "NOMINAL"
+    replenishment_recommendation: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -16,7 +16,7 @@ VALID_CARGO_TRANSITIONS = {
     CargoStatus.PACKED: [CargoStatus.DISPATCHED, CargoStatus.DELAYED, CargoStatus.PLANNED],
     CargoStatus.DISPATCHED: [CargoStatus.IN_TRANSIT, CargoStatus.DELAYED],
     CargoStatus.IN_TRANSIT: [CargoStatus.ARRIVED, CargoStatus.DELAYED],
-    CargoStatus.DELAYED: [CargoStatus.PACKED, CargoStatus.DISPATCHED, CargoStatus.IN_TRANSIT, CargoStatus.ARRIVED],
+    CargoStatus.DELAYED: [CargoStatus.PACKED, CargoStatus.DISPATCHED, CargoStatus.IN_TRANSIT, CargoStatus.ARRIVED, CargoStatus.DELIVERED],
     CargoStatus.ARRIVED: [CargoStatus.DELIVERED],
     CargoStatus.DELIVERED: [],  # Terminal state
 }

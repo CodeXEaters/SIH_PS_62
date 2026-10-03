@@ -267,6 +267,46 @@ class EmergencyService:
         db.commit()
         db.refresh(emergency)
         logger.info("Emergency decision updated: %s -> %s", emergency.incident_code, decision_in.decision.value)
+
+        # Cross-module integration: Record human-in-the-loop decision into recommendation feedback audit log
+        try:
+            from app.models.recommendation_feedback import RecommendationFeedback, FeedbackOutcome
+            feedback = RecommendationFeedback(
+                recommendation_id=f"REC-{emergency.incident_code}",
+                operator_id=user_id,
+                decision=decision_in.decision.value,
+                reason=decision_in.notes or f"Human operator authorized {decision_in.decision.value}",
+                outcome=FeedbackOutcome.SUCCESSFUL.value if decision_in.decision == EmergencyDecision.APPROVED else FeedbackOutcome.MITIGATED.value,
+                timestamp=datetime.now(timezone.utc),
+            )
+            db.add(feedback)
+            db.commit()
+        except Exception as f_err:
+            logger.warning(f"Could not record recommendation feedback: {f_err}")
+
+        # Broadcast emergency status change via WebSocket
+        try:
+            from app.websocket.manager import ws_manager
+            import asyncio
+            payload = {
+                "event": "EMERGENCY_DECISION_UPDATED",
+                "emergency": {
+                    "id": emergency.id,
+                    "incident_code": emergency.incident_code,
+                    "status": emergency.status.value,
+                    "human_decision": emergency.human_decision.value,
+                    "decision_notes": emergency.decision_notes,
+                    "decision_timestamp": emergency.decision_timestamp.isoformat() if emergency.decision_timestamp else None,
+                },
+            }
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(ws_manager.broadcast("alerts", payload))
+            except RuntimeError:
+                pass
+        except Exception:
+            pass
+
         return emergency
 
     @staticmethod

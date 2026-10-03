@@ -105,6 +105,50 @@ class CargoEventService:
         db.refresh(cargo)
         db.refresh(event)
 
+        # Cross-module operational alert triggers
+        if event_type == CargoEventType.DELAY_REPORTED:
+            try:
+                from app.services.alert_service import AlertService
+                from app.schemas.alert import AlertCreate
+                from app.models.alert import AlertType, AlertSeverity, AlertEntityType
+                AlertService.create_alert(
+                    db=db,
+                    alert_in=AlertCreate(
+                        alert_type=AlertType.CARGO_DELAY,
+                        severity=AlertSeverity.MEDIUM,
+                        title=f"Cargo Delay: {cargo.cargo_code}",
+                        message=f"Consignment {cargo.cargo_code} ({cargo.name}) reported delayed at {cargo.current_location}. {scan_in.remarks or ''}".strip(),
+                        entity_type=AlertEntityType.CARGO,
+                        entity_id=cargo.id,
+                        station_id=cargo.destination_station_id,
+                    ),
+                )
+            except Exception as e:
+                logger.warning(f"Failed to auto-generate cargo delay alert: {e}")
+        elif event_type == CargoEventType.DELIVERED:
+            try:
+                from app.models.alert import Alert, AlertType, AlertStatus, AlertEntityType
+                active_delay_alerts = (
+                    db.query(Alert)
+                    .filter(
+                        Alert.alert_type == AlertType.CARGO_DELAY,
+                        Alert.entity_type == AlertEntityType.CARGO,
+                        Alert.entity_id == cargo.id,
+                        Alert.status.in_([AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]),
+                    )
+                    .all()
+                )
+                from datetime import datetime, timezone
+                now_utc = datetime.now(timezone.utc)
+                for a in active_delay_alerts:
+                    a.status = AlertStatus.RESOLVED
+                    a.resolved_at = now_utc
+                    a.resolved_by = current_user.id if current_user else None
+                if active_delay_alerts:
+                    db.commit()
+            except Exception as e:
+                logger.warning(f"Failed to resolve cargo delay alerts on delivery: {e}")
+
         return CargoScanResponse(
             message=f"Cargo {cargo.cargo_code} successfully scanned and logged",
             cargo_id=cargo.id,

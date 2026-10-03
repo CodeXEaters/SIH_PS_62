@@ -16,6 +16,7 @@ from app.core.security import get_current_user, require_roles
 router = APIRouter()
 
 
+@router.post("", response_model=TrackingEventResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/update", response_model=TrackingEventResponse, status_code=status.HTTP_201_CREATED)
 def record_tracking_update(
     event_in: TrackingEventCreate,

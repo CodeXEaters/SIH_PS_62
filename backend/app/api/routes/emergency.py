@@ -71,6 +71,7 @@ def get_emergency(
 
 
 @router.put("/{id}", response_model=EmergencyResponse)
+@router.patch("/{id}", response_model=EmergencyResponse)
 def update_emergency(
     id: int,
     emergency_in: EmergencyUpdate,

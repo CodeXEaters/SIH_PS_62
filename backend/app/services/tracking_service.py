@@ -49,6 +49,54 @@ class TrackingService:
         db.add(event)
         db.commit()
         db.refresh(event)
+
+        # Cross-module integration: Trigger low-battery alert if battery is critically depleted
+        if event.battery is not None and event.battery < 20.0:
+            try:
+                from app.services.alert_service import AlertService
+                from app.schemas.alert import AlertCreate
+                from app.models.alert import AlertType, AlertSeverity, AlertEntityType
+                AlertService.create_alert(
+                    db=db,
+                    alert_in=AlertCreate(
+                        alert_type=AlertType.LOW_BATTERY,
+                        severity=AlertSeverity.HIGH if event.battery > 10.0 else AlertSeverity.CRITICAL,
+                        title=f"Low Battery: {entity_name or 'Tracked Unit'}",
+                        message=f"{event.entity_type.value} #{event.entity_id} ({entity_name}) reported critical battery level at {event.battery}%.",
+                        entity_type=AlertEntityType.MISSION if event.entity_type == TrackingEntityType.MISSION else AlertEntityType.TRANSPORT,
+                        entity_id=event.entity_id,
+                    ),
+                )
+            except Exception:
+                pass
+
+        # Broadcast live tracking update via WebSocket
+        try:
+            from app.websocket.manager import ws_manager
+            import asyncio
+            payload = {
+                "event": "TRACKING_UPDATE",
+                "telemetry": {
+                    "id": event.id,
+                    "entity_type": event.entity_type.value,
+                    "entity_id": event.entity_id,
+                    "entity_name": entity_name,
+                    "latitude": event.latitude,
+                    "longitude": event.longitude,
+                    "speed": event.speed,
+                    "battery": event.battery,
+                    "timestamp": event.timestamp.isoformat() if event.timestamp else None,
+                    "is_simulated": True,
+                },
+            }
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(ws_manager.broadcast("tracking", payload))
+            except RuntimeError:
+                pass
+        except Exception:
+            pass
+
         return event
 
     @staticmethod

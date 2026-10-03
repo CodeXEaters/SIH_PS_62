@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from app.models.permit import Permit, PermitStatus
 from app.models.personnel import Personnel, ReadinessStatus
 from app.models.asset import Asset
+from app.models.cargo import Cargo, CargoStatus
+from app.models.inventory import Inventory
 from app.schemas.expedition_evaluation import (
     PlanEvaluationRequest,
     PlanEvaluationResponse,
@@ -166,20 +168,96 @@ class ExpeditionPlannerService:
         ))
 
         # -------------------------------------------------------------
-        # 5. OVERALL STATUS DETERMINATION
+        # 5. CARGO & LOGISTICS READINESS CHECK
         # -------------------------------------------------------------
+        c_status = "PASS"
+        c_details = []
+        if payload.assigned_cargo_ids:
+            cargo_items = db.query(Cargo).filter(Cargo.id.in_(payload.assigned_cargo_ids)).all()
+            for c in cargo_items:
+                if c.status == CargoStatus.DELAYED:
+                    c_status = "WARNING" if c_status != "BLOCKED" else "BLOCKED"
+                    c_details.append(f"{c.cargo_code} ({c.name}) is DELAYED at {c.current_location}")
+                    recommendations.append(f"Verify alternative cargo allocation or wait for {c.cargo_code} arrival.")
+                elif c.status in [CargoStatus.PACKED, CargoStatus.DISPATCHED, CargoStatus.ARRIVED, CargoStatus.DELIVERED, CargoStatus.IN_TRANSIT]:
+                    pass
+                else:
+                    c_details.append(f"{c.cargo_code} status is {c.status.value}")
+            if not c_details:
+                c_details.append(f"All {len(cargo_items)} assigned cargo packages are staged and ready for transit.")
+        else:
+            c_details.append("No specialized cargo manifests designated for this sortie.")
+
+        checks.append(PlanEvaluationCheckItem(
+            category="CARGO",
+            status=c_status,
+            details="; ".join(c_details)
+        ))
+
+        # -------------------------------------------------------------
+        # 6. INVENTORY & LIFE-SUPPORT RESERVE CHECK
+        # -------------------------------------------------------------
+        inv_status = "PASS"
+        inv_details = []
+        fuel_items = (
+            db.query(Inventory)
+            .filter(Inventory.station_id == payload.origin_station_id, Inventory.category == "FUEL")
+            .all()
+        )
+        for fuel in fuel_items:
+            daily = fuel.daily_consumption if fuel.daily_consumption > 0 else 1.0
+            fuel_days = fuel.quantity / daily
+            if fuel_days < 7.0:
+                inv_status = "BLOCKED"
+                inv_details.append(f"Station {fuel.item_name} at critical reserve: {round(fuel_days, 1)} days remaining")
+                recommendations.append("Suspend non-essential sorties until station fuel replenishment is confirmed.")
+            elif fuel_days < 14.0 and inv_status != "BLOCKED":
+                inv_status = "WARNING"
+                inv_details.append(f"Station {fuel.item_name} approaching reserve threshold: {round(fuel_days, 1)} days remaining")
+
+        if not inv_details:
+            inv_details.append("Origin station life-support reserves and fuel buffers are nominal (>14 days).")
+
+        checks.append(PlanEvaluationCheckItem(
+            category="INVENTORY",
+            status=inv_status,
+            details="; ".join(inv_details)
+        ))
+
+        # -------------------------------------------------------------
+        # 7. MULTI-FACTOR RISK LEVEL & READINESS SCORE
+        # -------------------------------------------------------------
+        readiness_score = 100.0
+        for c in checks:
+            if c.status == "BLOCKED":
+                readiness_score -= 35.0
+            elif c.status == "WARNING":
+                readiness_score -= 12.0
+        readiness_score = max(0.0, min(100.0, round(readiness_score, 1)))
+
         if any(c.status == "BLOCKED" for c in checks):
             overall = "BLOCKED"
+            risk_level = "CRITICAL"
         elif any(c.status == "WARNING" for c in checks):
             overall = "WARNING"
+            risk_level = "HIGH"
         else:
             overall = "PASS"
+            risk_level = "LOW"
+
+        checks.append(PlanEvaluationCheckItem(
+            category="RISK",
+            status=overall,
+            details=f"Composite Operational Readiness: {readiness_score}% (Risk Level: {risk_level})"
+        ))
 
         if not recommendations:
             recommendations.append("All pre-departure clearance checks passed. Mission authorized for launch.")
 
         return PlanEvaluationResponse(
             overall_status=overall,
+            readiness_score=readiness_score,
+            risk_level=risk_level,
             checks=checks,
             recommendations=recommendations,
             evaluated_at=datetime.now(timezone.utc),

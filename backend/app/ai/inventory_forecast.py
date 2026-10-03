@@ -38,6 +38,28 @@ class InventoryForecaster:
             station = db.query(Station).filter(Station.id == item.station_id).first()
             station_name = station.name if station else f"Station #{item.station_id}"
 
+            if days_left <= 3.0:
+                urgency = "IMMEDIATE"
+                replenishment_recommendation = (
+                    f"CRITICAL RESERVE: Expedite urgent airlift/transfer of at least "
+                    f"{round(max(item.minimum_threshold * 2.0 - item.quantity, 10.0), 1)} {item.unit} to prevent station shutdown."
+                )
+            elif days_left <= 7.0:
+                urgency = "HIGH"
+                replenishment_recommendation = (
+                    f"HIGH DEFICIT: Schedule resupply convoy for "
+                    f"{round(max(item.minimum_threshold * 1.5 - item.quantity, 5.0), 1)} {item.unit} within 5 days."
+                )
+            elif days_left <= 14.0:
+                urgency = "MODERATE"
+                replenishment_recommendation = (
+                    f"APPROACHING BUFFER: Allocate {round(max(item.minimum_threshold - item.quantity, 1.0), 1)} {item.unit} "
+                    f"in next cargo manifest."
+                )
+            else:
+                urgency = "NOMINAL"
+                replenishment_recommendation = "Stock levels nominal. Daily burn-rate within seasonal profile."
+
             forecast_entry = {
                 "inventory_id": item.id,
                 "item_name": item.item_name,
@@ -50,6 +72,8 @@ class InventoryForecaster:
                 "days_remaining": days_left,
                 "is_critical": is_critical,
                 "projected_stockout_date": stockout_date,
+                "urgency": urgency,
+                "replenishment_recommendation": replenishment_recommendation,
             }
             results.append(forecast_entry)
 
@@ -60,7 +84,7 @@ class InventoryForecaster:
                 elif days_left <= 7.0:
                     severity = AlertSeverity.HIGH
                 else:
-                    severity = AlertSeverity.WARNING
+                    severity = AlertSeverity.MEDIUM
                 AlertService.create_alert(
                     db=db,
                     alert_in=AlertCreate(

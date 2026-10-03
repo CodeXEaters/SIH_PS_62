@@ -65,6 +65,7 @@ def get_alert(
     return AlertService.get_alert_by_id(db=db, alert_id=id)
 
 
+@router.post("/{id}/acknowledge", response_model=AlertResponse)
 @router.patch("/{id}/acknowledge", response_model=AlertResponse)
 def acknowledge_alert(
     id: int,
@@ -75,6 +76,7 @@ def acknowledge_alert(
     return AlertService.acknowledge_alert(db=db, alert_id=id, user_id=current_user.id)
 
 
+@router.post("/{id}/resolve", response_model=AlertResponse)
 @router.patch("/{id}/resolve", response_model=AlertResponse)
 def resolve_alert(
     id: int,
