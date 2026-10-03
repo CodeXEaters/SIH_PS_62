@@ -59,7 +59,6 @@ export const Sidebar: React.FC = () => {
       title: "COMMAND",
       items: [
         { label: "Overview", href: "/dashboard", icon: Compass },
-        { label: "PPT Scenarios", href: "/demonstration", icon: Sparkles, badge: "DEMO", badgeColor: "bg-[#C8A96B] text-black" },
       ],
     },
     {

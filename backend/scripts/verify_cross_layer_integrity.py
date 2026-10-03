@@ -246,6 +246,14 @@ def main():
 
         assert len(dangling) == 0, f"Found dangling foreign keys: {dangling}"
         print(f"  -> All operational foreign keys verified across {len(valid_station_ids)} stations, {len(valid_personnel_ids)} personnel, and {len(valid_asset_ids)} assets. 0 dangling.")
+
+        # Verify /reports/db-counts endpoint
+        counts_res = client.get("/reports/db-counts", headers=headers)
+        assert counts_res.status_code == 200, f"/reports/db-counts returned {counts_res.status_code}"
+        db_counts = counts_res.json()
+        print(f"  -> Database operational record counts: {db_counts}")
+        for k in ["users", "stations", "personnel", "inventory", "assets", "cargo", "transport", "missions", "alerts", "emergencies", "permits", "waste", "feedback"]:
+            assert k in db_counts and db_counts[k] > 0, f"Database table '{k}' has 0 records"
         passed += 1
 
         # =====================================================================

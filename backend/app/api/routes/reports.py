@@ -181,3 +181,38 @@ def get_report_charts(
         asset_health_data=asset_health,
         total_delivered_tonnes=total_delivered_t,
     )
+
+
+@router.get("/db-counts")
+def get_db_counts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Returns exact database record counts for all operational entities.
+    Used for cross-layer verification and forensic audits.
+    """
+    from app.models.station import Station
+    from app.models.personnel import Personnel
+    from app.models.transport import Transport
+    from app.models.alert import Alert
+    from app.models.permit import Permit
+    from app.models.waste_record import WasteRecord
+    from app.models.recommendation_feedback import RecommendationFeedback
+
+    return {
+        "users": db.query(User).count(),
+        "stations": db.query(Station).count(),
+        "personnel": db.query(Personnel).count(),
+        "inventory": db.query(Inventory).count(),
+        "assets": db.query(Asset).count(),
+        "cargo": db.query(Cargo).count(),
+        "transport": db.query(Transport).count(),
+        "missions": db.query(Mission).count(),
+        "alerts": db.query(Alert).count(),
+        "emergencies": db.query(Emergency).count(),
+        "permits": db.query(Permit).count(),
+        "waste": db.query(WasteRecord).count(),
+        "feedback": db.query(RecommendationFeedback).count(),
+    }
+

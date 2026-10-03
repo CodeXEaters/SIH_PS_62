@@ -24,6 +24,19 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
         run_schema_migrations()
         logger.info("Database tables and schema migrations verified / created.")
+
+        # Ensure database is seeded if completely empty (initial cloud deployment)
+        from app.models.user import User
+        from app.database.session import SessionLocal
+        with SessionLocal() as db:
+            user_count = db.query(User).count()
+            if user_count == 0:
+                logger.info("PostgreSQL database has 0 users. Executing initial deterministic seed...")
+                from app.database.seed import seed_database
+                seed_database(db=db)
+                logger.info("Initial deterministic seed completed successfully.")
+            else:
+                logger.info("PostgreSQL database verified seeded (%d existing users). Skipping seed.", user_count)
     except Exception as exc:
         logger.error("Database initialization check failed: %s", exc)
     yield
