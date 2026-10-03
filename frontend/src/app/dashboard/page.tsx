@@ -198,8 +198,8 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#242424] pb-6">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91]" />
-              <span className="text-[10px] font-mono tracking-[0.25em] text-[#C8C8C5] uppercase font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91] shrink-0" />
+              <span className="text-[10px] font-mono tracking-[0.15em] sm:tracking-[0.25em] text-[#C8C8C5] uppercase font-semibold">
                 NCPOR OPERATIONAL COMMAND &bull; 46TH ISEA
               </span>
             </div>
@@ -254,9 +254,9 @@ export default function DashboardPage() {
 
         {/* 10-FACET UNIFIED OPERATIONAL CAPABILITIES (PPT PARITY) */}
         <div className="p-4 rounded-lg bg-[#0D0D0D] border border-[#242424] space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <span className="text-[11px] font-mono font-bold tracking-wider text-[#F5F3EE] uppercase flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#7FAF91]" />
+              <span className="w-2 h-2 rounded-full bg-[#7FAF91] shrink-0" />
               UNIFIED OPERATIONAL PICTURE &bull; 10 CORE FACETS
             </span>
             <span className="text-[10px] font-mono text-[#6F6D68]">ALL DOMAINS SYNCHRONIZED</span>
@@ -318,9 +318,9 @@ export default function DashboardPage() {
 
         {/* ATTENTION REQUIRED (Most Important Section) */}
         <div className="rounded bg-[#0A0A0A] border border-[#242424] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#242424] flex items-center justify-between bg-[#070707]">
+          <div className="px-4 sm:px-6 py-4 border-b border-[#242424] flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#070707]">
             <div className="flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-[#B85C5C]" />
+              <span className="w-2 h-2 rounded-full bg-[#B85C5C] shrink-0" />
               <h2 className="text-xs font-mono font-bold tracking-[0.2em] text-[#F5F3EE] uppercase">
                 ATTENTION REQUIRED
               </h2>
@@ -347,10 +347,10 @@ export default function DashboardPage() {
               return (
                 <div
                   key={item.id || idx}
-                  className="p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors"
+                  className="p-4 sm:p-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#101010] transition-colors"
                 >
                   <div className="space-y-1.5 max-w-2xl">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <span className={`text-xs font-mono font-bold ${colorClass}`}>{numStr}</span>
                       <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
                         {item.title}
@@ -385,7 +385,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Station Telemetry (5 Columns) */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <span className="text-xs font-mono font-bold tracking-wider text-[#F5F3EE] uppercase">
                 STATION TELEMETRY
               </span>

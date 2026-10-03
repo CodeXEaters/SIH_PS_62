@@ -17,6 +17,7 @@ import {
   X,
   Sun,
   Moon,
+  Menu,
 } from "lucide-react";
 import { useAppStore } from "@/store";
 import { useTheme } from "@/context/ThemeContext";
@@ -38,6 +39,7 @@ export const Topbar: React.FC = () => {
     offlineQueueCount,
     user,
     setUser,
+    setMobileMenuOpen,
   } = useAppStore();
   const { theme, toggleTheme } = useTheme();
 
@@ -136,13 +138,22 @@ export const Topbar: React.FC = () => {
     : "IN";
 
   return (
-    <header className="h-14 border-b border-[#1E1E1E] bg-[#070707] px-4 sm:px-6 flex items-center justify-between z-20 shrink-0 sticky top-0">
-      {/* Left: 46th ISEA / ANTARCTICA OPERATIONS */}
+    <header className="h-14 border-b border-[#1E1E1E] bg-[#070707] px-3 sm:px-6 flex items-center justify-between z-20 shrink-0 sticky top-0">
+      {/* Left: Mobile Menu Trigger + 46th ISEA / ANTARCTICA OPERATIONS */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="font-bold text-[#F5F3EE] tracking-tight">46th ISEA</span>
-          <span className="text-[#303030]">/</span>
-          <span className="text-[#A5A29C] uppercase tracking-wider text-[11px]">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="lg:hidden p-1.5 -ml-1 text-[#A5A29C] hover:text-[#F5F3EE] hover:bg-[#121212] rounded transition-colors"
+          title="Open Navigation Menu"
+          aria-label="Open Navigation Menu"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-mono">
+          <span className="font-bold text-[#F5F3EE] tracking-tight whitespace-nowrap">46th ISEA</span>
+          <span className="text-[#303030] hidden sm:inline">/</span>
+          <span className="text-[#A5A29C] uppercase tracking-wider text-[11px] hidden sm:inline">
             ANTARCTICA OPERATIONS
           </span>
         </div>
@@ -165,7 +176,7 @@ export const Topbar: React.FC = () => {
       </div>
 
       {/* Right Controls: Theme Toggle, Connection Status, Notifications, Profile */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Mobile Search Button */}
         <button
           onClick={() => setSearchOpen(true)}
@@ -193,7 +204,7 @@ export const Topbar: React.FC = () => {
         <button
           onClick={() => setOfflineDrawerOpen(true)}
           className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono border transition-all cursor-pointer",
+            "flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded text-[11px] font-mono border transition-all cursor-pointer",
             connectionStatus === "OPERATIONAL" &&
               "bg-[#08120B] text-[#7FAF91] border-[#7FAF91]/30 hover:border-[#7FAF91]/50",
             connectionStatus === "SYNCING" &&
@@ -205,20 +216,20 @@ export const Topbar: React.FC = () => {
         >
           {connectionStatus === "OPERATIONAL" && (
             <>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91]" />
-              <span className="font-semibold">OPERATIONAL</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91] shrink-0" />
+              <span className="font-semibold hidden sm:inline">OPERATIONAL</span>
             </>
           )}
           {connectionStatus === "SYNCING" && (
             <>
-              <RefreshCw className="w-3 h-3 animate-spin text-[#C8C8C5]" />
-              <span>◌ SYNCING {offlineQueueCount > 0 ? `(${offlineQueueCount} queued)` : ""}</span>
+              <RefreshCw className="w-3 h-3 animate-spin text-[#C8C8C5] shrink-0" />
+              <span className="hidden sm:inline">◌ SYNCING {offlineQueueCount > 0 ? `(${offlineQueueCount} queued)` : ""}</span>
             </>
           )}
           {connectionStatus === "OFFLINE" && (
             <>
-              <span className="w-1.5 h-1.5 rounded-full border border-[#C49A55]" />
-              <span>○ OFFLINE (Cached)</span>
+              <span className="w-1.5 h-1.5 rounded-full border border-[#C49A55] shrink-0" />
+              <span className="hidden sm:inline">○ OFFLINE (Cached)</span>
             </>
           )}
         </button>

@@ -299,3 +299,43 @@ export interface ChainOfCustodyRecord {
   verificationHash: string;
   notes: string;
 }
+
+export type AlertStatus = "ACTIVE" | "ACKNOWLEDGED" | "RESOLVED" | "DISMISSED";
+export type AlertSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type AlertType =
+  | "LOW_BATTERY"
+  | "SIGNAL_LOST"
+  | "INVENTORY_SHORTAGE"
+  | "MAINTENANCE_ALERT"
+  | "MISSION_OVERDUE"
+  | "WEATHER_BLIZZARD"
+  | "CARGO_DELAY"
+  | "ANOMALY"
+  | "EMERGENCY"
+  | "GENERAL";
+export type AlertEntityType =
+  | "INVENTORY"
+  | "ASSET"
+  | "MISSION"
+  | "CARGO"
+  | "TRANSPORT"
+  | "PERSONNEL"
+  | "STATION"
+  | "SYSTEM";
+
+export interface Alert {
+  id: number;
+  alert_type: AlertType;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  entity_type?: AlertEntityType | null;
+  entity_id?: number | null;
+  station_id?: number | null;
+  status: AlertStatus;
+  created_at: string;
+  acknowledged_at?: string | null;
+  acknowledged_by?: number | null;
+  resolved_at?: string | null;
+  resolved_by?: number | null;
+}

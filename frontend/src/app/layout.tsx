@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/shared/Providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://dhruv-frontend.onrender.com"),
   title: "DHRUV — Integrated Polar Expedition Intelligence",
   description:
     "DHRUV is an integrated platform for planning, tracking and managing India's Antarctic expedition operations. National Centre for Polar and Ocean Research (NCPOR), Ministry of Earth Sciences, Government of India.",
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
     "Logistics",
   ],
   authors: [{ name: "NCPOR / Ministry of Earth Sciences" }],
+  alternates: {
+    canonical: "https://dhruv-frontend.onrender.com",
+  },
 };
 
 export default function RootLayout({

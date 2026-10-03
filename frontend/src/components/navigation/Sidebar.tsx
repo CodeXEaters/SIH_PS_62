@@ -33,6 +33,7 @@ import {
   FileText,
   CloudSnow,
   Trash2,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store";
@@ -52,13 +53,14 @@ interface NavSection {
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { sidebarCollapsed, toggleSidebar } = useAppStore();
+  const { sidebarCollapsed, toggleSidebar, mobileMenuOpen, setMobileMenuOpen } = useAppStore();
 
   const sections: NavSection[] = [
     {
       title: "COMMAND",
       items: [
         { label: "Overview", href: "/dashboard", icon: Compass },
+        { label: "Alerts", href: "/alerts", icon: AlertTriangle },
       ],
     },
     {
@@ -151,12 +153,14 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside
-      className={cn(
-        "h-screen sticky top-0 bg-[#070707] border-r border-[#1E1E1E] z-30 transition-all duration-200 flex flex-col select-none",
-        sidebarCollapsed ? "w-[68px]" : "w-[248px]"
-      )}
-    >
+    <>
+      {/* Desktop Persistent Sidebar (lg+ viewports) */}
+      <aside
+        className={cn(
+          "hidden lg:flex h-screen sticky top-0 bg-[#070707] border-r border-[#1E1E1E] z-30 transition-all duration-200 flex-col select-none shrink-0",
+          sidebarCollapsed ? "w-[68px]" : "w-[248px]"
+        )}
+      >
       {/* Top Header: DHRUV Brand Logo */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-[#1E1E1E] shrink-0 bg-[#070707]">
         <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
@@ -273,5 +277,128 @@ export const Sidebar: React.FC = () => {
         </div>
       )}
     </aside>
+
+    {/* Mobile Navigation Drawer (below lg viewports) */}
+    {mobileMenuOpen && (
+      <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        <div className="relative w-[280px] max-w-[85vw] h-full bg-[#070707] border-r border-[#1E1E1E] flex flex-col select-none z-10 shadow-2xl">
+          {/* Mobile Drawer Header */}
+          <div className="h-14 px-4 flex items-center justify-between border-b border-[#1E1E1E] shrink-0 bg-[#070707]">
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 overflow-hidden"
+            >
+              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <Image
+                  src="/images/dhruv-logo-transparent.png"
+                  alt="DHRUV"
+                  width={34}
+                  height={34}
+                  className="h-8 w-8 object-contain light-only:hidden"
+                  priority
+                />
+                <Image
+                  src="/images/dhruv-logo-dark.png"
+                  alt="DHRUV"
+                  width={34}
+                  height={34}
+                  className="h-8 w-8 object-contain hidden light-only:block"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold tracking-[0.2em] text-[#F5F3EE]">DHRUV</span>
+                <span className="text-[8px] font-mono tracking-wider text-[#6F6D68] uppercase -mt-0.5">
+                  NCPOR POLAR OPS
+                </span>
+              </div>
+            </Link>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-1.5 rounded text-[#6F6D68] hover:text-[#F5F3EE] hover:bg-[#121212] transition-colors"
+              title="Close Menu"
+              aria-label="Close Navigation Menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Mobile Navigation Links */}
+          <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
+            {sections.map((section) => (
+              <div key={section.title} className="space-y-0.5">
+                <p className="px-2.5 text-[9px] font-mono font-bold tracking-widest text-[#4A4844] uppercase mb-1">
+                  {section.title}
+                </p>
+                <div>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+
+                    return (
+                      <Link
+                        key={item.href + item.label}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-2.5 px-2.5 py-1.5 rounded text-xs transition-all relative group",
+                          isActive
+                            ? "text-[#F5F3EE] font-medium bg-[#101010]"
+                            : "text-[#8F8D88] hover:text-[#F5F3EE] hover:bg-[#0D0D0D]"
+                        )}
+                      >
+                        {isActive && (
+                          <span className="absolute left-0 top-1 bottom-1 w-[2px] bg-[#C8A96B] rounded-r" />
+                        )}
+
+                        <Icon
+                          className={cn(
+                            "w-3.5 h-3.5 shrink-0 transition-colors",
+                            isActive ? "text-[#C8A96B]" : "text-[#6F6D68] group-hover:text-[#F5F3EE]"
+                          )}
+                        />
+
+                        <div className="flex-1 flex items-center justify-between overflow-hidden">
+                          <span className="truncate">{item.label}</span>
+                          {item.badge && (
+                            <span
+                              className={cn(
+                                "text-[9px] font-mono px-1 py-0.2 rounded shrink-0 border",
+                                item.badgeColor || "bg-[#141414] text-[#6F6D68] border-[#242424]"
+                              )}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Drawer Footer */}
+          <div className="p-3 border-t border-[#1E1E1E] bg-[#070707] text-[10px] font-mono text-[#6F6D68] space-y-1">
+            <div className="flex items-center justify-between">
+              <span>BHARATI:</span>
+              <span className="text-[#A5A29C]">-19°C &bull; 34kt</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>MAITRI:</span>
+              <span className="text-[#A5A29C]">-14°C &bull; 18kt</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 };

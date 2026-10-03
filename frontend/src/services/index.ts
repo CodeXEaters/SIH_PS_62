@@ -14,3 +14,4 @@ export * from "./permits";
 export * from "./environment";
 export * from "./waste";
 export * from "./feedback";
+export * from "./alerts";

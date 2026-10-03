@@ -23,6 +23,7 @@ from app.config import settings
 from app.database.session import SessionLocal, engine
 from app.database.base import Base
 from app.database.seed import seed_database
+import app.models  # Ensure all models are registered with Base.metadata
 from app.models.user import User
 from app.models.station import Station
 from app.models.personnel import Personnel
@@ -37,6 +38,11 @@ from app.models.alert import Alert
 from app.models.emergency import Emergency
 from app.models.inventory_transfer import InventoryTransfer
 from app.models.fuel_log import FuelLog
+from app.models.permit import Permit
+from app.models.waste_record import WasteRecord
+from app.models.recommendation_feedback import RecommendationFeedback
+from app.models.environmental_observation import EnvironmentalObservation
+from sqlalchemy import text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("dhruv.reset_demo_db")
@@ -68,8 +74,13 @@ def reset_and_reseed():
     verify_safety_guards()
 
     logger.info("Dropping existing DHRUV application tables...")
-    # Drop all tables managed by Base metadata in dependency order
-    Base.metadata.drop_all(bind=engine)
+    try:
+        with engine.connect() as conn:
+            conn.execution_options(isolation_level="AUTOCOMMIT")
+            conn.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO dhruv_user; GRANT ALL ON SCHEMA public TO public;"))
+    except Exception as e:
+        logger.warning(f"Schema recreation fallback: {e}")
+        Base.metadata.drop_all(bind=engine)
 
     logger.info("Recreating DHRUV application tables...")
     Base.metadata.create_all(bind=engine)
@@ -90,9 +101,12 @@ def reset_and_reseed():
             "cargo_events": db.query(CargoEvent).count(),
             "transports": db.query(Transport).count(),
             "missions": db.query(Mission).count(),
-            "tracking_events": db.query(TrackingEvent).count(),
             "alerts": db.query(Alert).count(),
             "emergencies": db.query(Emergency).count(),
+            "permits": db.query(Permit).count(),
+            "waste": db.query(WasteRecord).count(),
+            "feedback": db.query(RecommendationFeedback).count(),
+            "env_observations": db.query(EnvironmentalObservation).count(),
             "inventory_transfers": db.query(InventoryTransfer).count(),
             "fuel_logs": db.query(FuelLog).count(),
         }
@@ -104,7 +118,27 @@ def reset_and_reseed():
             print(f"  * {table:22s}: {count}")
         print("==================================================\n")
 
-        logger.info("Demo database successfully initialized to canonical state.")
+        # Validate that the canonical baseline exactly matches Render
+        expected_baseline = {
+            "users": 6,
+            "stations": 6,
+            "personnel": 12,
+            "inventory": 20,
+            "assets": 10,
+            "cargo": 5,
+            "transports": 3,
+            "missions": 4,
+            "alerts": 4,
+            "emergencies": 1,
+            "permits": 4,
+            "waste": 5,
+            "feedback": 4,
+        }
+        for k, expected_val in expected_baseline.items():
+            actual_val = row_counts.get(k)
+            assert actual_val == expected_val, f"Canonical baseline mismatch for '{k}': expected {expected_val}, got {actual_val}"
+
+        logger.info("Demo database successfully synchronized to canonical baseline state.")
     except Exception as e:
         logger.exception(f"FATAL: Database reset/reseed failed: {e}")
         sys.exit(1)
@@ -114,3 +148,4 @@ def reset_and_reseed():
 
 if __name__ == "__main__":
     reset_and_reseed()
+
