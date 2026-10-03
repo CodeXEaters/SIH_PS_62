@@ -879,10 +879,13 @@ def seed_database(db: Session = None) -> None:
         # 10. Seed Missions (2 active missions)
         # ==========================================
         lead1 = db.query(Personnel).filter(Personnel.name == "Dr. Priya Nair").first()
+        if not lead1:
+            raise ValueError("Deterministic seed error: Required mission lead 'Dr. Priya Nair' not found.")
         lead2 = db.query(Personnel).filter(Personnel.name.in_(["Arun Mehra", "Suresh Rane", "Commander Sunita Rao"])).first()
-        first_personnel = db.query(Personnel).first()
-        lead1_id = lead1.id if lead1 else first_personnel.id
-        lead2_id = lead2.id if lead2 else first_personnel.id
+        if not lead2:
+            raise ValueError("Deterministic seed error: Required mission lead ('Arun Mehra' / 'Suresh Rane' / 'Commander Sunita Rao') not found.")
+        lead1_id = lead1.id
+        lead2_id = lead2.id
 
         mission_data = [
             {
@@ -1157,10 +1160,10 @@ def seed_database(db: Session = None) -> None:
         # ==========================================
         casualty = db.query(Personnel).filter(Personnel.name.ilike("%Tenzing Norbu%")).first()
         if not casualty:
-            casualty = db.query(Personnel).first()
+            raise ValueError("Deterministic seed error: Required emergency casualty 'Tenzing Norbu' not found.")
         rescue_asset = db.query(Asset).filter(Asset.asset_name.ilike("%PistenBully%")).first()
         if not rescue_asset:
-            rescue_asset = db.query(Asset).first()
+            raise ValueError("Deterministic seed error: Required emergency rescue asset 'PistenBully' not found.")
 
         emergency_incident = {
             "incident_code": "EMG-2026-001",
@@ -1170,8 +1173,8 @@ def seed_database(db: Session = None) -> None:
             "status": EmergencyStatus.OPEN,
             "station_id": created_stations["Bharati Station"].id,
             "mission_id": m_active.id if m_active else None,
-            "personnel_id": casualty.id if casualty else None,
-            "asset_id": rescue_asset.id if rescue_asset else None,
+            "personnel_id": casualty.id,
+            "asset_id": rescue_asset.id,
             "latitude": -69.4500,
             "longitude": 76.1200,
             "location_description": "Sector 4 Ridge • Crevasse Zone",

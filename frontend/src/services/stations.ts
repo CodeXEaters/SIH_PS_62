@@ -45,10 +45,20 @@ function determineStationSlug(name: string, id: number): string {
   return `station-${id}`;
 }
 
-export function mapBackendToStation(s: BackendStation): Station {
+export function mapBackendToStation(s: BackendStation, env?: any): Station {
   const isMaitri = (s.name || "").toLowerCase().includes("maitri");
   const isBharati = (s.name || "").toLowerCase().includes("bharati");
   const slug = determineStationSlug(s.name, s.id);
+
+  // Dynamic environmental data from backend observation if available
+  const temp = env?.temperature != null ? env.temperature : (isMaitri ? -22 : isBharati ? -18 : 24);
+  const wind = env?.wind_speed != null ? env.wind_speed : (isMaitri ? 28 : isBharati ? 22 : 8);
+  const feelsLike = env?.temperature != null ? Math.round(env.temperature - (env.wind_speed * 0.4)) : (isMaitri ? -31 : isBharati ? -28 : 26);
+  const pressure = env?.pressure != null ? env.pressure : 994;
+  const visibility = env?.visibility != null ? env.visibility : 10;
+  const condition = env?.weather_condition ? String(env.weather_condition) : "Polar Nominal";
+  const blizzard = (condition.toUpperCase().includes("BLIZZARD") || wind > 40) ? "HIGH" : (wind > 25 ? "MODERATE" : "NONE");
+  const telemetrySource = env ? "Backend Environmental Observation (Simulated)" : "Offline Cached Baseline (Simulated)";
 
   return {
     id: s.id,
@@ -70,15 +80,15 @@ export function mapBackendToStation(s: BackendStation): Station {
         ? "MAINTENANCE"
         : "INCIDENT",
     weather: {
-      temperatureC: isMaitri ? -22 : isBharati ? -18 : 24,
-      feelsLikeC: isMaitri ? -31 : isBharati ? -28 : 26,
-      windSpeedKts: isMaitri ? 28 : isBharati ? 22 : 8,
-      windDirection: "SE",
-      barometricPressureHpa: 994,
-      visibilityKm: 10,
-      condition: "Polar Nominal",
-      blizzardRisk: "NONE",
-      lastUpdated: "Simulated Telemetry",
+      temperatureC: temp,
+      feelsLikeC: feelsLike,
+      windSpeedKts: wind,
+      windDirection: env?.wind_direction || "SE",
+      barometricPressureHpa: pressure,
+      visibilityKm: visibility,
+      condition: condition,
+      blizzardRisk: blizzard as any,
+      lastUpdated: telemetrySource,
     },
   };
 }
@@ -138,13 +148,24 @@ export function getStationIdFromSlug(slug: string): number {
 export const stationsService = {
   async getAllStations(): Promise<Station[]> {
     try {
-      const backendStations = await apiClient.get<BackendStation[]>("/stations");
-      if (backendStations && Array.isArray(backendStations) && backendStations.length > 0) {
+      const [backendStationsRes, envRes] = await Promise.allSettled([
+        apiClient.get<BackendStation[]>("/stations"),
+        apiClient.get<any[]>("/environment/current"),
+      ]);
+
+      const backendStations = backendStationsRes.status === "fulfilled" && Array.isArray(backendStationsRes.value) ? backendStationsRes.value : [];
+      const envObservations = envRes.status === "fulfilled" && Array.isArray(envRes.value) ? envRes.value : [];
+      const envMap = new Map<number, any>();
+      for (const obs of envObservations) {
+        if (obs.station_id) envMap.set(obs.station_id, obs);
+      }
+
+      if (backendStations.length > 0) {
         runtimeStationCache.clear();
         for (const s of backendStations) {
           runtimeStationCache.set(s.id, s);
         }
-        runtimeStationsList = backendStations.map(mapBackendToStation);
+        runtimeStationsList = backendStations.map((s) => mapBackendToStation(s, envMap.get(s.id)));
         return runtimeStationsList;
       }
     } catch {
@@ -152,7 +173,7 @@ export const stationsService = {
     }
 
     if (runtimeStationsList.length === 0) {
-      runtimeStationsList = SEED_FALLBACK_STATIONS.map(mapBackendToStation);
+      runtimeStationsList = SEED_FALLBACK_STATIONS.map((s) => mapBackendToStation(s));
     }
     return runtimeStationsList;
   },

@@ -1,10 +1,20 @@
 import { apiClient } from "./apiClient";
 import { EmergencyIncident } from "@/types";
 
-function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
+function mapBackendEmergencyToIncident(em: any, envObs?: any, envRisk?: any): EmergencyIncident {
   const stationName = em.station_name || "Bharati Station";
   const personnelName = em.personnel_name || (em.personnel_id ? `Personnel #${em.personnel_id}` : "Field Personnel");
   const assetName = em.asset_name || (em.asset_id ? `Asset #${em.asset_id}` : "PistenBully Polar Rescue Unit");
+
+  // Environmental conditions sourced dynamically from backend observation
+  const windKts = envObs?.wind_speed != null ? Math.round(envObs.wind_speed) : 28;
+  const tempC = envObs?.temperature != null ? Math.round(envObs.temperature) : -22;
+  const visM = envObs?.visibility != null ? Math.round(envObs.visibility * 1000) : 1500;
+  const blizzardHours = envRisk?.level === "CRITICAL" ? 2 : envRisk?.level === "HIGH" ? 4 : envRisk?.level === "MEDIUM" ? 8 : 12;
+
+  // Route risk and departure window derived from backend risk engine
+  const riskScore = envRisk?.score != null ? Math.round(envRisk.score) : 45;
+  const departureWindow = envRisk?.level === "CRITICAL" ? "HOLD_FOR_WINDOW" : "IMMEDIATE";
 
   return {
     id: String(em.id),
@@ -29,10 +39,11 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
         ]
       : [],
     weatherConditions: {
-      windSpeedKts: 38,
-      temperatureC: -28,
-      visibilityM: 800,
-      blizzardWindowHours: 4,
+      windSpeedKts: windKts,
+      temperatureC: tempC,
+      visibilityM: visM,
+      blizzardWindowHours: blizzardHours,
+      source: envObs ? "Backend Environmental Observation (Simulated)" : "Offline Baseline Model (Simulated)",
     },
     recommendedResponse: (() => {
       let transitHours = 1.8;
@@ -74,8 +85,8 @@ function mapBackendEmergencyToIncident(em: any): EmergencyIncident {
         medicalTeamLeader: medicalLeader,
         estimatedTransitHours: transitHours,
         fuelRequiredLiters: fuelLiters,
-        routeRiskScore: 32,
-        optimalDepartureWindow: "IMMEDIATE",
+        routeRiskScore: riskScore,
+        optimalDepartureWindow: departureWindow,
         contingencyPlan:
           em.recommended_response ||
           "Deploy rescue snowcat unit via surveyed corridor. Evacuate casualty to station infirmary.",
@@ -111,7 +122,24 @@ export const emergencyService = {
     try {
       const active = await apiClient.get<any>("/emergency/active");
       if (active && active.id) {
-        cachedIncident = mapBackendEmergencyToIncident(active);
+        let envObs: any = null;
+        let envRisk: any = null;
+        try {
+          const stId = active.station_id || 4;
+          const [obsRes, riskRes] = await Promise.allSettled([
+            apiClient.get<any[]>(`/environment/current?station_id=${stId}`),
+            apiClient.get<any>(`/environment/risk?station_id=${stId}`),
+          ]);
+          if (obsRes.status === "fulfilled" && Array.isArray(obsRes.value) && obsRes.value.length > 0) {
+            envObs = obsRes.value[0];
+          }
+          if (riskRes.status === "fulfilled" && riskRes.value) {
+            envRisk = riskRes.value;
+          }
+        } catch {
+          // Gracefully fall back to offline baseline
+        }
+        cachedIncident = mapBackendEmergencyToIncident(active, envObs, envRisk);
         return cachedIncident;
       }
       return cachedIncident;

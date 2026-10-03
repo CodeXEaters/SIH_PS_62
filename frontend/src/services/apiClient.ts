@@ -91,6 +91,11 @@ export class ApiClient {
       this.clearToken();
     }
 
+    // Only auto-login if explicitly configured for presentation/demo mode
+    if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      return null;
+    }
+
     // If a login is already in-flight, wait for it rather than starting a new one
     if (this.pendingLogin) return this.pendingLogin;
 

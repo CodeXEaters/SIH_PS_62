@@ -38,7 +38,10 @@ api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 api_router.include_router(expeditions_router, prefix="/expeditions", tags=["Expeditions"])
 api_router.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
-# Parity modules
+# Strict PPT Parity modules and compatibility aliases:
+# NOTE: /waste and /feedback are top-level endpoints consumed by frontend services and live demos.
+# /environment/waste and /intelligence/feedback are namespaced aliases covered by backend test suites.
+# Both route variants are intentionally registered and maintained for cross-layer compatibility.
 api_router.include_router(permits_router, prefix="/permits", tags=["Permits"])
 api_router.include_router(environment_router, prefix="/environment", tags=["Environmental Intelligence"])
 api_router.include_router(waste_router, prefix="/waste", tags=["Waste"])

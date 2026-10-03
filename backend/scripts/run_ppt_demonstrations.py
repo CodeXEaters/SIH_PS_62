@@ -16,7 +16,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 
 # Ensure backend root is on Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
@@ -78,6 +78,7 @@ ephemeral_cleanup = {
     "emergencies": [],
     "alerts": [],
     "tracking": [],
+    "feedback": [],
 }
 
 
@@ -183,6 +184,9 @@ def run_demo_a(token: str):
     }
     status, telemetry = call_api("POST", "/tracking", telemetry_payload, token)
     assert status == 201, f"Telemetry record failed: {telemetry}"
+    t_id = telemetry.get("id")
+    if t_id:
+        ephemeral_cleanup["tracking"].append(t_id)
     print(f"  -> Position Broadcast: Lat={telemetry.get('latitude')}, Lon={telemetry.get('longitude')}, Battery={telemetry.get('battery')}%")
 
     # 6. Command Center Operational Verification
@@ -312,6 +316,9 @@ def run_demo_c(token: str):
     status, active_alerts = call_api("GET", "/alerts?severity=CRITICAL&limit=5", token=token)
     assert status == 200
     has_emg_alert = any(code in a.get("message", "") for a in active_alerts)
+    for a in active_alerts:
+        if code in a.get("message", "") or (a.get("entity_type") in ["EMERGENCY", 13] and a.get("entity_id") == emg_id):
+            ephemeral_cleanup["alerts"].append(a.get("id"))
     print(f"  -> High-Priority Emergency Alert Active: {has_emg_alert}")
 
     # 3. Human Commander Review and Authorization (Human-In-The-Loop)
@@ -330,7 +337,9 @@ def run_demo_c(token: str):
 
     # 4. Continuous Audit Trail & Feedback Verification
     print("\n[DEMO C.4] Verifying Recommendation Feedback Audit Log...")
-    status, feedback_items = call_api("GET", f"/feedback?recommendation_id=REC-{code}", token=token)
+    rec_id = f"REC-{code}"
+    ephemeral_cleanup["feedback"].append(rec_id)
+    status, feedback_items = call_api("GET", f"/feedback?recommendation_id={rec_id}", token=token)
     assert status == 200
     assert len(feedback_items) >= 1, "Audit record was not registered in recommendation_feedback"
     f_entry = feedback_items[0]
@@ -355,22 +364,84 @@ def run_demo_c(token: str):
     print("\n>> DEMO C PASSED: Full Emergency SOS Lifecycle & Audit Trail Verified.")
 
 
-def cleanup_demo_artifacts(token: str):
+def cleanup_demo_artifacts(token: str = None):
     print("\n" + "=" * 70)
     print("TEARDOWN & CLEANUP")
     print("=" * 70)
-    # Delete or resolve ephemeral records
-    for e_id in ephemeral_cleanup["emergencies"]:
-        try:
-            call_api("PATCH", f"/emergency/{e_id}", {"status": "RESOLVED"}, token)
-        except Exception:
-            pass
+    # 1. API-level graceful resolution if token provided
+    if token:
+        for e_id in ephemeral_cleanup["emergencies"]:
+            try:
+                call_api("PATCH", f"/emergency/{e_id}", {"status": "RESOLVED"}, token)
+            except Exception:
+                pass
 
-    for a_id in ephemeral_cleanup["alerts"]:
+        for a_id in ephemeral_cleanup["alerts"]:
+            try:
+                call_api("POST", f"/alerts/{a_id}/resolve", token=token)
+            except Exception:
+                pass
+
+    # 2. Direct database cleanup to ensure 100% idempotency and zero database pollution
+    try:
+        from app.database.session import SessionLocal
+        from app.models.cargo import Cargo
+        from app.models.cargo_event import CargoEvent
+        from app.models.mission import Mission
+        from app.models.tracking_event import TrackingEvent
+        from app.models.alert import Alert
+        from app.models.emergency import Emergency
+        from app.models.recommendation_feedback import RecommendationFeedback
+
+        db = SessionLocal()
         try:
-            call_api("POST", f"/alerts/{a_id}/resolve", token=token)
-        except Exception:
-            pass
+            # Delete tracking events
+            if ephemeral_cleanup["tracking"]:
+                db.query(TrackingEvent).filter(TrackingEvent.id.in_(ephemeral_cleanup["tracking"])).delete(synchronize_session=False)
+            if ephemeral_cleanup["missions"]:
+                db.query(TrackingEvent).filter(TrackingEvent.entity_id.in_(ephemeral_cleanup["missions"])).delete(synchronize_session=False)
+
+            # Delete feedback entries
+            if ephemeral_cleanup["feedback"]:
+                db.query(RecommendationFeedback).filter(RecommendationFeedback.recommendation_id.in_(ephemeral_cleanup["feedback"])).delete(synchronize_session=False)
+
+            # Delete cargo events and cargo
+            if ephemeral_cleanup["cargo"]:
+                db.query(CargoEvent).filter(CargoEvent.cargo_id.in_(ephemeral_cleanup["cargo"])).delete(synchronize_session=False)
+                db.query(Alert).filter(Alert.entity_id.in_(ephemeral_cleanup["cargo"])).delete(synchronize_session=False)
+                db.query(Cargo).filter(Cargo.id.in_(ephemeral_cleanup["cargo"])).delete(synchronize_session=False)
+
+            # Delete emergencies and alerts
+            if ephemeral_cleanup["emergencies"]:
+                db.query(Alert).filter(Alert.entity_id.in_(ephemeral_cleanup["emergencies"])).delete(synchronize_session=False)
+                db.query(Emergency).filter(Emergency.id.in_(ephemeral_cleanup["emergencies"])).delete(synchronize_session=False)
+
+            if ephemeral_cleanup["alerts"]:
+                db.query(Alert).filter(Alert.id.in_(ephemeral_cleanup["alerts"])).delete(synchronize_session=False)
+
+            # Delete missions
+            if ephemeral_cleanup["missions"]:
+                db.query(Mission).filter(Mission.id.in_(ephemeral_cleanup["missions"])).delete(synchronize_session=False)
+
+            # Pattern-based sweep for any orphaned demo items
+            db.query(CargoEvent).filter(CargoEvent.remarks.like("%Katabatic%") | CargoEvent.remarks.like("%Chief Engineer%")).delete(synchronize_session=False)
+            db.query(Cargo).filter(Cargo.name.in_(["Seismic Sensor Kit & Cold Batteries", "Generator Replacement Alternator"])).delete(synchronize_session=False)
+            db.query(Mission).filter(Mission.mission_name.like("Demo Sortie%")).delete(synchronize_session=False)
+            db.query(Emergency).filter(Emergency.title == "Snowcat Traverse Mechanical Breakdown in Katabatic Blizzard").delete(synchronize_session=False)
+
+            db.commit()
+            print("  -> Ephemeral demo records completely purged from database.")
+        except Exception as e:
+            db.rollback()
+            print(f"  [WARN] Database direct cleanup encountered: {e}")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"  [WARN] Could not initialize SessionLocal for teardown: {e}")
+
+    # Reset in-memory trackers
+    for key in ephemeral_cleanup:
+        ephemeral_cleanup[key].clear()
 
     print("  -> Ephemeral test alerts and emergencies resolved.")
     print("  -> Presentation database state clean and ready.")
@@ -389,6 +460,9 @@ def main():
 
     token = login_res["access_token"]
     print(f"[AUTH] Successfully logged in as Expedition Commander (Role: {login_res.get('user', {}).get('role')})")
+
+    # Ensure completely clean slate before beginning
+    cleanup_demo_artifacts(token)
 
     try:
         run_demo_a(token)

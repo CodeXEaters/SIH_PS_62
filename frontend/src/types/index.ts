@@ -252,6 +252,7 @@ export interface EmergencyIncident {
     temperatureC: number;
     visibilityM: number;
     blizzardWindowHours: number;
+    source?: string;
   };
   recommendedResponse: {
     primaryAssetId: string;
