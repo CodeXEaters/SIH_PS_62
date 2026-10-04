@@ -11,6 +11,7 @@ import { Personnel } from "@/types";
 export default function PersonnelMovementPage() {
   const [personnelList, setPersonnelList] = useState<Personnel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     personnelService
@@ -22,19 +23,38 @@ export default function PersonnelMovementPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const allMovements = personnelList.flatMap((p) =>
-    p.movementHistory.map((m) => ({
-      ...m,
-      personnelId: p.id,
-      personnelName: p.name,
-      role: p.role,
-    }))
-  );
+  const allMovements = personnelList
+    .flatMap((p) =>
+      p.movementHistory.map((m) => ({
+        ...m,
+        personnelId: p.id,
+        personnelName: p.name,
+        role: p.role,
+      }))
+    )
+    .sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+    });
+
+  const filteredMovements = allMovements.filter((m) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      m.personnelName.toLowerCase().includes(q) ||
+      m.role.toLowerCase().includes(q) ||
+      m.from.toLowerCase().includes(q) ||
+      m.to.toLowerCase().includes(q) ||
+      m.mode.toLowerCase().includes(q) ||
+      m.authorizedBy.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <AppShell>
       <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-polar-border pb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-polar-border pb-5">
           <div>
             <Link
               href="/personnel"
@@ -50,6 +70,31 @@ export default function PersonnelMovementPage() {
               Authorized inter-station transfers, flight sorties, and ice sheet traverses.
             </p>
           </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono px-3 py-1.5 rounded bg-polar-midnight border border-polar-border text-polar-snow font-semibold">
+              {filteredMovements.length} Rotation Logs
+            </span>
+          </div>
+        </div>
+
+        {/* Filter Input */}
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search by personnel, station, transport mode, or officer..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full max-w-md px-3.5 py-2 text-xs font-mono bg-polar-deep/90 border border-polar-border rounded text-polar-snow placeholder-polar-muted focus:outline-none focus:border-polar-cyan transition-colors"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="text-xs font-mono text-polar-muted hover:text-polar-snow underline"
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         {/* Movements Table */}
@@ -72,14 +117,14 @@ export default function PersonnelMovementPage() {
                       Loading personnel movement records...
                     </td>
                   </tr>
-                ) : allMovements.length === 0 ? (
+                ) : filteredMovements.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-polar-muted font-mono">
-                      No personnel movement logs recorded.
+                      {searchTerm ? "No movement logs match your search filter." : "No personnel movement logs recorded."}
                     </td>
                   </tr>
                 ) : (
-                  allMovements.map((move, idx) => (
+                  filteredMovements.map((move, idx) => (
                     <tr key={idx} className="hover:bg-polar-surface/50 transition-colors">
                       <td className="py-3 px-4 text-polar-muted">{move.timestamp}</td>
                       <td className="py-3 px-4">
