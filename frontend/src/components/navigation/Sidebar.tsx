@@ -163,8 +163,12 @@ export const Sidebar: React.FC = () => {
       >
       {/* Top Header: DHRUV Brand Logo */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-[#1E1E1E] shrink-0 bg-[#070707]">
-        <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505]">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 overflow-hidden group hover:opacity-90 transition-opacity"
+          title="Return to Landing Page"
+        >
+          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505] transition-transform group-hover:scale-105">
             <Image
               src="/images/dhruv-logo-transparent.png"
               alt="DHRUV"
@@ -177,7 +181,7 @@ export const Sidebar: React.FC = () => {
 
           {!sidebarCollapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-[0.2em] text-[#F5F3EE]">DHRUV</span>
+              <span className="text-sm font-bold tracking-[0.2em] text-[#F5F3EE] group-hover:text-white transition-colors">DHRUV</span>
               <span className="text-[8px] font-mono tracking-wider text-[#6F6D68] uppercase -mt-0.5">
                 NCPOR POLAR OPS
               </span>
@@ -281,11 +285,12 @@ export const Sidebar: React.FC = () => {
           {/* Mobile Drawer Header */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-[#1E1E1E] shrink-0 bg-[#070707]">
             <Link
-              href="/dashboard"
+              href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2.5 overflow-hidden"
+              className="flex items-center gap-2.5 overflow-hidden group hover:opacity-90 transition-opacity"
+              title="Return to Landing Page"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505]">
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505] transition-transform group-hover:scale-105">
                 <Image
                   src="/images/dhruv-logo-transparent.png"
                   alt="DHRUV"
@@ -296,7 +301,7 @@ export const Sidebar: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold tracking-[0.2em] text-[#F5F3EE]">DHRUV</span>
+                <span className="text-sm font-bold tracking-[0.2em] text-[#F5F3EE] group-hover:text-white transition-colors">DHRUV</span>
                 <span className="text-[8px] font-mono tracking-wider text-[#6F6D68] uppercase -mt-0.5">
                   NCPOR POLAR OPS
                 </span>
