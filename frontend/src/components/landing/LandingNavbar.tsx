@@ -35,7 +35,7 @@ export const LandingNavbar: React.FC = () => {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 sm:px-12 py-4",
         scrolled
-          ? "bg-white/90 dark:bg-[#050505]/90 backdrop-blur-[16px] border-b border-slate-200 dark:border-[#242424] shadow-sm dark:shadow-operational"
+          ? "bg-white/95 dark:bg-[#050505]/95 backdrop-blur-[16px] border-b border-slate-200 dark:border-[#242424] shadow-sm dark:shadow-operational"
           : "bg-transparent"
       )}
     >
@@ -43,7 +43,10 @@ export const LandingNavbar: React.FC = () => {
         {/* Left: DHRUV Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group select-none">
           <div className="flex items-center gap-2.5">
-            <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505]">
+            <div className={cn(
+              "relative w-8 h-8 rounded-full overflow-hidden shrink-0 shadow-sm bg-[#050505]",
+              scrolled ? "ring-1 ring-slate-900/15 dark:ring-white/20" : "ring-1 ring-white/30"
+            )}>
               <Image
                 src="/images/dhruv-logo-transparent.png"
                 alt="DHRUV"
@@ -53,11 +56,23 @@ export const LandingNavbar: React.FC = () => {
                 priority
               />
             </div>
-            <span className="text-xl font-black tracking-[0.25em] text-slate-900 dark:text-[#F5F3EE]">
+            <span
+              className={cn(
+                "text-xl font-black tracking-[0.25em] transition-colors",
+                scrolled ? "text-slate-900 dark:text-[#F5F3EE]" : "text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]"
+              )}
+            >
               DHRUV
             </span>
           </div>
-          <span className="hidden border-l border-slate-300 dark:border-[#242424] pl-3 text-[10px] font-mono tracking-widest text-slate-500 dark:text-[#6F6D68] uppercase sm:inline-block">
+          <span
+            className={cn(
+              "hidden border-l pl-3 text-[10px] font-mono tracking-widest uppercase sm:inline-block transition-colors",
+              scrolled
+                ? "border-slate-300 dark:border-[#242424] text-slate-500 dark:text-[#6F6D68]"
+                : "border-white/25 text-white/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+            )}
+          >
             NCPOR &bull; 70°S
           </span>
         </Link>
@@ -68,7 +83,12 @@ export const LandingNavbar: React.FC = () => {
             <a
               key={link.label}
               href={link.href}
-              className="text-slate-600 dark:text-[#A5A29C] transition-colors hover:text-slate-900 dark:hover:text-[#F5F3EE]"
+              className={cn(
+                "transition-colors",
+                scrolled
+                  ? "text-slate-600 dark:text-[#A5A29C] hover:text-slate-900 dark:hover:text-[#F5F3EE]"
+                  : "text-white/85 hover:text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] font-semibold"
+              )}
             >
               {link.label}
             </a>
@@ -79,20 +99,30 @@ export const LandingNavbar: React.FC = () => {
         <div className="hidden sm:flex items-center gap-3">
           <button
             onClick={toggleTheme}
-            className="p-1.5 rounded text-slate-600 hover:text-slate-900 dark:text-[#A5A29C] dark:hover:text-[#F5F3EE] hover:bg-slate-100 dark:hover:bg-[#121212] border border-slate-200 dark:border-[#242424] transition-colors"
+            className={cn(
+              "p-1.5 rounded transition-colors",
+              scrolled
+                ? "text-slate-600 hover:text-slate-900 dark:text-[#A5A29C] dark:hover:text-[#F5F3EE] hover:bg-slate-100 dark:hover:bg-[#121212] border border-slate-200 dark:border-[#242424]"
+                : "text-white hover:text-white border border-white/25 hover:bg-white/10 backdrop-blur-sm"
+            )}
             title={theme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
             aria-label="Toggle Theme"
           >
             {theme === "dark" ? (
               <Sun className="w-4 h-4 text-[#FFB84D]" />
             ) : (
-              <Moon className="w-4 h-4 text-[#0284C7]" />
+              <Moon className={cn("w-4 h-4", scrolled ? "text-[#0284C7]" : "text-white")} />
             )}
           </button>
 
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 rounded border border-slate-900 bg-slate-900 text-white dark:border-[#E8E4DC] dark:bg-[#E8E4DC] dark:text-[#050505] px-4 py-1.5 text-xs font-semibold transition-all hover:translate-x-0.5 hover:bg-slate-800 dark:hover:bg-white active:scale-[0.99] shadow-sm"
+            className={cn(
+              "inline-flex items-center gap-2 rounded px-4 py-1.5 text-xs font-semibold transition-all hover:translate-x-0.5 active:scale-[0.99] shadow-sm",
+              scrolled
+                ? "border border-slate-900 bg-slate-900 text-white dark:border-[#E8E4DC] dark:bg-[#E8E4DC] dark:text-[#050505] hover:bg-slate-800 dark:hover:bg-white"
+                : "border border-white bg-white text-[#050505] hover:bg-[#E8E4DC]"
+            )}
           >
             <span>LAUNCH</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -103,19 +133,29 @@ export const LandingNavbar: React.FC = () => {
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={toggleTheme}
-            className="p-1.5 rounded text-slate-600 dark:text-[#A5A29C] hover:bg-slate-100 dark:hover:bg-[#121212] border border-slate-200 dark:border-[#242424]"
+            className={cn(
+              "p-1.5 rounded",
+              scrolled
+                ? "text-slate-600 dark:text-[#A5A29C] hover:bg-slate-100 dark:hover:bg-[#121212] border border-slate-200 dark:border-[#242424]"
+                : "text-white border border-white/25 hover:bg-white/10"
+            )}
             aria-label="Toggle Theme"
           >
             {theme === "dark" ? (
               <Sun className="w-4 h-4 text-[#FFB84D]" />
             ) : (
-              <Moon className="w-4 h-4 text-[#0284C7]" />
+              <Moon className={cn("w-4 h-4", scrolled ? "text-[#0284C7]" : "text-white")} />
             )}
           </button>
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-1.5 text-slate-700 dark:text-[#A5A29C] hover:text-slate-950 dark:hover:text-[#F5F3EE]"
+            className={cn(
+              "p-1.5",
+              scrolled
+                ? "text-slate-700 dark:text-[#A5A29C] hover:text-slate-950 dark:hover:text-[#F5F3EE]"
+                : "text-white hover:text-white"
+            )}
             aria-label="Toggle Menu"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

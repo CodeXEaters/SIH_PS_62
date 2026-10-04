@@ -349,6 +349,44 @@ html.light .group:hover .group-hover\:text-\[\#F5F3EE\] {
   color: #0F172A !important;
 }
 
+/* ==========================================================================
+   HERO SECTION & TRANSPARENT HEADER: PROTECT POLAR NIGHT TYPOGRAPHY
+   The hero displays a photographic Antarctic aurora landscape. Text on this
+   photographic surface must ALWAYS remain luminous white/gold with high contrast.
+   ========================================================================== */
+html.light #hero .hero-headline {
+  color: #FFFFFF !important;
+}
+html.light #hero .hero-subheadline {
+  color: #E8E4DC !important;
+}
+html.light #hero .hero-copy {
+  color: rgba(245, 243, 238, 0.92) !important;
+}
+html.light #hero .hero-meta {
+  color: #C8C8C5 !important;
+}
+html.light #hero .hero-station {
+  color: #A5A29C !important;
+}
+html.light #hero .hero-footer,
+html.light #hero .hero-footer span {
+  color: #C8C8C5 !important;
+}
+html.light #hero a.hero-cta,
+html.light #hero a.hero-cta span,
+html.light #hero a.hero-cta svg {
+  background-color: #FFFFFF !important;
+  color: #050505 !important;
+  border-color: #FFFFFF !important;
+}
+html.light #hero a.hero-cta:hover,
+html.light #hero a.hero-cta:hover span,
+html.light #hero a.hero-cta:hover svg {
+  background-color: #E8E4DC !important;
+  color: #050505 !important;
+}
+
 /* Primary Action Buttons in Light Mode: Solid Dark Slate with White Text */
 html.light button.bg-\[\#F5F3EE\],
 html.light a.bg-\[\#F5F3EE\],
