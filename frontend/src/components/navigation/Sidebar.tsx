@@ -164,21 +164,13 @@ export const Sidebar: React.FC = () => {
       {/* Top Header: DHRUV Brand Logo */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-[#1E1E1E] shrink-0 bg-[#070707]">
         <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505]">
             <Image
               src="/images/dhruv-logo-transparent.png"
               alt="DHRUV"
               width={34}
               height={34}
-              className="h-8 w-8 object-contain light-only:hidden"
-              priority
-            />
-            <Image
-              src="/images/dhruv-logo-dark.png"
-              alt="DHRUV"
-              width={34}
-              height={34}
-              className="h-8 w-8 object-contain hidden light-only:block"
+              className="h-8 w-8 object-contain"
               priority
             />
           </div>
@@ -293,21 +285,13 @@ export const Sidebar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2.5 overflow-hidden"
             >
-              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm ring-1 ring-slate-900/15 dark:ring-white/20 bg-[#050505]">
                 <Image
                   src="/images/dhruv-logo-transparent.png"
                   alt="DHRUV"
                   width={34}
                   height={34}
-                  className="h-8 w-8 object-contain light-only:hidden"
-                  priority
-                />
-                <Image
-                  src="/images/dhruv-logo-dark.png"
-                  alt="DHRUV"
-                  width={34}
-                  height={34}
-                  className="h-8 w-8 object-contain hidden light-only:block"
+                  className="h-8 w-8 object-contain"
                   priority
                 />
               </div>

@@ -203,8 +203,11 @@ html.light .bg-polar-surface\/90,
 html.light .bg-polar-surface\/80,
 html.light .bg-polar-card,
 html.light aside,
-html.light header {
+html.light header:not(.bg-transparent) {
   background-color: #FFFFFF !important;
+}
+html.light header.bg-transparent {
+  background-color: transparent !important;
 }
 
 /* Elevated Insets, Subtle Sub-containers, and Table Headers */
@@ -349,8 +352,10 @@ html.light .group:hover .group-hover\:text-\[\#F5F3EE\] {
 /* Primary Action Buttons in Light Mode: Solid Dark Slate with White Text */
 html.light button.bg-\[\#F5F3EE\],
 html.light a.bg-\[\#F5F3EE\],
+html.light span.bg-\[\#F5F3EE\],
 html.light button.bg-\[\#E8E4DC\],
-html.light a.bg-\[\#E8E4DC\] {
+html.light a.bg-\[\#E8E4DC\],
+html.light span.bg-\[\#E8E4DC\] {
   background-color: #0F172A !important;
   color: #FFFFFF !important;
   border-color: #0F172A !important;
@@ -363,8 +368,10 @@ html.light a.bg-\[\#E8E4DC\]:hover {
 }
 html.light button.bg-\[\#F5F3EE\] *,
 html.light a.bg-\[\#F5F3EE\] *,
+html.light span.bg-\[\#F5F3EE\] *,
 html.light button.bg-\[\#E8E4DC\] *,
-html.light a.bg-\[\#E8E4DC\] * {
+html.light a.bg-\[\#E8E4DC\] *,
+html.light span.bg-\[\#E8E4DC\] * {
   color: #FFFFFF !important;
 }
 
@@ -387,9 +394,12 @@ html.light .bg-polar-cyan\/10,
 html.light .bg-polar-cyan\/15,
 html.light .bg-polar-cyan\/20,
 html.light .bg-polar-cyan\/30,
-html.light .bg-\[\#C8A96B\]\/15,
-html.light .bg-\[\#C8A96B\]\/50 {
+html.light .bg-\[\#C8A96B\]\/15 {
   background-color: #F0F9FF !important;
+}
+html.light .bg-\[\#C8A96B\]\/50 {
+  background-color: #0284C7 !important;
+  opacity: 0.7 !important;
 }
 html.light .border-polar-cyan\/30,
 html.light .border-polar-cyan\/40,

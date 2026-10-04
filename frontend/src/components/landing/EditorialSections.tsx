@@ -41,7 +41,7 @@ export const EditorialSections: React.FC = () => {
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#F5F3EE] leading-tight">
                 THE HARSH REALITY OF POLAR EXPEDITIONS.
               </h2>
-              <div className="w-10 h-[1px] bg-[#C8A96B]/50 my-6" />
+              <div className="w-10 h-[1px] bg-sky-500/70 dark:bg-[#C8A96B]/50 my-6" />
               <p className="text-xs font-mono text-[#6F6D68] tracking-widest uppercase">
                 13,000 KM TRANSIT &bull; -40°C &bull; 140KT BLIZZARDS
               </p>
@@ -217,7 +217,7 @@ export const EditorialSections: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${item.status === 'ACTIVE' ? 'bg-[#1C170E] text-[#C8A96B] border border-[#C8A96B]/30' : 'text-[#6F6D68]'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${item.status === 'ACTIVE' ? 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-[#1C170E] dark:text-[#C8A96B] dark:border-[#C8A96B]/30' : 'text-slate-500 dark:text-[#6F6D68]'}`}>
                         {item.status}
                       </span>
                       <span className="block text-[9px] text-[#6F6D68] mt-0.5">{item.date}</span>
@@ -429,10 +429,10 @@ export const EditorialSections: React.FC = () => {
                   <span className="text-[11px] text-[#A5A29C]">Confirm dispatch order for PistenBully AST-BHR-004.</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="px-3 py-1.5 rounded bg-[#F5F3EE] text-[#050505] text-xs font-bold tracking-wider">
+                  <span className="px-3 py-1.5 rounded bg-slate-900 text-white dark:bg-[#F5F3EE] dark:text-[#050505] text-xs font-bold tracking-wider shadow-sm">
                     APPROVE
                   </span>
-                  <span className="px-3 py-1.5 rounded bg-transparent border border-[#303030] text-[#A5A29C] text-xs font-mono">
+                  <span className="px-3 py-1.5 rounded bg-transparent border border-slate-300 dark:border-[#303030] text-slate-700 dark:text-[#A5A29C] text-xs font-mono">
                     MODIFY
                   </span>
                 </div>
@@ -506,7 +506,7 @@ export const EditorialSections: React.FC = () => {
               <div className="pt-2">
                 <Link
                   href="/intelligence/what-if"
-                  className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-[#F5F3EE] hover:text-[#C8A96B] transition-colors"
+                  className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-slate-900 hover:text-sky-600 dark:text-[#F5F3EE] dark:hover:text-[#C8A96B] transition-colors"
                 >
                   <span>Explore What-If Simulator</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -522,11 +522,11 @@ export const EditorialSections: React.FC = () => {
 
               <div className="space-y-3 font-mono text-xs">
                 {[
-                  { domain: "WEATHER HAZARD", val: 78, status: "HIGH", color: "bg-[#C49A55]" },
-                  { domain: "SEA ICE PRESSURE", val: 84, status: "CRITICAL", color: "bg-[#B85C5C]" },
-                  { domain: "CARGO TRANSIT", val: 52, status: "MODERATE", color: "bg-[#C8A96B]" },
-                  { domain: "PERSONNEL SAFETY", val: 28, status: "NOMINAL", color: "bg-[#7FAF91]" },
-                  { domain: "STATION FUEL BURN", val: 74, status: "HIGH", color: "bg-[#C49A55]" },
+                  { domain: "WEATHER HAZARD", val: 78, status: "HIGH", color: "bg-amber-500 dark:bg-[#C49A55]" },
+                  { domain: "SEA ICE PRESSURE", val: 84, status: "CRITICAL", color: "bg-red-500 dark:bg-[#B85C5C]" },
+                  { domain: "CARGO TRANSIT", val: 52, status: "MODERATE", color: "bg-sky-500 dark:bg-[#C8A96B]" },
+                  { domain: "PERSONNEL SAFETY", val: 28, status: "NOMINAL", color: "bg-emerald-500 dark:bg-[#7FAF91]" },
+                  { domain: "STATION FUEL BURN", val: 74, status: "HIGH", color: "bg-amber-500 dark:bg-[#C49A55]" },
                 ].map((risk) => (
                   <div key={risk.domain} className="space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
@@ -692,15 +692,15 @@ export const EditorialSections: React.FC = () => {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-3 px-8 py-3.5 rounded bg-[#F5F3EE] text-[#050505] hover:bg-[#FFFFFF] border border-[#E7E0D2] font-semibold text-xs tracking-wider uppercase transition-all hover:translate-x-0.5 active:scale-[0.99] shadow-sm"
+              className="inline-flex items-center gap-3 px-8 py-3.5 rounded bg-slate-900 text-white hover:bg-slate-800 dark:bg-[#F5F3EE] dark:text-[#050505] dark:hover:bg-[#FFFFFF] border border-slate-900 dark:border-[#E7E0D2] font-semibold text-xs tracking-wider uppercase transition-all hover:translate-x-0.5 active:scale-[0.99] shadow-md"
             >
               <span>LAUNCH DHRUV MISSION CONTROL</span>
-              <ArrowRight className="w-4 h-4 text-[#050505]" />
+              <ArrowRight className="w-4 h-4 text-white dark:text-[#050505]" />
             </Link>
 
             <Link
               href="/operations/map"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded bg-transparent hover:bg-[#101010] text-[#F5F3EE] border border-[#303030] text-xs font-mono transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded bg-white hover:bg-slate-100 dark:bg-transparent dark:hover:bg-[#101010] text-slate-800 dark:text-[#F5F3EE] border border-slate-300 dark:border-[#303030] text-xs font-mono transition-all shadow-sm"
             >
               <span>Tactical Operations Map</span>
             </Link>
