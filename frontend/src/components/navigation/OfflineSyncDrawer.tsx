@@ -5,6 +5,8 @@ import { Drawer, Button, Badge } from "@/components/ui";
 import { db, QueuedOfflineAction } from "@/lib/offline/storage/db";
 import { syncOfflineQueue, getOfflineQueueCount } from "@/lib/offline/sync/syncEngine";
 import { RefreshCw, CheckCircle2, AlertTriangle, Wifi, WifiOff, X } from "lucide-react";
+import { useAppStore } from "@/store";
+import { cn } from "@/lib/utils";
 
 interface OfflineSyncDrawerProps {
   isOpen: boolean;
@@ -17,10 +19,38 @@ export const OfflineSyncDrawer: React.FC<OfflineSyncDrawerProps> = ({
   onClose,
   onSyncComplete,
 }) => {
+  const { connectionStatus, setConnectionStatus, setLastSyncedAt } = useAppStore();
   const [queuedItems, setQueuedItems] = useState<QueuedOfflineAction[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ synced: number; failed: number } | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+
+  const handleToggleOffline = async (goOffline: boolean) => {
+    if (goOffline) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("dhruv_simulated_offline", "true");
+      }
+      setConnectionStatus("OFFLINE");
+    } else {
+      setIsSyncing(true);
+      setConnectionStatus("SYNCING");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("dhruv_simulated_offline");
+      }
+      try {
+        const res = await syncOfflineQueue();
+        setSyncResult(res);
+        await refreshQueue();
+        setLastSyncedAt(new Date().toLocaleTimeString("en-GB") + " UTC");
+        if (onSyncComplete) onSyncComplete();
+      } catch (err: any) {
+        console.warn("Sync failed:", err);
+      } finally {
+        setIsSyncing(false);
+        setConnectionStatus("OPERATIONAL");
+      }
+    }
+  };
 
   useEffect(() => {
     setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
@@ -82,13 +112,13 @@ export const OfflineSyncDrawer: React.FC<OfflineSyncDrawerProps> = ({
         {/* Connection status header */}
         <div className="flex items-center justify-between p-3 rounded bg-[#121212] border border-[#242424]">
           <div className="flex items-center gap-2">
-            {isOnline ? (
+            {connectionStatus !== "OFFLINE" && isOnline ? (
               <span className="flex items-center gap-1.5 text-[#7FAF91]">
                 <Wifi className="w-4 h-4" />
                 <span>ONLINE &bull; SAT-COM CONNECTED</span>
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-[#B85C5C]">
+              <span className="flex items-center gap-1.5 text-[#C49A55]">
                 <WifiOff className="w-4 h-4" />
                 <span>OFFLINE &bull; LOCAL INDEXED-DB CACHE</span>
               </span>
@@ -97,6 +127,58 @@ export const OfflineSyncDrawer: React.FC<OfflineSyncDrawerProps> = ({
           <Badge variant="outline" className="border-[#C8A96B]/30 text-[#C8A96B]">
             {queuedItems.length} PENDING
           </Badge>
+        </div>
+
+        {/* SAT-COM Simulation Mode Toggle */}
+        <div className="p-3.5 rounded bg-[#101010] border border-[#242424] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-[#F5F3EE]">
+              SAT-COM SIMULATION MODE
+            </span>
+            <span className="text-[10px] text-[#A5A29C]">Polar Blackout Demo</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleToggleOffline(false)}
+              disabled={isSyncing}
+              className={cn(
+                "px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer",
+                connectionStatus !== "OFFLINE"
+                  ? "bg-[#0A160C] text-[#7FAF91] border-[#7FAF91]/50 shadow-sm"
+                  : "bg-[#070707] text-[#6F6D68] border-[#242424] hover:text-[#F5F3EE] hover:bg-[#141414]"
+              )}
+            >
+              <Wifi className="w-3.5 h-3.5" />
+              <span>ONLINE (SAT-COM)</span>
+            </button>
+
+            <button
+              onClick={() => handleToggleOffline(true)}
+              disabled={isSyncing}
+              className={cn(
+                "px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer",
+                connectionStatus === "OFFLINE"
+                  ? "bg-[#181208] text-[#C49A55] border-[#C49A55]/50 shadow-sm"
+                  : "bg-[#070707] text-[#6F6D68] border-[#242424] hover:text-[#C49A55] hover:bg-[#141414]"
+              )}
+            >
+              <WifiOff className="w-3.5 h-3.5" />
+              <span>OFFLINE (BLACKOUT)</span>
+            </button>
+          </div>
+
+          <p className="text-[10px] text-[#6F6D68] leading-relaxed">
+            {connectionStatus === "OFFLINE" ? (
+              <span className="text-[#C49A55]">
+                • <strong>Simulated Blackout Active:</strong> Terminal operates on local IndexedDB cache. Data queries load locally without server requests, and mutations queue for future sync.
+              </span>
+            ) : (
+              <span>
+                • <strong>Online:</strong> Live telemetry and bi-directional synchronization with central NCPOR HQ database.
+              </span>
+            )}
+          </p>
         </div>
 
         {syncResult && (

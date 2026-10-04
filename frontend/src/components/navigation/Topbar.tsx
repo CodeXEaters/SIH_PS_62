@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CheckCircle2,
   RefreshCw,
+  Wifi,
   WifiOff,
   AlertTriangle,
   User,
@@ -89,17 +90,23 @@ export const Topbar: React.FC = () => {
 
   const toggleConnection = async () => {
     if (connectionStatus === "OPERATIONAL") {
-      setConnectionStatus("SYNCING");
-      await syncOfflineQueue();
-      setLastSyncedAt(new Date().toLocaleTimeString("en-GB") + " UTC");
-      setTimeout(() => setConnectionStatus("OFFLINE"), 600);
-    } else if (connectionStatus === "SYNCING") {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("dhruv_simulated_offline", "true");
+      }
       setConnectionStatus("OFFLINE");
     } else {
       setConnectionStatus("SYNCING");
-      await syncOfflineQueue();
-      setLastSyncedAt(new Date().toLocaleTimeString("en-GB") + " UTC");
-      setTimeout(() => setConnectionStatus("OPERATIONAL"), 800);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("dhruv_simulated_offline");
+      }
+      try {
+        await syncOfflineQueue();
+        setLastSyncedAt(new Date().toLocaleTimeString("en-GB") + " UTC");
+      } catch (err: any) {
+        console.warn("Sync failed:", err);
+      } finally {
+        setConnectionStatus("OPERATIONAL");
+      }
     }
   };
 
@@ -200,39 +207,65 @@ export const Topbar: React.FC = () => {
           )}
         </button>
 
-        {/* Connection Status Indicator */}
-        <button
-          onClick={() => setOfflineDrawerOpen(true)}
-          className={cn(
-            "flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded text-[11px] font-mono border transition-all cursor-pointer",
-            connectionStatus === "OPERATIONAL" &&
-              "bg-[#08120B] text-[#7FAF91] border-[#7FAF91]/30 hover:border-[#7FAF91]/50",
-            connectionStatus === "SYNCING" &&
-              "bg-[#101010] text-[#C8C8C5] border-[#303030] animate-pulse",
-            connectionStatus === "OFFLINE" &&
-              "bg-[#141008] text-[#C49A55] border-[#C49A55]/30 hover:border-[#C49A55]/50"
-          )}
-          title="Click to inspect offline queue and trigger sync"
-        >
-          {connectionStatus === "OPERATIONAL" && (
-            <>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91] shrink-0" />
-              <span className="font-semibold hidden sm:inline">OPERATIONAL</span>
-            </>
-          )}
-          {connectionStatus === "SYNCING" && (
-            <>
-              <RefreshCw className="w-3 h-3 animate-spin text-[#C8C8C5] shrink-0" />
-              <span className="hidden sm:inline">◌ SYNCING {offlineQueueCount > 0 ? `(${offlineQueueCount} queued)` : ""}</span>
-            </>
-          )}
-          {connectionStatus === "OFFLINE" && (
-            <>
-              <span className="w-1.5 h-1.5 rounded-full border border-[#C49A55] shrink-0" />
-              <span className="hidden sm:inline">○ OFFLINE (Cached)</span>
-            </>
-          )}
-        </button>
+        {/* Connection Status Indicator & Quick Offline Toggle */}
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <button
+            onClick={() => setOfflineDrawerOpen(true)}
+            className={cn(
+              "flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded text-[11px] font-mono border transition-all cursor-pointer",
+              connectionStatus === "OPERATIONAL" &&
+                "bg-[#08120B] text-[#7FAF91] border-[#7FAF91]/30 hover:border-[#7FAF91]/50",
+              connectionStatus === "SYNCING" &&
+                "bg-[#101010] text-[#C8C8C5] border-[#303030] animate-pulse",
+              connectionStatus === "OFFLINE" &&
+                "bg-[#141008] text-[#C49A55] border-[#C49A55]/30 hover:border-[#C49A55]/50"
+            )}
+            title="Click to inspect offline queue and sync engine"
+          >
+            {connectionStatus === "OPERATIONAL" && (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7FAF91] shrink-0" />
+                <span className="font-semibold hidden sm:inline">OPERATIONAL</span>
+              </>
+            )}
+            {connectionStatus === "SYNCING" && (
+              <>
+                <RefreshCw className="w-3 h-3 animate-spin text-[#C8C8C5] shrink-0" />
+                <span className="hidden sm:inline">◌ SYNCING {offlineQueueCount > 0 ? `(${offlineQueueCount} queued)` : ""}</span>
+              </>
+            )}
+            {connectionStatus === "OFFLINE" && (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full border border-[#C49A55] shrink-0" />
+                <span className="font-semibold hidden sm:inline">○ OFFLINE (Cached)</span>
+              </>
+            )}
+          </button>
+
+          {/* Quick Offline / Online Switch Button */}
+          <button
+            onClick={toggleConnection}
+            className={cn(
+              "px-2 py-1 rounded border text-[10px] font-mono transition-colors flex items-center gap-1 cursor-pointer",
+              connectionStatus === "OPERATIONAL"
+                ? "border-[#242424] bg-[#0A0A0A] text-[#A5A29C] hover:text-[#C49A55] hover:border-[#C49A55]/40 hover:bg-[#141008]"
+                : "border-[#C49A55]/40 bg-[#141008] text-[#C49A55] hover:text-[#7FAF91] hover:border-[#7FAF91]/40 hover:bg-[#0A160C]"
+            )}
+            title={connectionStatus === "OPERATIONAL" ? "Switch terminal to Offline Mode" : "Switch terminal to Online Mode & Sync"}
+          >
+            {connectionStatus === "OPERATIONAL" ? (
+              <>
+                <WifiOff className="w-3 h-3 text-[#C49A55]" />
+                <span className="hidden sm:inline">Go Offline</span>
+              </>
+            ) : (
+              <>
+                <Wifi className="w-3 h-3 text-[#7FAF91]" />
+                <span className="hidden sm:inline">Go Online</span>
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Notifications Dropdown */}
         <div className="relative">

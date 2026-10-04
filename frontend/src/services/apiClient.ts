@@ -133,6 +133,20 @@ export class ApiClient {
     const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const url = `${this.baseUrl}${cleanEndpoint}`;
 
+    // Support simulated offline blackout mode for demo/presentation
+    if (typeof window !== "undefined" && !endpoint.includes("/auth/")) {
+      const isSimulatedOffline =
+        localStorage.getItem("dhruv_simulated_offline") === "true";
+      if (isSimulatedOffline) {
+        throw new ApiError(
+          "Simulated polar blackout: Network unreachable",
+          undefined,
+          undefined,
+          true
+        );
+      }
+    }
+
     // Acquire token (serialized via singleton — no concurrent race)
     let token: string | null = null;
     if (typeof window !== "undefined" && !endpoint.includes("/auth/")) {
