@@ -387,6 +387,20 @@ html.light #hero a.hero-cta:hover svg {
   color: #050505 !important;
 }
 
+/* Transparent Landing Header: Keep Brand Title & Subtitle Crisp & Bright in Light Mode */
+html.light header.bg-transparent .nav-brand-title,
+html.light header.bg-transparent span.nav-brand-title,
+html.light header.bg-transparent span.text-white {
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+
+html.light header.bg-transparent .nav-brand-sub,
+html.light header.bg-transparent span.nav-brand-sub {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
 /* Primary Action Buttons in Light Mode: Solid Dark Slate with White Text */
 html.light button.bg-\[\#F5F3EE\],
 html.light a.bg-\[\#F5F3EE\],

@@ -44,22 +44,24 @@ export const LandingNavbar: React.FC = () => {
         <Link href="/" className="flex items-center gap-3 group select-none">
           <div className="flex items-center gap-2.5">
             <div className={cn(
-              "relative w-8 h-8 rounded-full overflow-hidden shrink-0 shadow-sm bg-[#050505]",
-              scrolled ? "ring-1 ring-slate-900/15 dark:ring-white/20" : "ring-1 ring-white/30"
+              "relative w-8 h-8 rounded-full overflow-hidden shrink-0 shadow-sm transition-all",
+              scrolled
+                ? "bg-[#050505] ring-1 ring-slate-900/15 dark:ring-white/20"
+                : "bg-white/10 ring-1 ring-white/60 shadow-[0_0_12px_rgba(255,255,255,0.3)] backdrop-blur-sm"
             )}>
               <Image
                 src="/images/dhruv-logo-transparent.png"
                 alt="DHRUV"
                 width={34}
                 height={34}
-                className="h-8 w-8 object-contain"
+                className="h-8 w-8 object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
                 priority
               />
             </div>
             <span
               className={cn(
-                "text-xl font-black tracking-[0.25em] transition-colors",
-                scrolled ? "text-slate-900 dark:text-[#F5F3EE]" : "text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]"
+                "text-xl font-black tracking-[0.25em] transition-colors nav-brand-title",
+                scrolled ? "text-slate-900 dark:text-[#F5F3EE]" : "text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
               )}
             >
               DHRUV
@@ -67,10 +69,10 @@ export const LandingNavbar: React.FC = () => {
           </div>
           <span
             className={cn(
-              "hidden border-l pl-3 text-[10px] font-mono tracking-widest uppercase sm:inline-block transition-colors",
+              "hidden border-l pl-3 text-[10px] font-mono tracking-widest uppercase sm:inline-block transition-colors nav-brand-sub",
               scrolled
                 ? "border-slate-300 dark:border-[#242424] text-slate-500 dark:text-[#6F6D68]"
-                : "border-white/25 text-white/75 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+                : "border-white/30 text-white/85 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
             )}
           >
             NCPOR &bull; 70°S
